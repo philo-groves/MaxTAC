@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Report Writer"
+  short_description: "Write proofed systems reports"
+  default_prompt: "Use $maxtac-report-writer to write reports from proofed systems findings."

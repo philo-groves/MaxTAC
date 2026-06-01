@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Chain Analysis"
+  short_description: "Compose systems exploit chains"
+  default_prompt: "Use $maxtac-chain-analysis to compose MaxTAC findings into higher-impact chains."

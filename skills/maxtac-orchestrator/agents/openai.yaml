@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Orchestrator"
+  short_description: "Run authorized MaxTAC campaigns"
+  default_prompt: "Use $maxtac-orchestrator to run an authorized MaxTAC systems research campaign."

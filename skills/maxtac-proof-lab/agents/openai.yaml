@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Proof Lab"
+  short_description: "Proof findings in clean labs"
+  default_prompt: "Use $maxtac-proof-lab to proof a confident systems finding in a lab."
