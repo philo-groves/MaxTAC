@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Apple Heap Grooming"
+  short_description: "Plan heap reliability experiments"
+  default_prompt: "Use $maxtac-apple-heap-grooming to plan Apple allocator and object-placement experiments."

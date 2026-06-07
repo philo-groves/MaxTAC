@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Apple Target Flags"
+  short_description: "Prepare Apple Target Flag proof"
+  default_prompt: "Use $maxtac-apple-target-flags to evaluate Target Flag evidence for this Apple finding."

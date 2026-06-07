@@ -1,6 +1,6 @@
 ---
 name: maxtac-triage-debate
-description: Run MaxTAC Debater evaluation for candidate systems vulnerabilities. Use when a kernel, driver, binary, crash, fuzzing, patch-diff, or open-source systems finding is triage-ready and needs independent judgment on reachability, exploitability, primitive quality, scope, or de-escalation.
+description: Run MaxTAC Debater evaluation for candidate systems vulnerabilities. Use when a kernel, driver, binary, crash, fuzzing, patch-diff, or open-source systems finding is triage-ready and needs independent judgment on reachability, exploitability, primitive quality, scope, alternative paths, or de-escalation.
 ---
 
 # MaxTAC Triage Debate
@@ -18,6 +18,7 @@ Each Debater must answer:
 - Mitigations: Which checks, locks, refcounts, ACLs, entitlements, probes, code-signing, or hardening may block it?
 - Scope: Does validation fit the authorized lab and impact tolerance?
 - Proof gap: What exact evidence is still needed?
+- Alternative paths: If the primary path blocks, what adjacent primitive, target surface, domain note, or proof route should be tried before de-escalation?
 
 ## Subagent Pattern
 
@@ -32,6 +33,7 @@ Reachability: <accepted/rejected/unknown with reason>
 Boundary crossing: <accepted/rejected/unknown with reason>
 Primitive quality: <accepted/rejected/unknown with reason>
 Missing evidence: <specific tests, traces, lines, symbols, crashes>
+Alternative paths: <specific next routes or none with reason>
 Recommended ledger state: <confident / de-escalated / triage-ready>
 ```
 
@@ -41,12 +43,12 @@ Promote to `confident` when a majority says `valid` and no Debater identifies a 
 
 Keep as `triage-ready` when the issue is plausible but the missing evidence is specific and obtainable.
 
-De-escalate when:
+Before de-escalating, require the debate packet to name alternative paths that were checked or explain why none are plausible within scope. De-escalate only when:
 
 - entry point is not reachable by the scoped actor
 - the guard exists and applies before the dangerous operation
 - the target or technique is out of scope
 - the crash is expected, local-only without security impact, or caused by the harness
-- the primitive depends on unrealistic memory layout, unavailable privileges, or prohibited impact
+- the primitive and its alternative paths depend on unrealistic memory layout, unavailable privileges, prohibited impact, or evidence contradicted by the artifacts
 
 Update the ledger with the debate result and store debate notes under `data/maxtac/debates/` when useful.

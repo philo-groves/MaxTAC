@@ -1,12 +1,13 @@
 # MaxTAC
 
-Maximize your Trusted Access for Cyber status with a multi-agent cyber plugin purpose-built for authorized vulnerability research and proofing. The initial implementation focuses on XNU, Windows kernel-adjacent artifacts, native binaries, and open-source systems code.
+Maximize your Trusted Access for Cyber status with a multi-agent cyber plugin purpose-built for authorized vulnerability research and proofing. The initial implementation focuses on XNU, Apple platform security research, Windows kernel-adjacent artifacts, native binaries, and open-source systems code.
 
 ## What Is Included
 
 - `maxtac-orchestrator`: Coordinates the Prepare, Discovery, Triage, Proof, and Report phases.
-- `maxtac-engagement-scope`: Establishes authorization, lab boundaries, impact tolerance, and artifact handling.
 - `maxtac-prepare`: Builds `data/maxtac/target-profile.json`.
+- `maxtac-apple-workspace`: Creates persistent Apple research directories by domain.
+- Focused Apple skills: `maxtac-apple-target-flags`, `maxtac-apple-sptm-bypass`, `maxtac-apple-aslr-bypass`, `maxtac-apple-pac-bypass`, `maxtac-apple-jop-chaining`, `maxtac-apple-gadget-chaining`, `maxtac-apple-stack-pivoting`, and `maxtac-apple-heap-grooming`.
 - `maxtac-auditor-router`: Selects systems Auditor packets from `references/auditor-catalog.yaml`.
 - `maxtac-finding-ledger`: Tracks discovered, triage-ready, confident, proofed, duplicate, and de-escalated findings.
 - `maxtac-triage-debate`: Runs independent Debater evaluation for reachability and exploitability.
@@ -22,6 +23,8 @@ Ask Codex to use MaxTAC against an authorized local target:
 Use MaxTAC to prepare this XNU target and select the first Auditor wave.
 ```
 
+Put program details, official scope links, target assets, allowed operations, lab constraints, and exclusions in the target workspace `AGENTS.md` before starting a campaign. MaxTAC assumes that context is already supplied by the researcher and does not run a separate scope preflight skill.
+
 The expected campaign state lives under:
 
 ```text
@@ -31,8 +34,20 @@ data/maxtac/
   auditor-packets/
   debates/
   proof/
+  research/
+    apple-intelligence/
+    boot-chain/
+    comms/
+    icloud/
+    kernel/
+    private-cloud-compute/
+    radios/
+    sandbox/
+    webkit/
   reports/
 ```
+
+Apple findings may include an optional `domain` field matching one of the research directories. Keep detailed markdown in `data/maxtac/research/<domain>/<target>/` and reference those files from the ledger.
 
 ## Subagents
 
@@ -64,7 +79,7 @@ For XNU and open-source systems targets, map user-kernel entry points, IPC, enti
 
 In the Discovery phase, Codex launches a series of specialized Auditor subagents to check for relevant bugs and document findings as discovered. The subagents used for scanning depend on the type of target.
 
-The initial Auditor set is systems-focused: XNU IOKit/MIG, XNU VFS/sandbox, XNU lifetime and parser surfaces, Windows driver IOCTLs, Windows object/token handling, Windows memory and filesystem filters, binary patch diffing, native parser fuzzability, crash root cause, and open-source systems code.
+The initial Auditor set is systems-focused: XNU IOKit/MIG, XNU VFS/sandbox, XNU lifetime and parser surfaces, focused Apple bypass mechanisms, Windows driver IOCTLs, Windows object/token handling, Windows memory and filesystem filters, binary patch diffing, native parser fuzzability, crash root cause, and open-source systems code.
 
 ### Triage
 
@@ -74,7 +89,7 @@ In the Triage phase, Codex validates a finding has not already been documented, 
 - Reachability: A finding must have a full attacker-to-victim pipeline.
 - Exploitability: A finding must be exploitable by an attacker.
 
-Codex first performs the de-duplication as the main agent; if successful, several (3) Debater subagents are spawned to debate the reachability and exploitability of the finding. If a majority vote the finding as Valid, it is escalated to Validated. If the finding is Invalid, it may be de-escalated or closed.
+Codex first performs the de-duplication as the main agent; if successful, several (3) Debater subagents are spawned to debate the reachability and exploitability of the finding. If a majority vote the finding as Valid, it is escalated to Validated. If the finding is Invalid, Debaters must identify alternative routes before recommending de-escalation.
 
 To save on cost, the Debater subagents for triage use gpt-5.4-mini.
 
@@ -84,6 +99,6 @@ In the Proofing phase, a realistic reproduction of the bug is created and tested
 
 Proof is conducted in three steps (may go back-and-forth):
 
-1. Reproduce the bug from a human attacker-victim perspective. Verify the correct configurations, with the same reachability and exploitability stories as the Triage phase. If the bug cannot be reproduced, it is de-escalated or closed.
+1. Reproduce the bug from a human attacker-victim perspective. Verify the correct configurations, with the same reachability and exploitability stories as the Triage phase. If the bug cannot be reproduced, record why and route to a plausible alternate primitive or de-escalate only with decisive evidence.
 2. Suggest a fix for the bug.
 3. In a newly spawned Auditor subagent, check for reproduction and fix correctness. If not valid, go back to any previous step.

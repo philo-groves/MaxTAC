@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Apple SPTM Bypass"
+  short_description: "Analyze SPTM and page permissions"
+  default_prompt: "Use $maxtac-apple-sptm-bypass to analyze SPTM, TXM, PPL, or page-permission blockers."

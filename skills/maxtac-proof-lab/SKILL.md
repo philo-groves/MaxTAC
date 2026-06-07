@@ -48,4 +48,4 @@ A proof packet must include:
 - cleanup
 - fix suggestion and regression test idea
 
-If proof fails, record why. Do not force a proofed state from a weak crash, ambiguous decompiler view, scanner output, or unvalidated exploitability claim.
+If proof fails, record why and identify the next plausible route: revised primitive, different negative control, alternate lab condition, related target surface, or decisive de-escalation. Do not force a proofed state from a weak crash, ambiguous decompiler view, scanner output, or unvalidated exploitability claim.

@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Engagement Scope"
-  short_description: "Set MaxTAC systems scope safely"
-  default_prompt: "Use $maxtac-engagement-scope to establish authorized systems research boundaries."

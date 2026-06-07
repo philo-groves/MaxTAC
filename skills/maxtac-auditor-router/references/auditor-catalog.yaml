@@ -85,6 +85,40 @@ auditors:
       - ntoh
       - bcopy
       - memcpy
+  - id: apple-bypass-mechanism-auditor
+    display_name: Apple Bypass Mechanism Auditor
+    platforms: [xnu, mach-o, native]
+    target_kinds: [kernel-source, kernel-extension-source, native-source, macho, crash, patch-diff]
+    surfaces: [target-flags, commpage, pac, aslr, sptm, jop, gadget-chain, stack-pivot, heap-grooming]
+    bug_classes: [exploitability-triage, mitigation-bypass, info-disclosure, reliability]
+    disabled_for: [linux-kernel, web-app]
+    required_inputs: [target-profile, apple-domain-notes-or-artifacts]
+    focus: >
+      Analyze focused Apple bypass mechanisms that affect proof and impact.
+      Prioritize Target Flag evidence, ASLR leak requirements, PAC-compatible
+      reuse, SPTM/TXM transition bugs, JOP/call-oriented feasibility,
+      build-specific gadget provenance, stack/context pivots, and heap
+      placement reliability. When the first path blocks, identify the next
+      missing primitive before de-escalation. Produce mechanism notes and
+      ledger references, not a weaponized chain.
+    search_seeds:
+      - arm64e
+      - Target Flags
+      - _COMM_PAGE_ASB_TARGET_VALUE
+      - _COMM_PAGE_ASB_TARGET_ADDRESS
+      - ptrauth
+      - PAC
+      - ASLR
+      - SPTM
+      - commpage
+      - TXM
+      - JOP
+      - gadget
+      - stack pivot
+      - kalloc_type
+      - heap
+      - vmmap
+      - IOSurface
   - id: windows-driver-ioctl-auditor
     display_name: Windows Driver IOCTL Auditor
     platforms: [windows, pe]

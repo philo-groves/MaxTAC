@@ -9,6 +9,8 @@ Use this skill as the single source of truth for findings. The parent agent owns
 
 Default path: `data/maxtac/findings.json`.
 
+Writes must go through `scripts/ledger.py`; it queues writers with a ledger lock and saves atomically. Do not hand-edit `findings.json` during a campaign.
+
 ## States
 
 Use exactly one state:
@@ -24,11 +26,27 @@ Use exactly one state:
 
 Before adding a finding:
 
-1. Search by title, target, category, affected surface, entry point, and evidence keywords.
+1. Search by title, target, category, affected surface, entry point, evidence keywords, and Apple research `domain` when relevant.
 2. Update the existing finding if the root cause is the same.
 3. Add a separate finding only when the root cause, boundary, primitive, affected target, or fix path materially differs.
 
 Record milestones for meaningful events: Auditor discovery, duplicate decision, triage vote, blocker, reproduction, negative control, proof packet, patch check, or report.
+
+Use the optional `domain` field to reduce Apple research clutter without bloating the ledger. Valid domains are:
+
+```text
+apple-intelligence
+boot-chain
+comms
+icloud
+kernel
+private-cloud-compute
+radios
+sandbox
+webkit
+```
+
+Keep domain-specific markdown under `data/maxtac/research/<domain>/<target>/` and reference those paths from `evidence`, `related`, or milestones.
 
 ## Helper Script
 
@@ -36,10 +54,10 @@ Use `scripts/ledger.py`:
 
 ```bash
 python <skill-dir>/scripts/ledger.py init
-python <skill-dir>/scripts/ledger.py summary
-python <skill-dir>/scripts/ledger.py search --title "Unchecked IOCTL output length" --target "example.sys" --category memory-safety
-python <skill-dir>/scripts/ledger.py add --title "Unchecked IOCTL output length" --target "example.sys" --category memory-safety --location "DeviceControl 0x222004" --summary "..." --evidence "..."
-python <skill-dir>/scripts/ledger.py update M-0001 --state confident --note "Debaters accepted low-privileged IOCTL reachability and kernel write primitive."
+python <skill-dir>/scripts/ledger.py summary --domain kernel
+python <skill-dir>/scripts/ledger.py search --domain kernel --title "Unchecked IOKit output length" --target "IOExample" --category memory-safety
+python <skill-dir>/scripts/ledger.py add --domain kernel --title "Unchecked IOKit output length" --target "IOExample" --category memory-safety --location "externalMethod selector 7" --summary "..." --evidence "data/maxtac/research/kernel/ioexample/notes.md"
+python <skill-dir>/scripts/ledger.py update M-0001 --domain kernel --state confident --note "Debaters accepted low-privileged IOKit reachability and kernel write primitive."
 python <skill-dir>/scripts/ledger.py milestone M-0001 --note "Negative control shows METHOD_BUFFERED path is safe."
 ```
 

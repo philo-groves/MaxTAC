@@ -66,13 +66,16 @@ Require concise JSON or Markdown with these fields:
   "evidence": ["..."],
   "confidence": "low|medium|high",
   "validation_steps": ["..."],
+  "alternative_paths": ["..."],
   "deescalation_reason": null
 }
 ```
 
+Use `deescalation_reason` only for a decisive blocker. When the primary route is blocked but another primitive, target surface, or proof path is plausible, fill `alternative_paths` and return `confidence: low` or `medium` instead.
+
 ## Routing Notes
 
-- XNU source targets usually start with IOKit/MIG, VFS/sandbox, memory/lifetime, and parser Auditors.
+- XNU and Apple platform targets usually start with IOKit/MIG, VFS/sandbox, memory/lifetime, parser, and Apple bypass mechanism Auditors when mitigations affect exploitability.
 - Windows targets usually start with driver IOCTL, object/token, memory, and filesystem filter Auditors when artifacts support them.
 - Binary-only targets usually start with binary patch diff, crash root cause, native parser fuzzability, and generic systems code Auditors.
 - Open-source native targets usually start with OSS systems code, native parser fuzzability, memory/lifetime, and file/path surfaces.

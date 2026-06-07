@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Apple Workspace"
+  short_description: "Lay out Apple research domains"
+  default_prompt: "Use $maxtac-apple-workspace to create Apple domain directories and target notes."
