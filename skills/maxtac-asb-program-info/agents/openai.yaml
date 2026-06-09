@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC ASB Program Info"
+  short_description: "Program information for Apple Security Bounty"
+  default_prompt: "Use $maxtac-asb-program-info for bounty eligibility, bonuses, and categories."

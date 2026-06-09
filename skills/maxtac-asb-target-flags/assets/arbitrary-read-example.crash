@@ -1,0 +1,233 @@
+-------------------------------------
+Translated Report (Full Report Below)
+-------------------------------------
+Process:             arb_read [1229]
+Path:                /Users/Shared/arb_read
+Identifier:          arb_read
+Version:             ???
+Code Type:           ARM-64 (Native)
+Role:                Unspecified
+Parent Process:      zsh [740]
+Coalition:           com.apple.Terminal [369]
+Responsible Process: Terminal [323]
+User ID:             501
+
+Date/Time:           2025-11-18 15:03:32.8685 -0800
+Launch Time:         2025-11-18 15:03:32.8458 -0800
+Hardware Model:      VirtualMac2,1
+OS Version:          macOS 26.1 (25B78)
+Release Type:        User
+
+Crash Reporter Key:  75B8E020-03A0-4ABB-9CF4-EBB16751310B
+Incident Identifier: 6EEEA894-821B-4E1B-BC77-E4D0D5CAE7D1
+
+Time Awake Since Boot: 2300 seconds
+
+System Integrity Protection: enabled
+
+Triggered by Thread: 0, Dispatch Queue: com.apple.main-thread
+
+Exception Type:    EXC_BAD_ACCESS (SIGSEGV)
+Exception Subtype: KERN_INVALID_ADDRESS at 0x08ad752109466b05 -> 0xfffff52109466b05 (possible pointer authentication failure)
+Exception Codes:   0x0000000000000001, 0x08ad752109466b05
+
+Termination Reason:  Namespace SIGNAL, Code 11, Segmentation fault: 11
+Terminating Process: exc handler [1229]
+
+
+VM Region Info: 0xfffff52109466b05 is not in any region.  Bytes after previous region: 18446731639934839558  
+      REGION TYPE                    START - END         [ VSIZE] PRT/MAX SHRMOD  REGION DETAIL
+      commpage (reserved)        1000000000-7000000000   [384.0G] ---/--- SM=NUL  reserved VM address space (unallocated)
+--->  
+      UNUSED SPACE AT END
+
+Thread 0 Crashed::  Dispatch queue: com.apple.main-thread
+0   arb_read                      	       0x102dd44e4 main + 132
+1   dyld                          	       0x18ae8dd54 start + 7184
+
+
+Thread 0 crashed with ARM Thread State (64-bit):
+    x0: 0x0000000000000000   x1: 0x0000000000000000   x2: 0x00000000000120a8   x3: 0x0000000102e05e1f
+    x4: 0x0000000102dd4552   x5: 0x000000016d02b2a0   x6: 0x000000000000000a   x7: 0x0000000000000000
+    x8: 0x08ad752109466b05   x9: 0x00000001f7c2e1f0  x10: 0x0000000000000002  x11: 0x0000010000000000
+   x12: 0x00000000fffffffd  x13: 0x0000000000000000  x14: 0x0000000000000000  x15: 0x0000000000000000
+   x16: 0x000000018b213608  x17: 0x00000001f921d2b0  x18: 0x0000000000000000  x19: 0x00000001f7974060
+   x20: 0x00000001f7c20248  x21: 0x00000001f7974dc0  x22: 0xfffffffffffffff0  x23: 0x00000001f7c23960
+   x24: 0x0000000000000001  x25: 0x000000016d02b4d0  x26: 0x00000001f7c23970  x27: 0x0000000000000000
+   x28: 0x0000000000000000   fp: 0x000000016d02b2d0   lr: 0x0000000102dd44dc
+    sp: 0x000000016d02b2a0   pc: 0x0000000102dd44e4 cpsr: 0x20001000
+   far: 0x08ad752109466b05  esr: 0x92000004 (Data Abort) byte read Translation fault
+
+Binary Images:
+       0x102dd4000 -        0x102dd7fff arb_read (*) <d721f8b6-0058-32c3-a1a2-e2138169698d> */arb_read
+       0x18ae85000 -        0x18af23f63 dyld (*) <b50f5a1a-be81-3068-92e1-3554f2be478a> /usr/lib/dyld
+               0x0 - 0xffffffffffffffff ??? (*) <00000000-0000-0000-0000-000000000000> ???
+       0x18b212000 -        0x18b24e49f libsystem_kernel.dylib (*) <9fe7c84d-0c2b-363f-bee5-6fd76d67a227> /usr/lib/system/libsystem_kernel.dylib
+
+External Modification Summary:
+  Calls made by other processes targeting this process:
+    task_for_pid: 0
+    thread_create: 0
+    thread_set_state: 0
+  Calls made by this process:
+    task_for_pid: 0
+    thread_create: 0
+    thread_set_state: 0
+  Calls made by all processes on this machine:
+    task_for_pid: 0
+    thread_create: 0
+    thread_set_state: 0
+
+VM Region Summary:
+ReadOnly portion of Libraries: Total=597.3M resident=0K(0%) swapped_out_or_unallocated=597.3M(100%)
+Writable regions: Total=85.0M written=225K(0%) resident=225K(0%) swapped_out=0K(0%) unallocated=84.8M(100%)
+
+                                VIRTUAL   REGION 
+REGION TYPE                        SIZE    COUNT (non-coalesced) 
+===========                     =======  ======= 
+Kernel Alloc Once                   32K        1 
+MALLOC                            76.8M       10 
+MALLOC guard page                 3840K        4 
+STACK GUARD                       56.0M        1 
+Stack                             8176K        1 
+__AUTH                              35K       13 
+__AUTH_CONST                       202K       44 
+__DATA                             155K       33 
+__DATA_CONST                       126K       43 
+__DATA_DIRTY                       152K       36 
+__LINKEDIT                       591.4M        2 
+__OBJC_RO                         78.3M        1 
+__OBJC_RW                         2567K        1 
+__TEXT                            6040K       46 
+__TPRO_CONST                       128K        2 
+page table in kernel               225K        1 
+shared memory                       32K        1 
+===========                     =======  ======= 
+TOTAL                            823.6M      240 
+
+
+-----------
+Full Report
+-----------
+
+{"app_name":"arb_read","timestamp":"2025-11-18 15:03:33.00 -0800","app_version":"","slice_uuid":"d721f8b6-0058-32c3-a1a2-e2138169698d","build_version":"","platform":1,"share_with_app_devs":0,"is_first_party":1,"bug_type":"309","os_version":"macOS 26.1 (25B78)","roots_installed":0,"incident_id":"6EEEA894-821B-4E1B-BC77-E4D0D5CAE7D1","name":"arb_read"}
+{
+  "uptime" : 2300,
+  "procRole" : "Unspecified",
+  "version" : 2,
+  "userID" : 501,
+  "deployVersion" : 210,
+  "modelCode" : "VirtualMac2,1",
+  "coalitionID" : 369,
+  "osVersion" : {
+    "train" : "macOS 26.1",
+    "build" : "25B78",
+    "releaseType" : "User"
+  },
+  "captureTime" : "2025-11-18 15:03:32.8685 -0800",
+  "codeSigningMonitor" : 0,
+  "incident" : "6EEEA894-821B-4E1B-BC77-E4D0D5CAE7D1",
+  "pid" : 1229,
+  "translated" : false,
+  "cpuType" : "ARM-64",
+  "roots_installed" : 0,
+  "bug_type" : "309",
+  "procLaunch" : "2025-11-18 15:03:32.8458 -0800",
+  "procStartAbsTime" : 56724058072,
+  "procExitAbsTime" : 56724293273,
+  "procName" : "arb_read",
+  "procPath" : "\/Users\/Shared\/arb_read",
+  "parentProc" : "zsh",
+  "parentPid" : 740,
+  "coalitionName" : "com.apple.Terminal",
+  "crashReporterKey" : "75B8E020-03A0-4ABB-9CF4-EBB16751310B",
+  "appleIntelligenceStatus" : {"state":"unavailable","reasons":["deviceNotCapable"]},
+  "customerFused" : 0,
+  "developerMode" : 1,
+  "responsiblePid" : 323,
+  "responsibleProc" : "Terminal",
+  "codeSigningID" : "arb_read",
+  "codeSigningTeamID" : "",
+  "codeSigningFlags" : 570556929,
+  "codeSigningValidationCategory" : 10,
+  "codeSigningTrustLevel" : 4294967295,
+  "codeSigningAuxiliaryInfo" : 0,
+  "instructionByteStream" : {"beforePC":"6QMAkSgBAPkAAACQAKgUkQoAAJQAAACQAEgVkQcAAJTgD0C56AtA+Q==","atPC":"CAFA+f17Q6n\/AwGRwANf1jAAAJAQAkD5AAIf1lsqXSBfQ09NTV9QQQ=="},
+  "bootSessionUUID" : "0635D522-4B8C-4D34-84AC-4A86F130A843",
+  "sip" : "enabled",
+  "vmRegionInfo" : "0xfffff52109466b05 is not in any region.  Bytes after previous region: 18446731639934839558  \n      REGION TYPE                    START - END         [ VSIZE] PRT\/MAX SHRMOD  REGION DETAIL\n      commpage (reserved)        1000000000-7000000000   [384.0G] ---\/--- SM=NUL  reserved VM address space (unallocated)\n--->  \n      UNUSED SPACE AT END",
+  "exception" : {"codes":"0x0000000000000001, 0x08ad752109466b05","rawCodes":[1,625284708024347397],"type":"EXC_BAD_ACCESS","signal":"SIGSEGV","subtype":"KERN_INVALID_ADDRESS at 0x08ad752109466b05 -> 0xfffff52109466b05 (possible pointer authentication failure)"},
+  "termination" : {"flags":0,"code":11,"namespace":"SIGNAL","indicator":"Segmentation fault: 11","byProc":"exc handler","byPid":1229},
+  "vmregioninfo" : "0xfffff52109466b05 is not in any region.  Bytes after previous region: 18446731639934839558  \n      REGION TYPE                    START - END         [ VSIZE] PRT\/MAX SHRMOD  REGION DETAIL\n      commpage (reserved)        1000000000-7000000000   [384.0G] ---\/--- SM=NUL  reserved VM address space (unallocated)\n--->  \n      UNUSED SPACE AT END",
+  "extMods" : {"caller":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"system":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"targeted":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"warnings":0},
+  "faultingThread" : 0,
+  "threads" : [{"triggered":true,"id":24012,"threadState":{"x":[{"value":0},{"value":0},{"value":73896},{"value":4343225887},{"value":4343022930},{"value":6123860640},{"value":10},{"value":0},{"value":625284708024347397},{"value":8451711472,"symbolLocation":0,"symbol":"errno"},{"value":2},{"value":1099511627776},{"value":4294967293},{"value":0},{"value":0},{"value":0},{"value":6629176840,"symbolLocation":0,"symbol":"__error"},{"value":8474710704},{"value":0},{"value":8448852064,"symbolLocation":0,"symbol":"lsl::sAllocatorBuffer"},{"value":8451654216,"symbolLocation":0,"symbol":"lsl::sMemoryManagerBuffer"},{"value":8448855488,"symbolLocation":3360,"symbol":"lsl::sPoolBytes"},{"value":18446744073709551600},{"value":8451668320,"symbolLocation":0,"symbol":"vm_page_mask"},{"value":1},{"value":6123861200},{"value":8451668336,"symbolLocation":0,"symbol":"mach_task_self_"},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":4343022812},"cpsr":{"value":536875008},"fp":{"value":6123860688},"sp":{"value":6123860640},"esr":{"value":2449473540,"description":"(Data Abort) byte read Translation fault"},"pc":{"value":4343022820,"matchesCrashFrame":1},"far":{"value":625284708024347397}},"queue":"com.apple.main-thread","frames":[{"imageOffset":1252,"symbol":"main","symbolLocation":132,"imageIndex":0},{"imageOffset":36180,"symbol":"start","symbolLocation":7184,"imageIndex":1}]}],
+  "usedImages" : [
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4343021568,
+    "size" : 16384,
+    "uuid" : "d721f8b6-0058-32c3-a1a2-e2138169698d",
+    "path" : "*\/arb_read",
+    "name" : "arb_read"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 6625447936,
+    "size" : 651108,
+    "uuid" : "b50f5a1a-be81-3068-92e1-3554f2be478a",
+    "path" : "\/usr\/lib\/dyld",
+    "name" : "dyld"
+  },
+  {
+    "size" : 0,
+    "source" : "A",
+    "base" : 0,
+    "uuid" : "00000000-0000-0000-0000-000000000000"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 6629171200,
+    "size" : 246944,
+    "uuid" : "9fe7c84d-0c2b-363f-bee5-6fd76d67a227",
+    "path" : "\/usr\/lib\/system\/libsystem_kernel.dylib",
+    "name" : "libsystem_kernel.dylib"
+  }
+],
+  "sharedCache" : {
+  "base" : 6624362496,
+  "size" : 5609635840,
+  "uuid" : "b69ff43c-dbfd-3fb1-b4fe-a8fe32ea1062"
+},
+  "vmSummary" : "ReadOnly portion of Libraries: Total=597.3M resident=0K(0%) swapped_out_or_unallocated=597.3M(100%)\nWritable regions: Total=85.0M written=225K(0%) resident=225K(0%) swapped_out=0K(0%) unallocated=84.8M(100%)\n\n                                VIRTUAL   REGION \nREGION TYPE                        SIZE    COUNT (non-coalesced) \n===========                     =======  ======= \nKernel Alloc Once                   32K        1 \nMALLOC                            76.8M       10 \nMALLOC guard page                 3840K        4 \nSTACK GUARD                       56.0M        1 \nStack                             8176K        1 \n__AUTH                              35K       13 \n__AUTH_CONST                       202K       44 \n__DATA                             155K       33 \n__DATA_CONST                       126K       43 \n__DATA_DIRTY                       152K       36 \n__LINKEDIT                       591.4M        2 \n__OBJC_RO                         78.3M        1 \n__OBJC_RW                         2567K        1 \n__TEXT                            6040K       46 \n__TPRO_CONST                       128K        2 \npage table in kernel               225K        1 \nshared memory                       32K        1 \n===========                     =======  ======= \nTOTAL                            823.6M      240 \n",
+  "legacyInfo" : {
+  "threadTriggered" : {
+    "queue" : "com.apple.main-thread"
+  }
+},
+  "logWritingSignature" : "18583b8d43cbbd419f69e83d56446d04dafbc2b7",
+  "trialInfo" : {
+  "rollouts" : [
+    {
+      "rolloutId" : "6761d0c9df60af01adb250fb",
+      "factorPackIds" : [
+
+      ],
+      "deploymentId" : 240000009
+    },
+    {
+      "rolloutId" : "64c025b28b7f0e739e4fbe58",
+      "factorPackIds" : [
+
+      ],
+      "deploymentId" : 240000044
+    }
+  ],
+  "experiments" : [
+
+  ]
+  }
+}

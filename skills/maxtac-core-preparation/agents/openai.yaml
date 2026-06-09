@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Core Preparation"
+  short_description: "Preparation instructions for a thorough recon"
+  default_prompt: "Use $maxtac-core-preparation to build a threat model."

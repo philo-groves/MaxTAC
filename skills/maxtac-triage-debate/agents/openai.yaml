@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Triage Debate"
-  short_description: "Debate systems finding validity"
-  default_prompt: "Use $maxtac-triage-debate to evaluate reachability and exploitability."

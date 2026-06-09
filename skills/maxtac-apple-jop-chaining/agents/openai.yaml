@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Apple JOP Chaining"
-  short_description: "Model Apple JOP feasibility"
-  default_prompt: "Use $maxtac-apple-jop-chaining to model a non-return Apple control-flow chain."

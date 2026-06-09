@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Apple ASLR Bypass"
-  short_description: "Analyze ASLR and KASLR leaks"
-  default_prompt: "Use $maxtac-apple-aslr-bypass to classify Apple address leaks and missing ASLR primitives."

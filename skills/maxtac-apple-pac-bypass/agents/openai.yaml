@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Apple PAC Bypass"
-  short_description: "Analyze PAC reuse constraints"
-  default_prompt: "Use $maxtac-apple-pac-bypass to classify PAC blockers and signed-pointer reuse options."

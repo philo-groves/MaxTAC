@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Core Subagent Audit"
+  short_description: "Subagent-based vulnerability scanning with specialists"
+  default_prompt: "Use $maxtac-core-subagent-audit to scan systems for vulnerabilities."

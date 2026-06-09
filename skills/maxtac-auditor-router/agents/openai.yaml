@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Auditor Router"
-  short_description: "Select systems Auditor packets"
-  default_prompt: "Use $maxtac-auditor-router to select systems Auditor subagent packets."

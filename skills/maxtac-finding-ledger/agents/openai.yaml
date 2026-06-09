@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Finding Ledger"
-  short_description: "Track and dedupe findings"
-  default_prompt: "Use $maxtac-finding-ledger to deduplicate and update MaxTAC findings."

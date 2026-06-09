@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Core Subagent Debate"
+  short_description: "Subagent-based reachability and exploitability debate"
+  default_prompt: "Use $maxtac-core-subagent-audit to spawn subagents for debate."

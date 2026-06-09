@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Prepare"
-  short_description: "Build MaxTAC target profiles"
-  default_prompt: "Use $maxtac-prepare to build a target profile for MaxTAC Auditor routing."

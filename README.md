@@ -1,104 +1,27 @@
-# MaxTAC
+## MaxTAC
+Maximize your verified OpenAI Trusted Access for Cyber (TAC) membership with a plugin that identifies and proves vulnerabilities in source code, binaries, and web services. Optional skills for Apple and Microsoft vulnerability research are also included.
 
-Maximize your Trusted Access for Cyber status with a multi-agent cyber plugin purpose-built for authorized vulnerability research and proofing. The initial implementation focuses on XNU, Apple platform security research, Windows kernel-adjacent artifacts, native binaries, and open-source systems code.
+This plugin is heavily inspired by [MDASH](https://www.microsoft.com/en-us/security/blog/2026/05/12/defense-at-ai-speed-microsofts-new-multi-model-agentic-security-system-tops-leading-industry-benchmark/).
 
-## What Is Included
+## Skills
+The `maxtac-core-*` skills should always be enabled for the plugin to work correctly.
 
-- `maxtac-orchestrator`: Coordinates the Prepare, Discovery, Triage, Proof, and Report phases.
-- `maxtac-prepare`: Builds `data/maxtac/target-profile.json`.
-- `maxtac-apple-workspace`: Creates persistent Apple research directories by domain.
-- Focused Apple skills: `maxtac-apple-target-flags`, `maxtac-apple-sptm-bypass`, `maxtac-apple-aslr-bypass`, `maxtac-apple-pac-bypass`, `maxtac-apple-jop-chaining`, `maxtac-apple-gadget-chaining`, `maxtac-apple-stack-pivoting`, and `maxtac-apple-heap-grooming`.
-- `maxtac-auditor-router`: Selects systems Auditor packets from `references/auditor-catalog.yaml`.
-- `maxtac-finding-ledger`: Tracks discovered, triage-ready, confident, proofed, duplicate, and de-escalated findings.
-- `maxtac-triage-debate`: Runs independent Debater evaluation for reachability and exploitability.
-- `maxtac-proof-lab`: Creates lab proof packets for confident findings.
-- `maxtac-chain-analysis`: Composes findings through explicit preconditions and postconditions.
-- `maxtac-report-writer`: Writes reports from proofed evidence.
+- `maxtac-core-workflow`: Acts as an orchestrator for all research. Manages a set of research phases to work through, tracks those phases, and aides with continued research planning.
+- `maxtac-core-preparation`: Prepares sessions and targets to perform recon and threat modeling, with a different approach depending on the type of target (source code, binary).
+- `maxtac-core-finding-ledger`: Centralized finding management to help with research history tracking and deduplication. Each finding has a state and a link to its research notes.
+- `maxtac-core-subagent-audit`: Auditor subagents, each specializing in a type of vulnerability recon and analysis, that may be spawned by the core workflow.
+- `maxtac-core-subagent-debate`: Debator subagents, each assessing bug reachability and exploitability with the the same information, that may be spawned by the core workflow.
 
-## Quick Start
+The `maxtac-asb-*` skills should only be enabled for macOS, iOS, and other Apple-related research.
 
-Ask Codex to use MaxTAC against an authorized local target:
+- `maxtac-asb-program-info`: Information for the Apple Security Bounty (ASB) program, including eligible bounty categories, priorities, and general proof requirements.
+- `maxtac-asb-target-flags`: Details for Apple target flags, which are vulnerability proof mechanisms built into every Apple OS.
+- `maxtac-asb-sandboxing`: Security hardening features and common bypasses for eligible Apple sandboxes, including differences between macOS and iOS instances.
 
-```text
-Use MaxTAC to prepare this XNU target and select the first Auditor wave.
-```
+The `maxtac-msrc-*` skills should only be enabled for Windows, .NET, and other Microsoft-related research.
 
-Put program details, official scope links, target assets, allowed operations, lab constraints, and exclusions in the target workspace `AGENTS.md` before starting a campaign. MaxTAC assumes that context is already supplied by the researcher and does not run a separate scope preflight skill.
+- `maxtac-msrc-program-info`: Information for the Microsoft Security Research Center (MSRC) program, including eligible bounty categories, priorities, and general proof requirements.
+- `maxtac-msrc-sandboxing`: Requirements for eligible MSRC sandboxes, including how to use the LPAC tool.
 
-The expected campaign state lives under:
-
-```text
-data/maxtac/
-  target-profile.json
-  findings.json
-  auditor-packets/
-  debates/
-  proof/
-  research/
-    apple-intelligence/
-    boot-chain/
-    comms/
-    icloud/
-    kernel/
-    private-cloud-compute/
-    radios/
-    sandbox/
-    webkit/
-  reports/
-```
-
-Apple findings may include an optional `domain` field matching one of the research directories. Keep detailed markdown in `data/maxtac/research/<domain>/<target>/` and reference those files from the ledger.
-
-## Subagents
-
-- Auditor: Specializes in a specific type of kernel, binary, or open-source systems audit.
-- Debater: Works together to determine the reachability and exploitability and each finding.
-- Prover: Acts as its own subagent to prevent context pollution and self-bias.
-
-## Phases
-
-Codex continues through the following phases.
-
-### Prepare
-
-In the Prepare phase, Codex lays a foundation to build a knowledge base of the target attack surface and threat models. The approach of recon conducted depends on the type of target.
-
-#### Source Code Recon
-
-Ingest the source target to ~/maxtac-resources/. Build language-aware indices. Analyze past commits and CVE history. Identify code comments, environment assumptions, and undefined behavior. Build a repository map and primary call graphs. Scout existing threat mitigations in the source code.
-
-#### Binary Recon
-
-Add or install the binary locally. Avoid placing binaries in the working directory, prefer ~/maxtac-resources/ in those cases. Decompile the binary (all or partial) to identify strings and other static data. Build a mapping of the most called and most important function. Scout existing threat mitigations in the decompiled code.
-
-#### Kernel And Systems Recon
-
-For XNU and open-source systems targets, map user-kernel entry points, IPC, entitlement or sandbox checks, file and parser surfaces, lifetime rules, locking, and mitigation assumptions. For Windows targets, bias toward supplied driver source, driver binaries, public symbols, patch diffs, and kernel-adjacent artifacts rather than closed-source operating-system internals.
-
-### Discovery
-
-In the Discovery phase, Codex launches a series of specialized Auditor subagents to check for relevant bugs and document findings as discovered. The subagents used for scanning depend on the type of target.
-
-The initial Auditor set is systems-focused: XNU IOKit/MIG, XNU VFS/sandbox, XNU lifetime and parser surfaces, focused Apple bypass mechanisms, Windows driver IOCTLs, Windows object/token handling, Windows memory and filesystem filters, binary patch diffing, native parser fuzzability, crash root cause, and open-source systems code.
-
-### Triage
-
-In the Triage phase, Codex validates a finding has not already been documented, reachable by an attacker, and exploitable. All three of these qualifications must pass for a finding to escalate to confident.
-
-- De-duplication: A new finding must not already be documented.
-- Reachability: A finding must have a full attacker-to-victim pipeline.
-- Exploitability: A finding must be exploitable by an attacker.
-
-Codex first performs the de-duplication as the main agent; if successful, several (3) Debater subagents are spawned to debate the reachability and exploitability of the finding. If a majority vote the finding as Valid, it is escalated to Validated. If the finding is Invalid, Debaters must identify alternative routes before recommending de-escalation.
-
-To save on cost, the Debater subagents for triage use gpt-5.4-mini.
-
-### Proof
-
-In the Proofing phase, a realistic reproduction of the bug is created and tested. For cleanliness, all testing is conducted on a configured VM or docker container. Codex spawns a new Prover agent at the beginning of this phase with its own self-contained prompt. This prevents pollution and self-bias by having the subagent act in its own isolated session. 
-
-Proof is conducted in three steps (may go back-and-forth):
-
-1. Reproduce the bug from a human attacker-victim perspective. Verify the correct configurations, with the same reachability and exploitability stories as the Triage phase. If the bug cannot be reproduced, record why and route to a plausible alternate primitive or de-escalate only with decisive evidence.
-2. Suggest a fix for the bug.
-3. In a newly spawned Auditor subagent, check for reproduction and fix correctness. If not valid, go back to any previous step.
+## How to Install
+Just ask Codex to install the plugin for you. With how fast Codex plugins are moving, any list of installation steps given may be invalid next week.

@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Apple Stack Pivoting"
-  short_description: "Analyze pivot evidence"
-  default_prompt: "Use $maxtac-apple-stack-pivoting to evaluate Apple stack or context pivot feasibility."

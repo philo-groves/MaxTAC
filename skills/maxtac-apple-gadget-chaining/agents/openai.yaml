@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Apple Gadget Chaining"
-  short_description: "Inventory Apple gadget constraints"
-  default_prompt: "Use $maxtac-apple-gadget-chaining to inventory build-specific Apple code-reuse gadgets."
