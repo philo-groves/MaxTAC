@@ -1,103 +1,189 @@
 # Source Code Preparation
 
+Use source preparation to turn a large native codebase into a map of attacker-controlled entry points, trust boundaries, object lifetimes, and candidate primitives. Prefer durable maps and short evidence packets over one-off notes. Preparation should make later scan, debate, primitive proof, and chain proof phases faster.
+
 ## Source Code Mapping
-Build a full repository map of code new and old. Create language-aware call graphs for important functions. Identify test coverage and locations where tests are missing. Trace untrusted user input (sources) directly to dangerous execution points (sinks) like SQL injections or command execution. Unpack complex, undocumented logic, dependencies, and API calls.
 
-### Data Flow Analysis (Taint Analysis)
-Tracks how values propagate through the program to identify unverified inputs being processed by sensitive sinks.
+Build a repository map that explains how untrusted input enters privileged code and how authority, memory ownership, and object lifetime move across files.
 
-- Taint Sources: Web requests, file uploads, environment variables, database inputs.
-- Taint Sinks: system(), SQL queries (e.g., SELECT...), deserialization endpoints, output printing.
+### Native Entry Point Inventory
 
-### Code Property Graph (CPG) Mapping
-Combines multiple static analysis representations into a searchable, graph-based database (often using Graphviz or Neo4j). CPGs capture:
+Create an entry-point index before deep auditing. Include the wrapper, policy gate, object lookup, core implementation, cleanup path, and copyout path where applicable.
 
-- AST (Abstract Syntax Tree): Captures the syntactic structure of the code.
-- CFG (Control Flow Graph): Maps execution paths, loops, and conditional branches.
-- PDG (Program Dependency Graph): Tracks data and control dependencies between variables and instructions.
+- Syscalls and private syscalls: syscall tables, argument structs, `copyin`, `copyout`, `copyinstr`, file descriptor lookup, process credential checks, and compatibility wrappers.
+- Mach and MIG: subsystem definitions, generated server stubs, descriptor counts, out-of-line memory, port right consumption, reply construction, and audit-token use.
+- IOKit and DriverKit: user client external methods, scalar and structure input/output sizes, async callbacks, shared memory mappings, memory descriptors, registry properties, and entitlement gates.
+- BSD kernel interfaces: `ioctl`, `fcntl`, `setsockopt`, `getsockopt`, `sysctl`, `proc_info`, `getattrlist`, `setattrlist`, `fsctl`, kqueue, workqueue, event, audit, and networking control paths.
+- IPC services in source form: XPC/Mach service handlers, launchd labels, sandbox extensions, entitlement checks, fileport/taskport transfer, and audit-token-derived identity.
+- Parsers and loaders: Mach-O, dyld metadata, code signatures, certificates, property lists, fonts or binary formats only when they cross a native privilege boundary.
 
-### Call Graph Generation
-Creates a map of which functions call other functions throughout the entire codebase. This is highly useful for spotting:
+### Cross-File Call Graphs
 
-- Privilege escalation vectors (e.g., how an unauthenticated route leads to administrative functions).
-- Impact analysis when a core library or framework component has a known vulnerability.
+For high-value entry points, build a compact call graph from user input to impact. Keep the graph security-oriented rather than exhaustive.
 
-### Mapping Best Practices
+- Start at the public entry point and follow input validation, privilege checks, object lookup, locking, allocation, and copyout.
+- Mark each reference transfer: retain, release, borrowed return, move semantics, port right transfer, file descriptor install, vnode reference, task reference, map reference, mbuf ownership, and memory-entry ownership.
+- Mark each lock and lifetime boundary: lock dropped before use, continuation return, async callback, workloop dispatch, thread wakeup, deferred free, garbage collection, or teardown path.
+- Mark each authority transition: credential adoption, MAC policy decision, sandbox profile check, entitlement check, code-signing flag mutation, persona transition, task/port right creation, or cross-process object lookup.
 
-- Identify Critical Entry Points: Always start by mapping where authentication, authorization, and data processing occur.
-- Visualize the Data: Dump call graphs or CPG structures to visualization formats like DOT files or directly into Graph databases to spot architectural flaws manually.
+### Generated and Build Artifacts
 
-## Source Code Threat Modeling
-Using the available code structure and documentation, build a threat model of the repository. Before modeling, build a source code map (described above), unless one already exists. Code-based threat modeling integrates the threat perspective into code review, supplementing the existing source code map with an attacker perspective analysis.
+Generated code often hides the real boundary. Include it in the map when it validates counts, sizes, descriptors, or rights.
 
-### Identify Trust Boundaries
-Locate where data leaves an authenticated, safe zone and enters an unvalidated state, for example:
+- MIG generated stubs and `.defs` files.
+- Syscall tables and generated argument declarations.
+- IOKit external method dispatch tables.
+- Entitlement, sandbox, profile, or policy manifests.
+- Tests that encode expected native error behavior.
 
-- API Endpoints: Controller or route handlers accepting HTTP requests (e.g., REST, GraphQL, webhooks).
-- Deserialization Points: Locations in code where raw strings or bytes are converted into complex objects or code states.
-- CLI/Terminal Inputs: Code reading execution arguments, environment variables, or standard input streams.
-- Microservice Communication: RPC, gRPC, or message queues (e.g., Kafka, RabbitMQ) crossing service domains.
-- Admin vs. User Roles: Code sections that switch operational contexts based on JWT claims, session cookies, or RBAC (Role-Based Access Control) checks.
-- Compiled vs. Interpreted: Dynamic code execution functions (e.g., eval(), exec(), reflection) that transition strings into executable code.
+## Data Flow Analysis
 
-### Source Code Danger Areas
-Inspect code comments, string, and documentation gaps in the source code. Use `rg` expressions or `opengrep` rules to quickly locate functions known to cause remote command execution, buffer overflows, and other vulnerabilities. For large source code workspaces, verify the expression is filtered correctly to reduce noise. If still too noisy, only search one specific module or file at a time.
+Track attacker-controlled data as typed native values, not just strings. Record where values are trusted, widened, truncated, copied, retained, or reinterpreted.
 
-- Command Injection / RCE: Search for string patterns involving system calls and execution. Keywords: `eval()`, `system()`, `exec()`, `passthru()`.
-- Use-After-Free (UAF) / Buffer Overflow: Dangerous functions because they are "memory-unsafe" and require manual management of the heap. Keywords: `malloc()`, `calloc()`, `realloc()`, `free()`
-- SQL Injection (SQLi): Search for user inputs directly concatenated or interpolated into database query strings. Keywords: `SELECT`, `UPDATE`, `INSERT` combined with string concatenation operators (e.g., `.`, `+`, or string formatting like `%s`).
-- Cross-Site Scripting (XSS): Look for untrusted data being passed directly into output printing functions without sanitization or encoding. Keywords: `echo()`, `print()`, `innerHTML`. 
-- Path Traversal / File Inclusion: Check for file system operations using unsanitized variables. Keywords: `include()`, `require()`, `open()`, `file_get_contents()`.
-- Hard-Coded Secrets (CWE-540): Scan for sensitive information like API keys, encryption keys, or passwords embedded in plaintext strings. Keywords: Keywords: "secret", "password", "apiKey". Regex patterns: `AKIA` (AWS keys), `eyJhbGciOi` (JWT tokens).
+### Common Native Sources
 
-### Source Code Static Analysis
-The primary source code static analysis engine is `opengrep`, expected to be available on the CLI. Instead of manually auditing thousands of lines of code or guessing where a vulnerability lives, Opengrep allows describing the structure of security flaws using YAML rules. All opengrep research files should be persisted to `data/maxtac/static/`
+- Raw syscall arguments, packed structs, user pointers, lengths, flags, offsets, counts, and enum selectors.
+- Mach message bodies, port rights, descriptors, voucher data, audit tokens, and out-of-line memory.
+- File descriptors, vnodes, paths, extended attributes, fork attributes, ACLs, fileports, and memory-backed files.
+- Socket data, control messages, mbufs, route messages, NECP parameters, packet metadata, and shared ring indices.
+- IOKit scalar inputs, structure inputs, memory mappings, notification ports, async references, and registry properties.
+- Shared memory, commpage values, VM map ranges, memory entries, code-signing blobs, loader metadata, and slide/fixup records.
+- Process identity material: pid, pidversion, uniqueid, uid/gid, audit token, persona id, coalition id, task port, thread port, and entitlement-derived booleans.
 
-- Custom Taint Analysis: Opengrep tracks data from unverified sources (e.g., HTTP requests or external APIs) to dangerous sinks (e.g., SQL execution or command line). Use the `--taint-intrafile` flag to map how untrusted data propagates through the application to enforce strict trust boundaries.
-- Security Control Verification: Write custom rules to verify that internal API calls bypass unencrypted connections, restrict sensitive actions to specific user roles, or enforce mandatory data sanitization.
-- Dependency & API Mapping: Use semantic patterns to immediately find where deprecated libraries or forbidden cloud SDKs are imported into a codebase.
+### Common Native Sinks
 
-Opengrep rules use code syntax patterns rather than complex Abstract Syntax Tree (AST) manipulation. This makes it easy to translate your system's data flows into rules. For an example, see: `opengrep-sql-injection-example.yml`
+- Pointer arithmetic, array indexing, bitmap access, variable-length record parsing, and descriptor walking.
+- Allocation sizes, copy sizes, element counts, page counts, offset plus length arithmetic, and integer casts.
+- `copyout`, `copyoutstr`, reply message construction, external method outputs, and variable-size kernel-to-user records.
+- Reference count changes, object install/remove, borrowed-object returns, cleanup labels, and error paths.
+- VM map operations, memory object creation, remap/protect transitions, executable mapping, code-signing checks, and pager operations.
+- Credential, task, port, sandbox, entitlement, MAC policy, TCC, persona, coalition, or code-signing state changes.
+- Kernel callbacks reached after generic validation, including driver vtables, socket protocol callbacks, filesystem operations, and workqueue continuations.
 
-#### Opengrep Best Practices
-Best practices involve writing modular rules and properly leveraging advanced taint features.
+## Threat Modeling
 
-- Validate Before Scanning: Always run `opengrep validate <rules_directory>` to verify that your rules parse correctly before executing a full repository scan.
-- Apply Dynamic Timeouts: Enable `--dynamic-timeout` to automatically scale timeouts based on file size, optimizing scan speeds for small vs. large codebases.
-- Limit Matches: Use `max_match_per_file: 5` to prevent OpenGrep from overwhelming your output or slowing down when it hits a repetitive, large-scale issue.
-- Utilize Cross-Function Taint: Take advantage of OpenGrep's open features by using `--taint-intrafile` to track user-controlled input across different functions within the same file. See the [Intrafile Taint Analysis](https://github.com/opengrep/opengrep/wiki/Intrafile-tainting-tutorial) tutorial for more information.
-- Handle Higher-Order Functions: If your codebase relies on JavaScript/TypeScript, ensure you utilize OpenGrep's taint-tracking support for ⁠[Higher Order Functions](https://github.com/opengrep/opengrep/wiki/Higher-order-functions-tutorial) (e.g., `.map()`, `.forEach()`) to find vulnerabilities hidden in callback logic.
+Build the threat model around attacker reachability and chain potential. A primitive can be valuable even when it does not satisfy the current session goal.
 
-### Source Code Bug History Assessment
-Analyze publicly posted CVEs and cross-reference them with commits for additional information. Most CVEs are public by their nature to inform developers to update. However, they often lack details of the vulnerable behavior and scope of fix. Through cross-referencing, a full picture of historical bug root causes and fixes can be assessed. 
+### Attacker Models
 
-#### Vulnerability Contributing Commit (VCC).
-The most critical part of bug history assessment is finding the Vulnerability Contributing Commit (VCC) - the exact change where the bug was introduced, rather than just where it was fixed.
+Define the weakest plausible attacker for each surface.
 
-- Git Blame: Use `git blame` and `git log -S [string]` to trace the lifespan of a specific vulnerable code block.
-- Commit Messages: Review historical developer notes, ticket IDs, and PR comments associated with previous bug fixes, as they often hint at edge cases the developers missed.
-- Historical Tracking: Utilize historical databases and academic frameworks to study the lineage of known CVEs in similar codebases.
+- Regular sandboxed app with no private entitlement.
+- Sandboxed app with user-granted resource access.
+- Same-user unprivileged process on macOS.
+- Network input reaching Apple-owned userspace or kernel parsing.
+- File or document opened by a privileged Apple component.
+- IPC client with only a public Mach service name or inherited send right.
+- Compromised lower-privilege service attempting to cross into a more privileged service, kernel, or driver.
 
-### Source Code STRIDE Modeling
+### Native Trust Boundaries
 
-The STRIDE threat model is a developer-focused model to identify and classify threats under 6 types of attacks – Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service DoS, and elevation of privilege.
+Prefer concrete boundary statements:
 
-- Spoofing Identity: Attackers impersonate legitimate users, devices, or systems to bypass authentication mechanisms and gain unauthorized access.
-- Tampering with Data: Attackers modify data, code, or system components without authorization to alter system behavior or compromise data integrity.
-- Repudiation: Users or attackers deny performing specific actions, making it difficult to prove accountability or trace malicious activities.
-- Information Disclosure: Attackers gain unauthorized access to confidential data through system vulnerabilities, misconfigurations, or weak access controls.
-- Denial of Service (DoS): Attackers disrupt system availability by consuming resources, exploiting vulnerabilities, or overwhelming services to prevent legitimate access.
-- Elevation of Privilege: Attackers exploit system weaknesses to gain higher privileges than intended, accessing restricted resources or administrative functions.
+- User memory to kernel memory.
+- Untrusted Mach message to trusted server object.
+- User-controlled file descriptor to kernel object.
+- Sandboxed process identity to privileged policy decision.
+- External packet/file/parser input to privileged native parser.
+- Driver shared memory to kernel/firmware/provider logic.
+- Borrowed object reference to owned object reference.
+- Validated size/count to later size/count in a different subsystem.
 
-#### STRIDE Step 1: Decompose
-- Break the system into smaller modules or services.
-- Identify all entry points where data enters the system.
-- Map data flows to understand how information moves logically.
+### Chain Hooks
 
-#### STRIDE Step 2: Categorize
-- Apply the STRIDE mnemonic to each system component.
-- Check for Spoofing, Tampering, Repudiation, and Information Disclosure.
-- Evaluate risks of Denial of Service and Elevation of Privilege.
+For each real behavior that is not reportable alone, preserve why it might matter later.
 
-#### STRIDE Step 3: Mitigate
-- Prioritize threats based on their potential business impact.
+- Information leak that could defeat ASLR, PAC signing context secrecy, heap layout uncertainty, or pointer authentication assumptions.
+- Metadata spoofing that reaches a later policy decision or attribution sink.
+- Resource accounting mismatch that can shape timing, allocation, pressure, or scheduler state for another primitive.
+- Parser gap that is gated by timing, entitlement, file format, launch path, or artifact availability.
+- Same-process primitive that may become non-self when paired with IPC, shared memory, file import, or service-mediated execution.
+
+## Native Bug Class Checklist
+
+Use this checklist to seed scan hypotheses. For high-value surfaces, audit several classes rather than one narrow bug shape.
+
+### Memory Safety
+
+- UAF from cleanup races, async callbacks, borrowed returns, stale list entries, or reference transfer mismatches.
+- OOB read/write from count confusion, descriptor walking, variable record parsing, page-boundary logic, or signedness mistakes.
+- Integer overflow/truncation in `offset + size`, `count * elem_size`, page rounding, 32-bit compatibility, and userspace-to-kernel type conversion.
+- Uninitialized or stale kernel data copied out through partial structure initialization, error exits, or variable-length records.
+- Type confusion across port kobject types, file types, vnode types, memory-entry flavors, socket protocols, or driver user-client methods.
+
+### Authorization and Policy
+
+- Entitlement checked after object lookup or after side effects.
+- Sandbox/MAC policy applied to one identity but action performed on another.
+- Audit token, pid, pidversion, uniqueid, persona, or credential checked before a ref-dropping race.
+- Capability transfer bugs: fileport, task port, thread port, memory entry, vnode, send right, or shared-memory mapping handed to the wrong subject.
+- Public metadata accepted where downstream code assumes kernel-verified identity.
+
+### Race and Lifetime
+
+- Check/use split across lock drops, callbacks, continuations, blocking copyin/copyout, vnode recycle, process exit, thread exit, or object teardown.
+- Error path cleanup that releases more references than it owns.
+- Success path that returns a borrowed object as owned.
+- Shared state updated before all preconditions are committed.
+- Retry loops that revalidate size but not identity, type, generation, or policy.
+
+### Parser and Format Logic
+
+- Header fields validated independently but inconsistent together.
+- Nested offsets validated against the wrong base or total size.
+- First element, sentinel, or zero-count case handled differently from the general loop.
+- Multiple format versions sharing one walker with version-specific layout assumptions.
+- Kernel parser trusts userspace prevalidation from dyld, launchd, securityd, or another component.
+
+### Resource and Accounting
+
+- Per-message limit checked but aggregate limit skipped.
+- Charge/debit performed against the wrong task, coalition, ledger, socket, vnode, or memory object.
+- Cleanup fails to undo partial accounting.
+- Quota or pressure state can force rare allocation, bind, reclaim, or error paths useful for chaining.
+
+## Static Analysis
+
+Use `rg` first for fast source mapping. Use `opengrep` when a structural rule will be reused or when many call sites share one vulnerability shape. Persist reusable rules and results under `data/maxtac/static/`.
+
+Useful rule families for native targets:
+
+- Usercopy size flows: user-controlled length reaches allocation, copy, descriptor, or reply size without shared bounds.
+- Reference transfer contracts: functions named like create/copy/get/lookup/find return objects whose caller releases inconsistently.
+- Policy-before-use: object mutation, port right creation, copyout, or cross-process lookup happens before entitlement, sandbox, MAC, or credential checks.
+- Integer shape: `count * size`, `offset + length`, page rounding, and 32-bit compatibility conversions.
+- Cleanup labels: error paths with multiple releases, partial initialization, or state insertion before failure-prone calls.
+- Parser walkers: offset arrays, variable records, versioned structs, descriptor loops, and sentinel handling.
+
+Validate custom `opengrep` rules before large scans, cap noisy rules, and save the exact command line with the results. Static findings should become primitive candidates only when the source path, attacker-controlled fields, and plausible impact are documented.
+
+## Bug History Assessment
+
+Analyze public CVEs, security release notes, and available commits to learn local bug patterns. For Apple-style source drops, compare source versions and adjacent subsystem changes when direct fix commits are unavailable.
+
+- Identify the vulnerable function family and the boundary it served.
+- Look for recurring fix shapes: added retain, moved entitlement check, bounded count, extra generation check, new MAC policy call, additional vnode/task/map ref, or parser range check.
+- Search nearby code for the same pre-fix pattern.
+- Record both the fixed sink and adjacent unfixed variants as future primitive hypotheses.
+
+## Native STRIDE Prompts
+
+Use STRIDE as a prompt set, but translate each category into native security terms.
+
+- Spoofing: pid, audit token, persona, code-signing identity, bundle id, entitlement, port right, vnode, interface, or network endpoint confusion.
+- Tampering: unauthorized mutation of kernel object state, privileged service state, code-signing flags, MAC labels, sandbox extensions, VM mappings, or driver/provider state.
+- Repudiation: audit/session attribution mismatch, coalition/accounting mismatch, or log identity confusion with security impact.
+- Information disclosure: kernel pointers, PAC material, heap/layout state, credentials, task metadata, vnode paths, sandbox decisions, or privileged parser state.
+- Denial of service: only preserve if it can force a rare race, allocation shape, state transition, or chain-enabling side effect.
+- Elevation of privilege: credential changes, sandbox escape, task/port acquisition, code execution, arbitrary read/write, TCC modification, or target-flag-capable register control.
+
+## Preparation Output
+
+End preparation with a short research packet under `data/maxtac/research/<domain>/<target>/` containing:
+
+- Entry-point inventory and trust-boundary map.
+- High-value call graphs with source paths.
+- Attacker-controlled fields and their sinks.
+- Policy and lifetime invariants the code appears to rely on.
+- Candidate primitives, chain hooks, blockers, and suggested dynamic probes.
+- Static-analysis rules or commands saved under `data/maxtac/static/` when used.
