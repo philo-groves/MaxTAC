@@ -26,8 +26,8 @@ These states are valid for both primitives and chains.
 - `validated`: primitive passes validity debater votes, or chain passes reachability/exploitability.
 - `proofed`: PoC reproduced with accepted evidence and a validated proof packet.
 - `duplicate`: same root cause or security boundary as another primitive, or the same primitive combination as another chain.
-- `stalled`: cannot be promoted to proofed, but cannot be de-escalated either; potential chain primitives or incomplete chains. 
-- `de-escalated`: debunked if the finding is invalid, or out-of-scope if excluded from program information.
+- `limited`: cannot be promoted to proofed, but cannot be de-escalated either; potential chain primitives or incomplete chains. 
+- `de-escalated`: debunked if the finding is invalid, or out-of-scope if excluded from program eligibility.
 
 ## Script Usage
 

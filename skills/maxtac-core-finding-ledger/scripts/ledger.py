@@ -23,7 +23,7 @@ STATES = {
     "validated",
     "proofed",
     "duplicate",
-    "stalled",
+    "limited",
     "de-escalated",
 }
 TERMINAL_STATES = {"duplicate", "de-escalated"}
