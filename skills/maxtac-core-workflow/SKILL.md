@@ -27,21 +27,22 @@ MaxTAC is designed as a modular research workspace meant to scale for scopes of 
 
 The base module exists at `data/maxtac/research/`, containing a hierarchy of agent-driven submodules. Each submodule contains one or more markdown files which act as the knowledge base for that localized system. For non-markdown files related to any submodule, persist them to a submodule-relative `artifacts/` directory. Submodules may have their own child submodules. There is no child submodule limit.
 
-Example Submodule:
+#### Example:
 ```
 artifacts/
 example-submodule/
 another-submodule-same-module/
-example-research.md
-more-research-same-module.md
+example-subsystem.md
+another-subsystem-same-module.md
 ```
 
 ### Naming Conventions
 Due to search noise and loss in large research workspaces, naming is more important than it may seem. Submodule directory names should label the localized system that is being researched. Markdown file names should label the subsystem the module that is being documented. Avoid timestamps, dates, and internal identifiers in names.
 
-Example submodules: `apple-intelligence` with a `apple-foundation-models` submodule; `edge` with an `edge-app-container` submodule.
+#### Examples
+Submodule examples: `apple-intelligence` with a `apple-foundation-models` submodule; `edge` with an `edge-app-container` submodule.
 
-Example markdown: `amf-3-core-model.md`, `amf-3-core-advanced-model.md`, `pcc-server-model.md` in an `apple-foundation-models` submodule; `browser-process.md`, `renderer-process.md`, `extension-system.md` in an `edge-app-container` submodule.
+Markdown examples: `amf-3-core-model.md`, `amf-3-core-advanced-model.md`, `pcc-server-model.md` in an `apple-foundation-models` submodule; `browser-process.md`, `renderer-process.md`, `extension-system.md` in an `edge-app-container` submodule.
 
 ### Large Markdown
 A large markdown file is a sign that a single document should be broken into a submodule. If a large markdown file (> 300 lines) is found, create the new submodule and rewrite the large markdown core information under several research files. Also copy any relevant artifacts into the new submodule. Only after verifying the key information was transcribed, delete the old markdown file and old artifacts.
@@ -73,26 +74,50 @@ Use this category with `maxtac-core-preparation` skill guidance to perform recon
 ### 2. Scan
 Go to this phase after the Prepare phase or when additional vulnerability discovery is required.
 
-#### Hypothesis
+#### Hypothesize
 Analyze previously conducted recon, threat modeling, and research to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.
 
 #### Spawn Auditors
 For each hypothesis, spawn one or more auditor subagents with `maxtac-core-subagent-audit` skill guidance to scan for unique vulnerabilities. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `maxtac/data/audits/` directory.
 
-#### Record Findings
+#### Update Findings
 Based on audit results, use `maxtac-core-finding-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state. Only update `research/` markdown or submodules in the scan phase if it relates to a finding demotion; research for new findings is persisted after validation.
 
-### 3. Validate & Dedupe
+### 3. Validation
 Go to this phase after the Scan phase or when additional pre-proofing validation is required.
 
-For each new finding from the scan hypotheses and evidence, spawn three subagents with the `maxtac-core-subagent-debate` skill to judge its validity. If the finding is a chain, also judge its reachability and exploitability. Each debater votes each finding as valid or invalid. If at least two subagents vote invalid, more scanning may be conducted or the finding may be de-escalated. If at least two subagents vote valid, the finding is promoted to validated using `maxtac-core-finding-ledger` guidance. After a majority validation, perform semantic analysis of the finding ledger to determine if the finding already exists, and if it does, use `maxtac-core-finding-ledger` guidance to mark the duplicate. If the finding is original, move to the Proof phase.
+#### Spawn Debaters
+For each new finding or pre-proofing requirement, spawn three subagents with the `maxtac-core-subagent-debate` skill to judge its validity. If the finding is a chain, also judge its reachability and exploitability. Each debater votes each finding as valid or invalid.
 
-### 4a. Primitive Proof
-Go to this phase after the Validate & Dedupe phase completes with at least one valid non-duplicate finding.
+#### Update Findings
+If at least two subagents vote invalid, go to the Scan phase where more auditing may be conducted, or the finding may be `de-escalated`. If at least two subagents vote valid, the finding is promoted to `validated` using `maxtac-core-finding-ledger` guidance. Before any promotion action, search the finding ledger to determine if the finding already exists, and if it does, use `maxtac-core-finding-ledger` guidance to mark the `duplicate` state. If the finding is original, move to the Proof phase.
 
-Construct and execute an isolated primitive proof-of-concept (PoC) that plausibly validates the vulnerable behavior, inputs, and pre-conditions. Primitive proofing is intentionally more lax than chain proofing. This stage is meant to prove a standalone flaw exists, but it does not guarantee a reportable chain. Spawn three debater subagents using `maxtac-core-subagent-debate` guidance to vote whether the PoC reproduces the described primitive: valid or invalid. If at least two subagents vote invalid, revise the PoC or use `maxtac-core-finding-ledger` guidance to de-escalate the primitive as debunked or out-of-scope. Confirmed primitives are marked as proofed according to `maxtac-core-finding-ledger` guidance, even if they are not reachable or exploitable. If a primitive cannot be proven nor debunked, it is marked as limited.
+#### Update Research
+After promoting any finding to `validated`, evidence from its audit(s) is incorporated into the research workspace. Determine whether a submodule and/or markdown file already exists for this subsystem; if not, created the file system resource(s). Do not copy audit information directly; instead, rewrite the information to fit fluently within the research workspace.
 
-### 4b. Chain Proof
-Go to this phase after the Primitive Proof phase completes with at least one confident or proven primitive.
+### 4. Primitive Proof
+Go to this phase after the Validation phase completes with at least one valid non-duplicate finding.
 
-For each proven primitive finding, create at least two hypotheses for combining findings into a chain with attacker-reachable impact. Backtrack through other research phases as required to analyze and prove each chain with an end-to-end PoC, including the spawn of additional auditor subagents or additional primitive research. Validation is performed through standard methods such as crash, panic, and system log evidence. After the evidence is collected, spawn three debater subagents using `maxtac-core-subagent-debate` guidance to vote whether the PoC reproduces the described vulnerability: valid or invalid. If at least two subagents vote invalid, revise the PoC or use `maxtac-core-finding-ledger` guidance to de-escalate the chain. If at least two subagents vote the PoC as valid, promote it to proofed. After marking a PoC as proofed, write a submission-ready report which includes it.
+#### Proof-of-Concept (PoC) Primitive
+Construct and execute an isolated proof-of-concept (PoC) primitive that plausibly validates the vulnerable behavior, inputs, and pre-conditions. Primitive proofing is intentionally more lax than chain proofing. This stage is meant to prove a standalone flaw exists, but it does not guarantee a reportable chain. Spawn three debater subagents using `maxtac-core-subagent-debate` guidance to vote whether the PoC reproduces the described primitive: `valid` or `invalid`.
+
+#### Update Findings
+If at least two subagents vote invalid, revise the PoC or use `maxtac-core-finding-ledger` guidance to de-escalate the primitive as debunked or out-of-scope. Confirmed primitives are marked as proofed according to `maxtac-core-finding-ledger` guidance, even if they are not reachable or exploitable. If a primitive cannot be proven nor debunked, it is marked as `limited`.
+
+#### Update Research
+After executing any primitive PoC, identify the submodule and markdown for the related subsystem. These file system resources were likely already created during the Validation phase flow; however, if there was a deletion or mistake, the resources may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positives results, do not overwrite any information that may be important later; prefer to append to a research document instead.
+
+#### Chain Planning
+For each proven primitive, first analyze whether the primitive is exploitable and reachable as a standalone chain. If so, no further scanning is needed; a validated chain may be created based on the single primitive, then go to the Chain Proof phase. If the primitive is not reachable or exploitable on its own, use creative thinking to generate at least two chains and their hypotheses. If all chain primitives are already proven, go to the Chain Proof phase; otherwise, go to the Scan phase to audit the chain gaps.
+
+### 5. Chain Proof
+Go to this phase after a Primitive Proof or Scanning phase results in one or more validated chains.
+
+#### Proof-of-Concept (PoC) Chain
+For each validated chain, create and execute a realistic end-to-end proof-of-concept (PoC) reproduction of the vulnerability. The PoC must not mock any portion of the chain. The PoC chain must be reachable from a non-self or security sandboxed vector. The PoC chain must demonstrate an exploitable vulnerability that is not documented as an accepted risk or shared responsibility. Spawn three debater subagents using `maxtac-core-subagent-debate` guidance to vote whether the PoC reproduces the described chain: `valid` or `invalid`.
+
+#### Update Findings
+If at least two subagents vote invalid, revise the PoC or use `maxtac-core-finding-ledger` guidance to de-escalate the chain. If at least two subagents vote the PoC as valid, promote it to `proofed`. After marking a PoC as `proofed`, write a submission-ready report which includes it.
+
+#### Update Research
+After executing any chain PoC, identify the submodule(s) and markdown(s) for the related subsystem(s). Since chains combine primitives, research may span multiple submodules or markdown files. These file system resources were likely already created during the Validation or Primitive Proof phase flows; however, if there was a deletion or mistake, the resources may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positives results, do not overwrite any information that may be important later; prefer to append to a research document instead.
