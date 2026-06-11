@@ -33,76 +33,8 @@ Investigate the binary composition to determine which language or framework was 
 ## Binary Threat Modeling
 Using publicly documented information and inputs, build a threat model of the binary.
 
-### Function and Text Danger Areas
-Perform static binary analysis, decompilation, and taint analysis to trace insecure user inputs to dangerous "sink" functions and embedded text.
-
-#### Finding Dangerous Functions (Sinks)
-Certain standard library functions are inherently risky because they lack bounds checking or format validation. Common targets include:
-
-- Buffer Overflow: `strcpy`, `strcat`, `gets`, `sprintf`.
-- Format String: `printf`, `sprintf`, `syslog` without explicit format specifiers (e.g., `printf(input)` rather than `printf("%s", input)`).
-- Command Injection: `system`, `popen`, `exec`
-
-#### Finding Dangerous Text and Strings
-Embedded text and strings within a binary can reveal sensitive data, API endpoints, debugging commands, or vulnerable path strings.
-
-- Hardcoded Credentials: API keys, passwords, database URIs.
-- Debugging/Log Strings: "Password accepted", "Debug mode enabled", or specific error logs that expose internal logic.
-- Command Strings: Text strings that match command patterns being passed directly to `system()`.
-- Path Traversal Patterns: Strings like `../..` or directory paths.
-
-### Binary Symbolic Execution
-Use tools like angr to explore all possible execution paths mathematically, identifying inputs required to trigger specific crash states.
-
-- Exhaustive Path Coverage: Instead of manually testing different inputs, symbolic execution systematically forces branches and tracks the path constraints required to reach vulnerable states.
-- Math-Based Verification: It provides formal proof of whether a security property holds true for all possible inputs (e.g., proving that an attacker cannot execute a buffer overflow past a certain boundary).
-- Automated Exploit Generation: By querying Satisfiability Modulo Theories (SMT) solvers like Z3, the engine can automatically generate the precise payload required to trigger a bug.
-
-### Binary Static Analysis
-The primary source code static analysis engine is `opengrep`, expected to be available on the CLI. Instead of manually auditing thousands of lines of code or guessing where a vulnerability lives, Opengrep allows describing the structure of security flaws using YAML rules. All opengrep research files should be persisted to `data/maxtac/static/`
-
-Unlike source code targets, `opengrep` cannot directly analyze binaries. However, `opengrep` is compatible with decompiled C and C-psuedocode. Before performing static analysis on a binary target with `opengrep`, it should be decompiled.
-
-- Custom Taint Analysis: Opengrep tracks data from unverified sources (e.g., HTTP requests or external APIs) to dangerous sinks (e.g., SQL execution or command line). Use the `--taint-intrafile` flag to map how untrusted data propagates through the application to enforce strict trust boundaries.
-- Security Control Verification: Write custom rules to verify that internal API calls bypass unencrypted connections, restrict sensitive actions to specific user roles, or enforce mandatory data sanitization.
-- Dependency & API Mapping: Use semantic patterns to immediately find where deprecated libraries or forbidden cloud SDKs are imported into a codebase.
-
-Opengrep rules use code syntax patterns rather than complex Abstract Syntax Tree (AST) manipulation. This makes it easy to translate your system's data flows into rules. For an example, see: `opengrep-sql-injection-example.yml`
-
-#### Opengrep Best Practices
-Best practices involve writing modular rules and properly leveraging advanced taint features.
-
-- Validate Before Scanning: Always run `opengrep validate <rules_directory>` to verify that your rules parse correctly before executing a full repository scan.
-- Apply Dynamic Timeouts: Enable `--dynamic-timeout` to automatically scale timeouts based on file size, optimizing scan speeds for small vs. large codebases.
-- Limit Matches: Use `max_match_per_file: 5` to prevent OpenGrep from overwhelming your output or slowing down when it hits a repetitive, large-scale issue.
-- Utilize Cross-Function Taint: Take advantage of OpenGrep's open features by using `--taint-intrafile` to track user-controlled input across different functions within the same file. See the [Intrafile Taint Analysis](https://github.com/opengrep/opengrep/wiki/Intrafile-tainting-tutorial) tutorial for more information.
-- Handle Higher-Order Functions: If your codebase relies on JavaScript/TypeScript, ensure you utilize OpenGrep's taint-tracking support for higher-order functions ⁠[Higher Order Functions Tutorial](https://github.com/opengrep/opengrep/wiki/Higher-order-functions-tutorial) (e.g., `.map()`, `.forEach()`) to find vulnerabilities hidden in callback logic.
-
 ### Binary Bug History Assessment
 Analyze CVEs and cross-reference them with changelog items (if a changelog exists) for additional information. If the relevant binary is small enough, perform binary diffing and decomp/disassembly to understand the exact fix that was implemented.
-
-### Binary STRIDE Modeling
-The STRIDE threat model is a developer-focused model to identify and classify threats under 6 types of attacks – Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service DoS, and elevation of privilege.
-
-- Spoofing Identity: Attackers impersonate legitimate users, devices, or systems to bypass authentication mechanisms and gain unauthorized access.
-- Tampering with Data: Attackers modify data, code, or system components without authorization to alter system behavior or compromise data integrity.
-- Repudiation: Users or attackers deny performing specific actions, making it difficult to prove accountability or trace malicious activities.
-- Information Disclosure: Attackers gain unauthorized access to confidential data through system vulnerabilities, misconfigurations, or weak access controls.
-- Denial of Service (DoS): Attackers disrupt system availability by consuming resources, exploiting vulnerabilities, or overwhelming services to prevent legitimate access.
-- Elevation of Privilege: Attackers exploit system weaknesses to gain higher privileges than intended, accessing restricted resources or administrative functions.
-
-#### STRIDE Step 1: Decompose
-- Break the system into smaller modules or services.
-- Identify all entry points where data enters the system.
-- Map data flows to understand how information moves logically.
-
-#### STRIDE Step 2: Categorize
-- Apply the STRIDE mnemonic to each system component.
-- Check for Spoofing, Tampering, Repudiation, and Information Disclosure.
-- Evaluate risks of Denial of Service and Elevation of Privilege.
-
-#### STRIDE Step 3: Mitigate
-- Prioritize threats based on their potential business impact.
 
 ### Mitigations & Evasion Assessment
 Determine the binary’s resilience against modern exploitation techniques.

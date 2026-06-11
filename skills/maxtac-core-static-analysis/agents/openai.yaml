@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Core Static Analysis"
+  short_description: "Static analysis instructions for source code and binary understanding"
+  default_prompt: "Use $maxtac-core-static-analysis to review source code."
