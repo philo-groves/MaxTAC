@@ -4,27 +4,27 @@ description: Flows for working with debater subagents to vote on the reachabilit
 ---
 
 # MaxTAC Core Subagent Debate
-Use this skill for spawning and interacting with debater subagents. Each debater subagent independently votes on a topic and outputs its assessment.
+Use this skill for spawning debater subagents and managing the artifical debate floor. Each debater subagent independently analyzes a finding and outputs a vote: `valid`, `invalid`, or `unsure`. A debate is over when all subagents vote and none are `unsure`. A debate uses three debaters, guaranteeing a majority.
 
 ## Model Selection
-
 All debater subagents use gpt-5.4-mini to save on cost.
 
 ## Debate Flow
 Each debate is created by the main agent, but all assessments and votes are delegated to debater subagents. The flow is:
 
-1. Main agent assigns a debate ID and creates `data/maxtac/debates/<debate-id>/`.
-2. Main agent spawns three debater subagents, each with a unique subagent ID. They are provided the same information.
-3. Each agent votes `valid` or `invalid` based on the provided information.
-4. Results from each agent are output to `data/maxtac/debates/<debate-id>/<subagent-id>/vote.json`. Supplemental evidence may be placed in the same directory if needed.
+1. Main agent generates a unique debate ID, then creates a `data/maxtac/debates/<debate-id>/` directory and a `data/maxtac/debates/<debate-id>/floor.jsonl` file.
+2. Main agent generates a debate prompt that is shared between debater subagents. Prefer the format in `<skill-dir>/assets/debate.template.md` file.
+3. Persist the raw debate prompt in a `data/maxtac/debates/<debate-id>/debate.md` file (without subagent field), then spawn three debater subagents with the same prompt (but include unique subagent fields).
+4. Each subagent appends the `floor.jsonl` with their vote and reason: `valid`, `invalid`, or `unsure`.
+5. At the end of each round (every three votes), check if there were any `unsure` debaters. If there were, agents which responded `valid` or `invalid` write a clarification response to this `unsure` vote in the next round; then, the `unsure` subagent(s) reacts and revotes based on that information. In some cases, an `unsure` subagent may influence and change an already-confirmed subagent vote, which is allowed.
+5. After a debate has settled with no `unsure` agents, continue and complete the current phase as described in the primary workflow.
 
-## JSON Structure
+## JSONL Structure
 
-The JSON structure for `vote.json` only contains `result` and `reason` fields. Additional information is expected to be placed in the same directory if needed.
+The JSON structure for `floor.jsonl` only contains `subagent`, `vote` and `reason` fields. Additional information is expected to be placed in the same directory if needed.
 
 ```
-{
-  "result": "valid",
-  "reason": "<yada yada>"
-}
+{ subagent: "A", "vote": "valid", "reason": "<yada yada>" }
+{ subagent: "B", "vote": "invalid", "reason": "<tada tada>" }
+{ subagent: "C", "vote": "valid", "reason": "<wada wada>" }
 ```
