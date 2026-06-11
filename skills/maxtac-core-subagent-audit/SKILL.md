@@ -18,7 +18,7 @@ A shared responsibility exists between the main agent and subagent. The main age
 2. Main agent accepts one or more hypotheses from another phase, or uses creative thinking to hypothesize. For each hypothesis, generate unique subagent ID for it. There is one subagent per hypothesis. Prefer the format from `<skill-dir>/assets/hypothesis.template.md` and fill in the missing sections; rewrite accepted hypotheses to match this format if needed.
 3. Persist each raw hypothesis to `data/maxtac/audits/<audit-id>/<subagent-id>/hypothesis.md`, then spawn each subagent with the hypothesis as a prompt; include no session history.
 4. As each subagent completes its audit, the results are stored in `data/maxtac/audits/<audit-id>/<subagent-id>/evidence.md`. Prefer the format from `<skill-dir>/assets/evidence.template.md` and fill in the missing sections. Other supporting evidence files may be included in the same directory.
-5. Main agent analyzes subagent results as they appear, not waiting for every subagent.
+5. Instead of waiting for every subagent, the main agent process hypothesis-evidence packets as each subagent completes. After the audit, continue and complete the Scan phase as described in the primary workflow.
 
 ## Vulnerability Specialists
 
@@ -36,4 +36,4 @@ These are only a few examples of the types of specialists that may be spawned.
 - Hidden or Internal Assets: exposed test environments, shadow IT, or undocumented API endpoints that bypass a scanner.
 - Heap Grooming: an application's dynamic memory management can be manipulated to create a predictable, advantageous memory layout
 - Jump-Oriented Programming (JOP): advanced code-reuse attack that bypasses modern hardware memory protections without relying on the stack. It functions by chaining together small snippets of existing code (gadgets) ending in indirect jumps or calls.
-- Stack Pivoting: a technique where an attacker redirects the program’s stack pointer (ESP in 32-bit, RSP in 64-bit) to an attacker-controlled memory location, such as the heap
+- Stack Pivoting: a technique where an attacker redirects the program’s stack pointer (ESP in 32-bit, RSP in 64-bit) to an attacker-controlled memory location, such as the heap.

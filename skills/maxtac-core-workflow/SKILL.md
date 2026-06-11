@@ -60,7 +60,10 @@ The workflow is optimized for three primary goals:
 Go to this phase at the start of the workflow or when additional threat modeling is required.
 
 #### First Run Setup
-Assume the first run is active if `data/maxtac/program-info.md` does not exist. Ingest the program information to `data/maxtac/program-info.md` as a preliminary step. Use `assets/program-info.template.md` relative to this skill as a template and fill in the missing pieces. Key information is usually publicly available via an official site: MSRC, Apple Security, Google VRP, Meta Security, HackerOne, and Bugcrowd program information is accessible on their public websites.
+Assume the first run is active if `data/maxtac/program-info.md` does not exist. Ingest the program information to `data/maxtac/program-info.md` as a preliminary step. Some programs have streamlined information via skills, others are more generic.
+
+- Apple: If the `maxtac-asb-program-info` skill is enabled and the target subsystem seems to be Apple-related, copy the skill markdown directly into the `data/maxtac/program-info.md` file.
+- Other: Use `assets/program-info.template.md` relative to this skill as a template and fill in the missing sections. Key information is usually publicly available via an official site: MSRC, Apple Security, Google VRP, Meta Security, HackerOne, and Bugcrowd program information is accessible on their public websites.
 
 #### Target Setup
 Determine if a submodule relevant to this session activity already exists, and if not, create a submodule. Use the associated submodule for persisting security research: documenting markdown and creating child submodules as needed. Avoid recreating similar submodules as it may cause duplicate work. 
