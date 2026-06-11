@@ -4,7 +4,7 @@ description: Flows for working with auditor subagents to perform specialized vul
 ---
 
 # MaxTAC Core Subagent Audit
-Use this skill for spawning and interacting with auditor subagents. Each auditor subagent specializes in a vulnerability of a specific type.
+Use this skill for spawning auditor subagents. Each auditor subagent specializes in a vulnerability of a specific type. Auditor subagents are generally ready-only so they do not conflict with each other; the exclusions are per-auditor evidence and other conflict-free files. Each audit is stored in a `data/maxtac/audits/<audit-id>` directory, where `<audit-id>` is a generated ID.
 
 ## Model Selection
 
@@ -14,10 +14,11 @@ All auditor subagents use GPT 5.5 xhigh due to the reasoning requirement.
 A shared responsibility exists between the main agent and subagent. The main agent must reason about the best vulnerability specialist for the target, while the subagent must act independently as that specialist. The main agent must also carefully write subagent prompts so they are durable enough to surface findings, but not so complex to cause run-on agents.
 
 ## Audit Flow
-1. Main agent assigns a audit ID and creates `data/maxtac/research/<domain>/<target>/audits/<audit-id>/`.
-2. Main agent reasons about security-sensitive boundaries, then spawns one or more vulnerability specialist (auditor) subagents based on what is known about the relevant source code or system. Each subagent is assigned a unique subagent ID.
-3. As each subagent completes its audit, the results are stored using markdown in `data/maxtac/research/<domain>/<target>/audits/<audit-id>/<subagent-id>`. Supporting evidence may be included in the same directory.
-4. Main agent analyzes subagent results as they appear, not waiting for every subagent.
+1. Main agent generates a unique audit ID and creates `data/maxtac/audits/<audit-id>/`.
+2. Main agent accepts one or more hypotheses from another phase, or uses creative thinking to hypothesize. For each hypothesis, generate unique subagent ID for it. There is one subagent per hypothesis. Prefer the format from `<skill-dir>/assets/hypothesis.template.md` and fill in the missing sections; rewrite accepted hypotheses to match this format if needed.
+3. Persist each raw hypothesis to `data/maxtac/audits/<audit-id>/<subagent-id>/hypothesis.md`, then spawn each subagent with the hypothesis as a prompt; include no session history.
+4. As each subagent completes its audit, the results are stored in `data/maxtac/audits/<audit-id>/<subagent-id>/evidence.md`. Prefer the format from `<skill-dir>/assets/evidence.template.md` and fill in the missing sections. Other supporting evidence files may be included in the same directory.
+5. Main agent analyzes subagent results as they appear, not waiting for every subagent.
 
 ## Vulnerability Specialists
 

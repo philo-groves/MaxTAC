@@ -78,7 +78,7 @@ Go to this phase after the Prepare phase or when additional vulnerability discov
 Analyze previously conducted recon, threat modeling, and research to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.
 
 #### Spawn Auditors
-For each hypothesis, spawn one or more auditor subagents with `maxtac-core-subagent-audit` skill guidance to scan for unique vulnerabilities. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `maxtac/data/audits/` directory.
+For each hypothesis, spawn one or more auditor subagents with `maxtac-core-subagent-audit` skill guidance to scan for unique vulnerabilities. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `data/maxtac/audits/` directory.
 
 #### Update Findings
 Based on audit results, use `maxtac-core-finding-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state. Only update `research/` markdown or submodules in the scan phase if it relates to a finding demotion; research for new findings is persisted after validation.
@@ -90,7 +90,7 @@ Go to this phase after the Scan phase or when additional pre-proofing validation
 For each new finding or pre-proofing requirement, spawn three subagents with the `maxtac-core-subagent-debate` skill to judge its validity. If the finding is a chain, also judge its reachability and exploitability. Each debater votes each finding as valid or invalid.
 
 #### Update Findings
-If at least two subagents vote invalid, go to the Scan phase where more auditing may be conducted, or the finding may be `de-escalated`. If at least two subagents vote valid, the finding is promoted to `validated` using `maxtac-core-finding-ledger` guidance. Before any promotion action, search the finding ledger to determine if the finding already exists, and if it does, use `maxtac-core-finding-ledger` guidance to mark the `duplicate` state. If the finding is original, move to the Proof phase.
+If at least two subagents vote invalid, go to the Scan phase where more auditing may be conducted, or the finding may be `de-escalated`. If at least two subagents vote valid, the finding is promoted to `validated` using `maxtac-core-finding-ledger` guidance and update the research (see next section). Before any promotion action, search the finding ledger to determine if the finding already exists, and if it does, use `maxtac-core-finding-ledger` guidance to mark the `duplicate` state. If the finding is original, move to the Proof phase.
 
 #### Update Research
 After promoting any finding to `validated`, evidence from its audit(s) is incorporated into the research workspace. Determine whether a submodule and/or markdown file already exists for this subsystem; if not, created the file system resource(s). Do not copy audit information directly; instead, rewrite the information to fit fluently within the research workspace.
