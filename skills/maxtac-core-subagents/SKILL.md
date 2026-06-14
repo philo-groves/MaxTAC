@@ -5,7 +5,7 @@ Ideally, subagents would always run in parallel, but system resources sometimes 
 
 To determine whether to run in parallel or sequentially, run:
 ```
-python3 <skill-dir>/scripts/system-check.py --subagents <count>
+python3 <skill-dir>/scripts/readiness-check.py --subagents <count>
 ```
 
 The script prints `parallel` or `sequential` after checking available system resources against the requested subagent count.
