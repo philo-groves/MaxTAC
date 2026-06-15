@@ -20,7 +20,7 @@
       "- Whether an attacker can win the race reliably enough to affect confidentiality, integrity, or code execution.",
       "",
       "## Output",
-      "Persist `assessment.md` with the reviewed paths, preconditions, race timeline, exploitability notes, and concrete evidence."
+      "Persist `assessment.md` with the reviewed paths, preconditions, race timeline, exploitability notes, and relevant evidence."
     ]
   },
   {
