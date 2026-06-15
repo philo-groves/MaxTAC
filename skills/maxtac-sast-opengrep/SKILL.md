@@ -9,6 +9,21 @@ Before using this skill, ensure OpenGrep is installed and properly configured on
 opengrep --version
 ```
 
+If there is no output or an error occurs, OpenGrep may not be installed. Follow the installation instructions:
+
+1. Ask the user for permission to install OpenGrep if it is not already installed.
+2. If permission is granted, install OpenGrep using the per-system instructions below.
+
+### Linux / macOS Install
+```
+curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash
+```
+
+### Windows Install (Powershell)
+```
+irm https://raw.githubusercontent.com/opengrep/opengrep/main/install.ps1 | iex
+```
+
 ## Effective Rules
 Search queries consist of rules, which are sets of pattern matching logic and data flow analysis. Rules are used for scanning code to identify potential security vulnerabilities. When writing rules for SAST, consider the following:
 - **Narrow Focus**: Focus on specific vulnerability types (e.g., SQL injection, cross-site scripting) to narrow down results.
