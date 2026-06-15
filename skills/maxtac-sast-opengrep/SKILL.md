@@ -28,6 +28,6 @@ OpenGrep's data flow analysis capabilities allow for tracking the flow of data t
 - **Symbolic Propagation**: Tracks symbolic value usage through the application to identify potential vulnerabilities. See `<skill-dir>/references/opengrep-symbolic-propagation.md`
 
 ### Generic Pattern Matching
-Generic pattern matching allows OpenGrep to scan files using code-aware syntax even when a dedicated language parser does not exist. When using generic pattern matching, see `<skill-dir>/references/opengrep-pattern-syntax.md`
+Generic pattern matching allows OpenGrep to scan files using code-aware syntax even when a dedicated language parser does not exist. When using generic pattern matching, see `<skill-dir>/references/opengrep-rule-structure-syntax.md`
 
 ## Interpreting Results
