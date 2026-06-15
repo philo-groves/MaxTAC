@@ -17,8 +17,8 @@ Search queries consist of rules, which are sets of pattern matching logic and da
 
 ### Custom Rules
 OpenGrep allows for the creation of custom rules to target specific vulnerabilities or coding patterns. When creating custom rules, consider the following:
-- **Pattern Syntax**: See `<skill-dir>/references/opengrep-pattern-syntax.md`
-- **Rule Syntax**: See `<skill-dir>/references/opengrep-rule-syntax.md`
+- **Rule Structure Syntax**: Describes the YAML rule structure of OpenGrep. See `<skill-dir>/references/opengrep-rule-structure-syntax.md`
+- **Rule Pattern Syntax**: Describes how to write custom rule pattern syntax. See `<skill-dir>/references/opengrep-rule-pattern-syntax.md`
 
 ### Data Flow Analysis
 OpenGrep's data flow analysis capabilities allow for tracking the flow of data through the application. When performing data flow analysis, consider the following:
@@ -28,6 +28,6 @@ OpenGrep's data flow analysis capabilities allow for tracking the flow of data t
 - **Symbolic Propagation**: Tracks symbolic value usage through the application to identify potential vulnerabilities. See `<skill-dir>/references/opengrep-symbolic-propagation.md`
 
 ### Generic Pattern Matching
-Generic pattern matching allows OpenGrep to scan files using code-aware syntax even when a dedicated language parser does not exist. When using generic pattern matching, see `<skill-dir>/references/opengrep-generic-pattern-matching.md`
+Generic pattern matching allows OpenGrep to scan files using code-aware syntax even when a dedicated language parser does not exist. When using generic pattern matching, see `<skill-dir>/references/opengrep-pattern-syntax.md`
 
 ## Interpreting Results
