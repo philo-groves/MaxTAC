@@ -17,7 +17,7 @@ chains.json        # combined findings (chains) of all states
 research/          # scalable markdown research library
 debates/           # debater subagent results
 audits/            # auditor subagent results
-proof/             # proof-of-concept (PoC) development
+proof/             # proof-of-vulnerability (PoV) development
 ```
 
 ## Research Workspace
@@ -105,14 +105,14 @@ After promoting any finding to `validated`, evidence from its audit(s) is incorp
 ### 4. Primitive Proof
 Go to this phase after the Validation phase completes with at least one valid non-duplicate finding.
 
-#### Proof-of-Concept (PoC) Primitive
-Construct and execute an isolated proof-of-concept (PoC) primitive that plausibly validates the vulnerable behavior, inputs, and pre-conditions. Primitive proofing is intentionally more lax than chain proofing. This stage is meant to prove a standalone flaw exists, but it does not guarantee a reportable chain. Spawn three debater subagents using `maxtac-core-subagents` guidance to vote whether the PoC reproduces the described primitive: `valid` or `invalid`.
+#### Proof-of-Vulnerability (PoV) Primitive
+Construct and execute an isolated proof-of-vulnerability (PoV) primitive that plausibly validates the vulnerable behavior, inputs, and pre-conditions. Primitive proofing is intentionally more lax than chain proofing. This stage is meant to prove a standalone flaw exists, but it does not guarantee a reportable chain. Spawn three debater subagents using `maxtac-core-subagents` guidance to vote whether the PoV reproduces the described primitive: `valid` or `invalid`.
 
 #### Update Findings
-If at least two subagents vote invalid, revise the PoC or use `maxtac-core-finding-ledger` guidance to de-escalate the primitive as debunked or out-of-scope. Confirmed primitives are marked as proofed according to `maxtac-core-finding-ledger` guidance, even if they are not reachable or exploitable. If a primitive cannot be proven nor debunked, it is marked as `limited`.
+If at least two subagents vote invalid, revise the PoV or use `maxtac-core-finding-ledger` guidance to de-escalate the primitive as debunked or out-of-scope. Confirmed primitives are marked as proofed according to `maxtac-core-finding-ledger` guidance, even if they are not reachable or exploitable. If a primitive cannot be proven nor debunked, it is marked as `limited`.
 
 #### Update Research
-After executing any primitive PoC, identify the submodule and markdown for the related subsystem. These file system resources were likely already created during the Validation phase flow; however, if there was a deletion or mistake, the resources may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positives results, do not overwrite any information that may be important later; prefer to append to a research document instead.
+After executing any primitive PoV, identify the submodule and markdown for the related subsystem. These file system resources were likely already created during the Validation phase flow; however, if there was a deletion or mistake, the resources may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positives results, do not overwrite any information that may be important later; prefer to append to a research document instead.
 
 #### Chain Planning
 For each proven primitive, first analyze whether the primitive is exploitable and reachable as a standalone chain. If so, no further scanning is needed; a validated chain may be created based on the single primitive, then go to the Chain Proof phase. If the primitive is not reachable or exploitable on its own, use creative thinking to generate at least two chains and their hypotheses. If all chain primitives are already proven, go to the Chain Proof phase; otherwise, go to the Scan phase to audit the chain gaps.
@@ -120,11 +120,11 @@ For each proven primitive, first analyze whether the primitive is exploitable an
 ### 5. Chain Proof
 Go to this phase after a Primitive Proof or Scanning phase results in one or more validated chains.
 
-#### Proof-of-Concept (PoC) Chain
-For each validated chain, create and execute a realistic end-to-end proof-of-concept (PoC) reproduction of the vulnerability. The PoC must not mock any portion of the chain. The PoC chain must be reachable from a non-self or security sandboxed vector. The PoC chain must demonstrate an exploitable vulnerability that is not documented as an accepted risk or shared responsibility. Spawn three debater subagents using `maxtac-core-subagents` guidance to vote whether the PoC reproduces the described chain: `valid` or `invalid`.
+#### Proof-of-Vulnerability (PoV) Chain
+For each validated chain, create and execute a realistic end-to-end proof-of-vulnerability (PoV) reproduction of the vulnerability. The PoV must not mock any portion of the chain. The PoV chain must be reachable from a non-self or security sandboxed vector. The PoV chain must demonstrate an exploitable vulnerability that is not documented as an accepted risk or shared responsibility. Spawn three debater subagents using `maxtac-core-subagents` guidance to vote whether the PoV reproduces the described chain: `valid` or `invalid`.
 
 #### Update Findings
-If at least two subagents vote invalid, revise the PoC or use `maxtac-core-finding-ledger` guidance to de-escalate the chain. If at least two subagents vote the PoC as valid, promote it to `proofed`. After marking a PoC as `proofed`, write a submission-ready report which includes it.
+If at least two subagents vote invalid, revise the PoV or use `maxtac-core-finding-ledger` guidance to de-escalate the chain. If at least two subagents vote the PoV as valid, promote it to `proofed`. After marking a PoV as `proofed`, write a submission-ready report which includes it.
 
 #### Update Research
-After executing any chain PoC, identify the submodule(s) and markdown(s) for the related subsystem(s). Since chains combine primitives, research may span multiple submodules or markdown files. These file system resources were likely already created during the Validation or Primitive Proof phase flows; however, if there was a deletion or mistake, the resources may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positives results, do not overwrite any information that may be important later; prefer to append to a research document instead.
+After executing any chain PoV, identify the submodule(s) and markdown(s) for the related subsystem(s). Since chains combine primitives, research may span multiple submodules or markdown files. These file system resources were likely already created during the Validation or Primitive Proof phase flows; however, if there was a deletion or mistake, the resources may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positives results, do not overwrite any information that may be important later; prefer to append to a research document instead.

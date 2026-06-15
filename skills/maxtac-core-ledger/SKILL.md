@@ -16,7 +16,7 @@ At the start of the research session, if no finding ledger exists, create it wit
 Primitives are individual security flaws. A proven primitive does not guarantee a reportable vulnerability. For example, many memory corruption primitives are not exploitable due to ASLR and other defense-in-depth mitigations. Those findings should not be de-escalated because their flaws are real and a bypass, such as additional memory disclosure primitive, may be found later.
 
 ## Chains
-Chains combine one or more confident or proven primitives for greater impact and reportability. A chain is not proven until it is confirmed to be reachable and exploitable by an attacker through an end-to-end PoC. Only chains have associated reports; if a single primitive exploits a vulnerability, it should still have a chain created and proven.
+Chains combine one or more confident or proven primitives for greater impact and reportability. A chain is not proven until it is confirmed to be reachable and exploitable by an attacker through an end-to-end PoV. Only chains have associated reports; if a single primitive exploits a vulnerability, it should still have a chain created and proven.
 
 ## Finding States
 These states are valid for both primitives and chains.
@@ -24,7 +24,7 @@ These states are valid for both primitives and chains.
 - `discovered`: plausible candidate but no direct evidence yet.
 - `confident`: plausible candidate and direct evidence exists.
 - `validated`: primitive passes validity debater votes, or chain passes reachability/exploitability.
-- `proofed`: PoC reproduced with accepted evidence and a validated proof packet.
+- `proofed`: PoV reproduced with accepted evidence and a validated proof packet.
 - `duplicate`: same root cause or security boundary as another primitive, or the same primitive combination as another chain.
 - `limited`: cannot be promoted to proofed, but cannot be de-escalated either; potential chain primitives or incomplete chains. 
 - `de-escalated`: debunked if the finding is invalid, or out-of-scope if excluded from program eligibility.
