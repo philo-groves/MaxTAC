@@ -1,5 +1,5 @@
 ---
-name: maxtac-asb-target-flags
+name: maxtac-asb-flag-proof
 description: Guidance for capturing target flags, proofing mechanisms that are built into every major Apple OS. Includes the types of target flags, examples of their capture, and when they should be captured.
 ---
 
