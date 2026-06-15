@@ -7,10 +7,9 @@ This plugin is heavily inspired by [MDASH](https://www.microsoft.com/en-us/secur
 The `maxtac-core-*` skills should always be enabled for the plugin to work correctly.
 
 - `maxtac-core-workflow`: Acts as an orchestrator for all research. Manages a set of research phases to work through, tracks those phases, and aides with continued research planning.
+- `maxtac-core-subagents`: Subagent flows for security auditing and verifier debate, including how to spawn subagents of each type and prompt templates to use.
 - `maxtac-core-preparation`: Prepares sessions and targets to perform recon and threat modeling, with a different approach depending on the type of target (source code, binary).
 - `maxtac-core-finding-ledger`: Centralized finding management to help with research history tracking and deduplication. Each finding has a state and a link to its research notes.
-- `maxtac-core-subagent-audit`: Auditor subagents, each specializing in a type of vulnerability recon and analysis, that may be spawned by the core workflow.
-- `maxtac-core-subagent-debate`: Debator subagents, each assessing bug reachability and exploitability with the the same information, that may be spawned by the core workflow.
 
 The `maxtac-asb-*` skills should only be enabled for macOS, iOS, and other Apple-related research.
 
