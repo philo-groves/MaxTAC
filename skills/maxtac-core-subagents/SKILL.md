@@ -31,7 +31,7 @@ python <skill-dir>/scripts/audit-helper.py --show <auditor id>
 
 Each of the above scripts result in one or more auditors. The `--list` and `--filter` options print condensed information for a list of auditors, while the `--show` option prints the full markdown instructions for a specific auditor.
 
-2. **Write the audit prompt**: after reading the specialist usage and related markdown, write a prompt for its subject matter and the current target. Persist the prompt to a file in a temporary directory (%temp% on Windows, /tmp on Unix), then run:
+2. **Write the audit prompt**: after reading the specialist usage and related markdown, write a prompt for its subject matter and the current target. Do not use the specialist markdown directly as a prompt; instead, adapt its guidance for the current context. Persist the prompt to a file in a temporary directory (%temp% on Windows, /tmp on Unix), then run:
 
 ```
 python <skill-dir>/scripts/audit-helper.py --prompt-file <file path>
