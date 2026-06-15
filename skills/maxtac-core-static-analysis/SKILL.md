@@ -7,7 +7,7 @@ description: Static analysis guidance, including code danger areas and static an
 Use this skill when static analysis must be performed at any stage of research, from recon to proofing. Includes instructions for opengrep, guidance for code danger areas, and how to identify trust boundaries.
 
 ## Static Analysis Engine
-The primary source code static analysis engine is `opengrep`, expected to be available on the CLI. Instead of manually auditing thousands of lines of code or guessing where a vulnerability lives, Opengrep allows describing the structure of security flaws using YAML rules. All opengrep research files should be persisted to `data/maxtac/static/`
+The primary source code static analysis engine is `opengrep`, expected to be available on the CLI. Instead of manually auditing thousands of lines of code or guessing where a vulnerability lives, Opengrep allows describing the structure of security flaws using YAML rules. All opengrep research files should be persisted to `static/`
 
 Unlike source code targets, `opengrep` cannot directly analyze binaries. However, `opengrep` is compatible with decompiled C and C-psuedocode. Before performing static analysis on a binary target with `opengrep`, it should be decompiled.
 

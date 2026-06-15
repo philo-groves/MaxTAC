@@ -12,8 +12,8 @@ from typing import Any
 
 
 LEDGER_FILES = {
-    "primitive": Path("data/maxtac/primitives.json"),
-    "chain": Path("data/maxtac/chains.json"),
+    "primitive": Path("primitives.json"),
+    "chain": Path("chains.json"),
 }
 TYPE_CHOICES = tuple(LEDGER_FILES)
 TYPE_OR_ALL = (*TYPE_CHOICES, "all")

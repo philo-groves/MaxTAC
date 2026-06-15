@@ -6,8 +6,8 @@ description: Maintain MaxTAC finding state for authorized systems vulnerability 
 # MaxTAC Finding Ledger
 Use this skill as the single-source-of-truth for findings and their states. The parent agent owns ledger writes; subagents return packets for the parent to merge. There are two types of findings: primitives and chains. A primitive is individual code or security flaw, while a chain combines one or more primitives into a reproducible attacker-reachable proof.
 
-- Primitives path: `data/maxtac/primitives.json`
-- Chains path: `data/maxtac/chains.json`
+- Primitives path: `primitives.json`
+- Chains path: `chains.json`
 
 ## Initialize the Ledger
 At the start of the research session, if no finding ledger exists, create it with: `python3 <skill-dir>/scripts/ledger.py init`

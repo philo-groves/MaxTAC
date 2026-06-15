@@ -8,7 +8,7 @@ description: Orchestration for vulnerability research workflows. Includes a stan
 Use this skill as the primary workflow controller. MaxTAC is for authorized vulnerability analysis and proofing. The workflow aggressively utilizes the verified Trusted Access for Cyber (TAC) membership of plugin users and their expanded range of OpenAI cyber capabilities. Do not negatively affect other users or external resources unless given direct permission.
 
 ## Directory Structure
-The following files and directories are managed under the `data/maxtac/` relative directory:
+The following files and directories are managed under the base directory of the workspace:
 
 ```
 program-info.md    # authorized scope and exclusions
@@ -25,7 +25,7 @@ MaxTAC is designed as a modular research workspace meant to scale for scopes of 
 
 ### Submodule Structure
 
-The base module exists at `data/maxtac/research/`, containing a hierarchy of agent-driven submodules. Each submodule contains one or more markdown files which act as the knowledge base for that localized system. For non-markdown files related to any submodule, persist them to a submodule-relative `artifacts/` directory. Submodules may have their own child submodules. There is no child submodule limit.
+The base module exists at `research/`, containing a hierarchy of agent-driven submodules. Each submodule contains one or more markdown files which act as the knowledge base for that localized system. For non-markdown files related to any submodule, persist them to a submodule-relative `artifacts/` directory. Submodules may have their own child submodules. There is no child submodule limit.
 
 #### Example:
 ```
@@ -60,9 +60,9 @@ The workflow is optimized for three primary goals:
 Go to this phase at the start of the workflow or when additional threat modeling is required.
 
 #### First Run Setup
-Assume the first run is active if `data/maxtac/program-info.md` does not exist. Ingest the program information to `data/maxtac/program-info.md` as a preliminary step. Some programs have streamlined information via skills, others are more generic.
+Assume the first run is active if `program-info.md` does not exist. Ingest the program information to `program-info.md` as a preliminary step. Some programs have streamlined information via skills, others are more generic.
 
-- Apple: If the `maxtac-asb-program-info` skill is enabled and the target subsystem seems to be Apple-related, copy the skill markdown directly into the `data/maxtac/program-info.md` file.
+- Apple: If the `maxtac-asb-program-info` skill is enabled and the target subsystem seems to be Apple-related, copy the skill markdown directly into the `program-info.md` file.
 - Other: Use `assets/program-info.template.md` relative to this skill as a template and fill in the missing sections. Key information is usually publicly available via an official site: MSRC, Apple Security, Google VRP, Meta Security, HackerOne, and Bugcrowd program information is accessible on their public websites.
 
 #### Target Setup
@@ -81,7 +81,7 @@ Go to this phase after the Prepare phase or when additional vulnerability discov
 Analyze previously conducted recon, threat modeling, and research to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.
 
 #### Spawn Auditors
-For each hypothesis, spawn one or more auditor subagents with `maxtac-core-subagent-audit` skill guidance to scan for unique vulnerabilities. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `data/maxtac/audits/` directory.
+For each hypothesis, spawn one or more auditor subagents with `maxtac-core-subagent-audit` skill guidance to scan for unique vulnerabilities. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `audits/` directory.
 
 #### Update Findings
 Based on audit results, use `maxtac-core-finding-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state. Only update `research/` markdown or submodules in the scan phase if it relates to a finding demotion; research for new findings is persisted after validation.
