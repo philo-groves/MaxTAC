@@ -14,20 +14,34 @@ The `maxtac-core-*` skills work together to create healthy research sessions(s) 
 
 The `maxtac-sast-*` skills are used to perform Static Application Security Testing (SAST).
 
+- `maxtac-sast-control-flow-graph`: 
+- `maxtac-sast-logic-analysis`: 
+- `maxtac-sast-opengrep`: Provides instructions and references for writing and using OpenGrep rules.
+
 The `maxtac-dast-*` skills are used to perform Dynamic Application Security Testing (DAST).
 
-- `maxtac-dast-`: 
+- `maxtac-dast-debugger`: 
+- `maxtac-dast-fuzzer`: 
+- `maxtac-dast-instrumentation`: 
+- `maxtac-dast-virtualization`: 
+
+The `maxtac-re-*` skills are used to perform reverse engineering (RE).
+
+- `maxtac-re-ghidra`: 
+- `maxtac-re-jadx`: 
+- `maxtac-re-radare2`: 
 
 The `maxtac-asb-*` skills should only be enabled for macOS, iOS, and other Apple-related research.
 
-- `maxtac-asb-program-info`: Information for the Apple Security Bounty (ASB) program, including eligible bounty categories, priorities, and general proof requirements.
-- `maxtac-asb-target-flags`: Details for Apple target flags, which are vulnerability proof mechanisms built into every Apple OS.
-- `maxtac-asb-sandboxing`: Security hardening features and common bypasses for eligible Apple sandboxes, including differences between macOS and iOS instances.
+- `maxtac-asb-flag-proof`: Details for Apple target flags, which are vulnerability proof mechanisms built into every Apple OS.
+- `maxtac-asb-mitigations`: 
+- `maxtac-asb-workflow`: 
 
 The `maxtac-msrc-*` skills should only be enabled for Windows, .NET, and other Microsoft-related research.
 
-- `maxtac-msrc-program-info`: Information for the Microsoft Security Research Center (MSRC) program, including eligible bounty categories, priorities, and general proof requirements.
-- `maxtac-msrc-sandboxing`: Requirements for eligible MSRC sandboxes, including how to use the LPAC tool.
+- `maxtac-msrc-lpac-proof`: 
+- `maxtac-msrc-mitigations`: 
+- `maxtac-msrc-workflow`: 
 
 ## How to Install
 Just ask Codex to install the plugin for you. With how fast Codex plugins are moving, any list of installation steps given may be invalid next week.
