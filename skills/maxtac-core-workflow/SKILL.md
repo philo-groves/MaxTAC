@@ -60,10 +60,10 @@ The workflow is optimized for three primary goals:
 Go to this phase at the start of the workflow or when additional threat modeling is required.
 
 #### First Run Setup
-Assume the first run is active if `program-info.md` does not exist. Ingest the program information to `program-info.md` as a preliminary step. Some programs have streamlined information via skills, others are more generic.
+Assume the first run is active if `<skill-dir>/references/program-info.md` does not exist. Ingest the program information to `<skill-dir>/references/program-info.md` as a preliminary step. Some programs have streamlined information via skills, others are more generic.
 
-- Apple: If the `maxtac-asb-program-info` skill is enabled and the target subsystem seems to be Apple-related, copy the skill markdown directly into the `program-info.md` file.
-- Other: Use `assets/program-info.template.md` relative to this skill as a template and fill in the missing sections. Key information is usually publicly available via an official site: MSRC, Apple Security, Google VRP, Meta Security, HackerOne, and Bugcrowd program information is accessible on their public websites.
+- Apple: If the `maxtac-asb-program-info` skill is enabled and the target subsystem seems to be Apple-related, copy the skill markdown directly into the `<skill-dir>/references/program-info.md` file.
+- Other: Use `<skill-dir>/references/program-info.template.md` relative to this skill as a template and fill in the missing sections. Key information is usually publicly available via an official site: MSRC, Apple Security, Google VRP, Meta Security, HackerOne, and Bugcrowd program information is accessible on their public websites.
 
 #### Target Setup
 Determine if a submodule relevant to this session activity already exists, and if not, create a submodule. Use the associated submodule for persisting security research: documenting markdown and creating child submodules as needed. Avoid recreating similar submodules as it may cause duplicate work. 
@@ -72,7 +72,11 @@ Next, categorize the current session target; this category is used throughout th
 - Source Code: A repository or project workspace is available for exploration.
 - Binary: One or more binaries are provided and reverse engineering is expected.
 
-Use this category with `maxtac-core-preparation` skill guidance to perform recon and threat modeling.
+##### Source Code Preparation
+Source code targets have most rich set of recon materials. For source code preparation guidance, read `<skill-dir>/references/source-code-preparation.md`
+
+##### Binary Preparation
+Binary targets are more difficult to recon than source code, but not impossible. For binary preparation guidance, read `<skill-dir>/references/binary-preparation.md`
 
 ### 2. Scan
 Go to this phase after the Prepare phase or when additional vulnerability discovery is required.
@@ -81,16 +85,16 @@ Go to this phase after the Prepare phase or when additional vulnerability discov
 Analyze previously conducted recon, threat modeling, and research to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.
 
 #### Spawn Auditors
-For each hypothesis, spawn one or more auditor subagents with `maxtac-core-subagent-audit` skill guidance to scan for unique vulnerabilities. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `audits/` directory.
+For each hypothesis, spawn one or more auditor subagents with `maxtac-core-subagents` skill guidance to scan for unique vulnerabilities. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `<skill-dir>/audits/` directory.
 
 #### Update Findings
-Based on audit results, use `maxtac-core-finding-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state. Only update `research/` markdown or submodules in the scan phase if it relates to a finding demotion; research for new findings is persisted after validation.
+Based on audit results, use `maxtac-core-finding-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state. Only update `<skill-dir>/research/` markdown or submodules in the scan phase if it relates to a finding demotion; research for new findings is persisted after validation.
 
 ### 3. Validation
 Go to this phase after the Scan phase or when additional pre-proofing validation is required.
 
 #### Spawn Debaters
-For each new finding or pre-proofing requirement, spawn three subagents with the `maxtac-core-subagent-debate` skill to judge its validity. If the finding is a chain, also judge its reachability and exploitability. Each debater votes each finding as valid or invalid.
+For each new finding or pre-proofing requirement, spawn three subagents with the `maxtac-core-subagents` skill to judge its validity. If the finding is a chain, also judge its reachability and exploitability. Each debater votes each finding as valid or invalid.
 
 #### Update Findings
 If at least two subagents vote invalid, go to the Scan phase where more auditing may be conducted, or the finding may be `de-escalated`. If at least two subagents vote valid, the finding is promoted to `validated` using `maxtac-core-finding-ledger` guidance and update the research (see next section). Before any promotion action, search the finding ledger to determine if the finding already exists, and if it does, use `maxtac-core-finding-ledger` guidance to mark the `duplicate` state. If the finding is original, move to the Proof phase.
@@ -102,7 +106,7 @@ After promoting any finding to `validated`, evidence from its audit(s) is incorp
 Go to this phase after the Validation phase completes with at least one valid non-duplicate finding.
 
 #### Proof-of-Concept (PoC) Primitive
-Construct and execute an isolated proof-of-concept (PoC) primitive that plausibly validates the vulnerable behavior, inputs, and pre-conditions. Primitive proofing is intentionally more lax than chain proofing. This stage is meant to prove a standalone flaw exists, but it does not guarantee a reportable chain. Spawn three debater subagents using `maxtac-core-subagent-debate` guidance to vote whether the PoC reproduces the described primitive: `valid` or `invalid`.
+Construct and execute an isolated proof-of-concept (PoC) primitive that plausibly validates the vulnerable behavior, inputs, and pre-conditions. Primitive proofing is intentionally more lax than chain proofing. This stage is meant to prove a standalone flaw exists, but it does not guarantee a reportable chain. Spawn three debater subagents using `maxtac-core-subagents` guidance to vote whether the PoC reproduces the described primitive: `valid` or `invalid`.
 
 #### Update Findings
 If at least two subagents vote invalid, revise the PoC or use `maxtac-core-finding-ledger` guidance to de-escalate the primitive as debunked or out-of-scope. Confirmed primitives are marked as proofed according to `maxtac-core-finding-ledger` guidance, even if they are not reachable or exploitable. If a primitive cannot be proven nor debunked, it is marked as `limited`.
@@ -117,7 +121,7 @@ For each proven primitive, first analyze whether the primitive is exploitable an
 Go to this phase after a Primitive Proof or Scanning phase results in one or more validated chains.
 
 #### Proof-of-Concept (PoC) Chain
-For each validated chain, create and execute a realistic end-to-end proof-of-concept (PoC) reproduction of the vulnerability. The PoC must not mock any portion of the chain. The PoC chain must be reachable from a non-self or security sandboxed vector. The PoC chain must demonstrate an exploitable vulnerability that is not documented as an accepted risk or shared responsibility. Spawn three debater subagents using `maxtac-core-subagent-debate` guidance to vote whether the PoC reproduces the described chain: `valid` or `invalid`.
+For each validated chain, create and execute a realistic end-to-end proof-of-concept (PoC) reproduction of the vulnerability. The PoC must not mock any portion of the chain. The PoC chain must be reachable from a non-self or security sandboxed vector. The PoC chain must demonstrate an exploitable vulnerability that is not documented as an accepted risk or shared responsibility. Spawn three debater subagents using `maxtac-core-subagents` guidance to vote whether the PoC reproduces the described chain: `valid` or `invalid`.
 
 #### Update Findings
 If at least two subagents vote invalid, revise the PoC or use `maxtac-core-finding-ledger` guidance to de-escalate the chain. If at least two subagents vote the PoC as valid, promote it to `proofed`. After marking a PoC as `proofed`, write a submission-ready report which includes it.

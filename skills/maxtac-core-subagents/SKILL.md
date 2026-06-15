@@ -21,7 +21,7 @@ An auditor subagent is a specialist vulnerability researcher for an individual b
 ### Auditor Flow
 Every audit follows the same 5-step flow.
 
-1. **Choose the auditor**: a collection of specialist security auditors exist in `<skill-dir>/assets/auditors.json`. Use this information to select the appropriate auditor. Do not read the large JSON file directly; instead, run:
+1. **Choose the auditor**: a collection of specialist security auditors exist in `<skill-dir>/references/auditors.json`. Use this information to select the appropriate auditor. Do not read the large JSON file directly; instead, run:
 
 ```
 python <skill-dir>/scripts/audit-helper.py --list

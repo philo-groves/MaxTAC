@@ -1,6 +1,6 @@
 ---
 name: maxtac-sast-opengrep
-description: Use this skill to perform code searches using OpenGrep for static application security testing (SAST). Provides guidance on how to use OpenGrep for SAST, including how to write effective search queries, interpret results, and OpenGrep features for the security testing workflow.
+description: Use this skill to perform general SAST using OpenGrep for static application security testing (SAST). Provides guidance on how to use OpenGrep for SAST, including how to write effective search queries, interpret results, and OpenGrep features for the security testing workflow.
 ---
 
 ## Check Readiness

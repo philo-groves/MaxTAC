@@ -13,7 +13,7 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
-AUDITORS_FILE = SKILL_DIR / "assets" / "auditors.json"
+AUDITORS_FILE = SKILL_DIR / "references" / "auditors.json"
 
 
 def generated_id(prefix: str) -> str:
