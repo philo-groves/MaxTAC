@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC Core Finding Ledger"
-  short_description: "Centralized finding tracker for research of the program"
-  default_prompt: "Use $maxtac-core-finding-ledger to track new or updated findings."

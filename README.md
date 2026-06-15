@@ -4,12 +4,19 @@ Maximize your verified OpenAI Trusted Access for Cyber (TAC) membership with a p
 This plugin is heavily inspired by [MDASH](https://www.microsoft.com/en-us/security/blog/2026/05/12/defense-at-ai-speed-microsofts-new-multi-model-agentic-security-system-tops-leading-industry-benchmark/).
 
 ## Skills
-The `maxtac-core-*` skills should always be enabled for the plugin to work correctly.
+The `maxtac-core-*`, `maxtac-sast-*`, `maxtac-dast-*`, and `maxtac-re-*` skills must always be enabled for the plugin to work correctly.
+
+The `maxtac-core-*` skills work together to create healthy research sessions(s) and a scalable knowledge base.
 
 - `maxtac-core-workflow`: Acts as an orchestrator for all research. Manages a set of research phases to work through, tracks those phases, and aides with continued research planning.
 - `maxtac-core-subagents`: Subagent flows for security auditing and verifier debate, including how to spawn subagents of each type and prompt templates to use.
-- `maxtac-core-preparation`: Prepares sessions and targets to perform recon and threat modeling, with a different approach depending on the type of target (source code, binary).
-- `maxtac-core-finding-ledger`: Centralized finding management to help with research history tracking and deduplication. Each finding has a state and a link to its research notes.
+- `maxtac-core-ledger`: Centralized finding management to help with research history tracking and deduplication. Each finding has a state and a link to its research notes.
+
+The `maxtac-sast-*` skills are used to perform Static Application Security Testing (SAST).
+
+The `maxtac-dast-*` skills are used to perform Dynamic Application Security Testing (DAST).
+
+- `maxtac-dast-`: 
 
 The `maxtac-asb-*` skills should only be enabled for macOS, iOS, and other Apple-related research.
 

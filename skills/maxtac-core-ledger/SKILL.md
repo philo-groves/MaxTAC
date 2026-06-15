@@ -1,9 +1,9 @@
 ---
-name: maxtac-core-finding-ledger
+name: maxtac-core-ledger
 description: Maintain MaxTAC finding state for authorized systems vulnerability research. Use for adding and updating findings for state tracking and deduplication.
 ---
 
-# MaxTAC Finding Ledger
+# MaxTAC Ledger
 Use this skill as the single-source-of-truth for findings and their states. The parent agent owns ledger writes; subagents return packets for the parent to merge. There are two types of findings: primitives and chains. A primitive is individual code or security flaw, while a chain combines one or more primitives into a reproducible attacker-reachable proof.
 
 - Primitives path: `primitives.json`
