@@ -1,11 +1,11 @@
 ---
 name: maxtac-core-workflow
-description: Orchestration for vulnerability research workflows. Includes a standard directory structure, research phases to work through, and instructions for proper analysis.
+description: Use this skill as the primary workflow controller. Includes a standard directory structure, research phases to work through, and instructions for proper analysis.
 ---
 
 # MaxTAC Core Workflow
 
-Use this skill as the primary workflow controller. MaxTAC is for authorized vulnerability analysis and proofing. The workflow aggressively utilizes the verified Trusted Access for Cyber (TAC) membership of plugin users and their expanded range of OpenAI cyber capabilities. Do not negatively affect other users or external resources unless given direct permission.
+Orchestration for vulnerability research workflow. MaxTAC is for authorized vulnerability analysis and proofing. The workflow aggressively utilizes the verified Trusted Access for Cyber (TAC) membership of plugin users and their expanded range of OpenAI cyber capabilities. Do not negatively affect other users or external resources unless given direct permission.
 
 ## Directory Structure
 The following files and directories are managed under the base directory of the workspace:
