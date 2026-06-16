@@ -20,14 +20,14 @@ Prefer to use physical iOS devices instead of simulators. Before any simulator t
 
 Use `xcrun devicectl` to manage and interact with physical iOS devices. If `xcrun` cannot be found from the current shell, check its default location at `/usr/bin/xcrun` and add it to the PATH if necessary.
 
-See: `<skill-dir>/references/xcrun-cli.md`
+See the `maxtac-dast-debugger` skill `xcrun` reference: `<plugin-root>/skills/maxtac-dast-debugger/references/xcrun-cli.md`
 
 ### Physical Android
 Prefer to use physical Android devices instead of emulators. Before any emulator testing, ask the user if they have access to a physical Android device, and if not, convey the limitations of emulator testing.
 
 Use `adb` to manage and interact with physical Android devices. If `adb` cannot be found from the current shell, check its default location at `/usr/local/bin/adb` and add it to the PATH if necessary.
 
-See: `<skill-dir>/references/adb-cli.md`
+See the `maxtac-dast-debugger` skill `adb` reference: `<plugin-root>/skills/maxtac-dast-debugger/references/adb-cli.md`
 
 ## Desktop OS Research
 For desktop operating system vulnerability research, virtual machines provide a more controlled and consistent environment compared to physical hardware. This allows for better isolation and easier management of test conditions.
