@@ -29,7 +29,6 @@ The `maxtac-dast-*` skills are used to perform Dynamic Application Security Test
 
 - `maxtac-dast-debugger`: 
 - `maxtac-dast-fuzzer`: 
-- `maxtac-dast-instrumentation`: 
 - `maxtac-dast-virtualization`: 
 
 The `maxtac-re-*` skills are used to perform reverse engineering (RE).
