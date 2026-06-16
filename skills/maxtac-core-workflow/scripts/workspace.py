@@ -30,7 +30,7 @@ WORKSPACE_DIRS = {
     "audits": "auditor subagent results",
     "proof": "proof-of-vulnerability development",
     "fuzz": "fuzzing inputs, scripts, and artifacts",
-    "reports": "submission-ready reports and evidence indexes",
+    "reporting": "submission-ready reports and evidence indexes",
 }
 LEDGER_FILES = {
     "primitive": Path("primitives.json"),
