@@ -1,6 +1,6 @@
 {
   "name": "maxtac",
-  "version": "0.1.0+codex.20260605012859",
+  "version": "0.1.0+codex.20260616231844",
   "description": "Multi-agent systems vulnerability research workflows for authorized kernel, binary, and open-source targets.",
   "author": {
     "name": "MaxTAC Contributors"
@@ -21,6 +21,7 @@
     "triage"
   ],
   "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "MaxTAC",
     "shortDescription": "Multi-agent systems vulnerability research for TAC",

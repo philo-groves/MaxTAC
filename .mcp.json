@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "maxtac": {
+      "command": "python",
+      "args": [
+        "scripts/maxtac_mcp.py"
+      ],
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}

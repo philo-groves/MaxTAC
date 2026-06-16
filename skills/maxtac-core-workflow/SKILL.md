@@ -14,12 +14,13 @@ The following files and directories are managed under the base directory of the 
 program-info.md    # authorized scope and exclusions
 primitives.json    # individual findings (primitives) of all states
 chains.json        # combined findings (chains) of all states
+reporting/         # submission-ready reports and evidence indexes
 research/          # scalable markdown research library
 debates/           # debater subagent results
 audits/            # auditor subagent results
 proof/             # proof-of-vulnerability (PoV) development
 fuzz/              # fuzzing inputs, scripts, and artifacts
-reports/           # submission-ready reports and evidence indexes
+tmp/               # temporary files that can be deleted between sessions
 ```
 
 ## Workspace Helper Script
@@ -34,6 +35,8 @@ Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations 
 - `report-ready`: check whether a proofed chain has the minimum workspace evidence needed to move into reporting.
 
 The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script.
+
+When the MaxTAC MCP server is available, prefer `workspace_init` for first-run workspace setup before falling back to `scripts/workspace.py init`. Use `evidence_pack` for generic proof evidence bundles that need copied artifacts, SHA-256 hashes, tool versions, command lines, export settings, related findings, and notes; specialized DAST, RE, LPAC, and IPSW evidence scripts should still be used when their stricter packet shape applies.
 
 ## Research Workspace
 MaxTAC is designed as a modular research workspace meant to scale for scopes of any size, continuously building a knowledge base that provides better context than most security researchers traditionally have access to. Models often persist every research file to the base directory, or fail to persist important knowledge at all; this guidance prevents that behavior.
@@ -154,4 +157,4 @@ Go to this phase after Chain Proof produces at least one proofed chain with acce
 
 Run `python3 <skill-dir>/scripts/workspace.py report-ready` before drafting or finalizing a submission report. If the helper reports missing proof, scope, ledger, or phase evidence, return to the phase that can produce the missing artifact.
 
-Write submission-ready reports under `<workspace-root>/reports/`. Reports should be based on proofed chains, not standalone primitives. Include the validated chain summary, attacker reachability, exploitability, affected versions or targets, reproduction steps, observed impact, proof artifacts, limitations, and any program-specific evidence requirements.
+Write submission-ready reports under `<workspace-root>/reporting/`. Reports should be based on proofed chains, not standalone primitives. Include the validated chain summary, attacker reachability, exploitability, affected versions or targets, reproduction steps, observed impact, proof artifacts, limitations, and any program-specific evidence requirements.

@@ -49,5 +49,8 @@ The `maxtac-msrc-*` skills should only be enabled for Windows, .NET, and other M
 - `maxtac-msrc-mitigations`: 
 - `maxtac-msrc-workflow`: 
 
+## MCP Tools
+MaxTAC includes a small Python MCP server declared in `.mcp.json`. When enabled in Codex, it exposes deterministic tools for workspace setup, ledger operations, auditor/debater prompt persistence, debate tallying, SAST packet validation, and generic evidence packing. These tools are intended to replace “remember to run this script” moments with callable functions while preserving the same JSON and markdown artifacts used by the skills.
+
 ## How to Install
 Just ask Codex to install the plugin for you. With how fast Codex plugins are moving, any list of installation steps given may be invalid next week.

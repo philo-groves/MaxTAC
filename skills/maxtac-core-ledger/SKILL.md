@@ -33,6 +33,8 @@ These states are valid for both primitives and chains.
 
 Use the `scripts/ledger.py` script instead of reading and editing ledger JSON files directly:
 
+When the MaxTAC MCP server is available, prefer `ledger_init`, `ledger_search`, `ledger_add`, and `ledger_update` before falling back to `scripts/ledger.py`. These tools use the same primitive and chain ledger JSON shape as the script, return structured JSON, and reduce the chance that a finding is promoted from loose prose instead of a ledger record.
+
 ### Initialize the Ledger
 ```
 python3 <skill-dir>/scripts/ledger.py init

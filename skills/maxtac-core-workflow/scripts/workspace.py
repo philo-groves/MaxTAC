@@ -297,14 +297,14 @@ def report_readiness(root: Path, chain_id: str | None = None, *, require_report_
     proof_count = recursive_file_count(root / "proof")
     add("proof-artifacts", proof_count > 0, f"{proof_count} proof file(s) under proof/")
 
-    reports = root / "reports"
+    reports = root / "reporting"
     if require_report_file:
         report_files = sorted(reports.glob("*.md")) if reports.exists() else []
         if chain_id:
             report_files = [path for path in report_files if chain_id.lower() in path.name.lower()]
         add("report-file", bool(report_files), f"{len(report_files)} matching report file(s)")
     else:
-        add("reports-directory", reports.is_dir(), "reports/ exists" if reports.is_dir() else "reports/ is missing")
+        add("reporting-directory", reports.is_dir(), "reporting/ exists" if reports.is_dir() else "reporting/ is missing")
 
     state = load_state(root)
     current_phase = state.get("current_phase") if state else None
