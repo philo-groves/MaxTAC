@@ -8,39 +8,39 @@ MaxTAC performs debugging to understand the runtime behavior of the application 
 
 ## Binary Debuggers
 
-### Radare2 DBG
-All desktop and most mobile platforms supported.
-
 ### LLDB
-All desktop platforms supported, but only iOS for mobile.
+Preferred for macOS binaries. All desktop platforms supported, but only iOS for mobile.
 
 ### GDB (GNU Debugger)
-Linux and macOS only.
+Preferred for Linux binaries. Linux and macOS only.
 
 ### x64dbg
-Windows only, often used for debugging user-mode applications.
+Preferred for user-mode Windows binaries. Windows only.
 
 ### WinDbg
-Windows only, often used for debugging kernel-mode applications and services.
+Preferred for kernel-mode Windows binaries. Windows only.
+
+### Radare2 DBG
+Preferred when a first-choice debug option is not available. All desktop and most mobile platforms supported.
 
 ## Mobile Debuggers
 
-### Frida
-All mobile platforms supported, but primarily used for dynamic instrumentation rather than traditional debugging.
-
 ### Android Debug Bridge (ADB)
-Android only.
+Required for interacting with Android devices. Android only.
 
 ### xcrun
-iOS only. Includes `xcrun simctl` for interacting with iOS simulators and `xcrun devicectl` for managing connected devices.
+Required for interacting with iOS devices. iOS only. Includes `xcrun simctl` for interacting with iOS simulators and `xcrun devicectl` for managing connected devices.
+
+### Frida
+Preferred for all mobile platforms, supplementing other mobile debug tools like `adb` and `xcrun`. Primarily used for dynamic instrumentation rather than traditional debugging.
 
 ## Web Debuggers
 
 ### Chrome DevTools Protocol (CDP)
-Mature web protocol, supported by most Chromium-based browsers.
+Preferred for Chromium-based browsers. A mature but limited web debugging protocol.
 
 ## WebDriver BiDi
-Newest web debugging protocol, supported by modern desktop browsers like Chrome and Firefox.
+Preferred for modern web browsers. Newest web debugging protocol.
 
 ## WebKit Debugging
-Safari and WebKit-based mobile browsers only.
+Preferred for Safari and WebKit-based mobile browsers. Safari and WebKit-based mobile browsers only.
