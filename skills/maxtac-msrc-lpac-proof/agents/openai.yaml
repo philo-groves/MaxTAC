@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC MSRC LPAC Proof"
+  short_description: "MSRC LPAC sandbox proofing"
+  default_prompt: "Use $maxtac-msrc-lpac-proof to build MSRC LPAC sandbox proof-of-vulnerability evidence."

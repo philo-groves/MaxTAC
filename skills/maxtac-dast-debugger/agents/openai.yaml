@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC DAST Debugger"
+  short_description: "Dynamic debugging tool guidance"
+  default_prompt: "Use $maxtac-dast-debugger to choose and operate debugger tooling for dynamic analysis."

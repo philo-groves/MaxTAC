@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC DAST Fuzzer"
+  short_description: "DAST fuzzing workflow guidance"
+  default_prompt: "Use $maxtac-dast-fuzzer to plan and run fuzzing campaigns for dynamic vulnerability research."

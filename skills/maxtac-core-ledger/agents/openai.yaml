@@ -1,4 +1,4 @@
 interface:
   display_name: "MaxTAC Core Ledger"
-  short_description: "Centralized finding tracker for research of the program"
-  default_prompt: "Use $maxtac-core-ledger to track new or updated findings."
+  short_description: "Track MaxTAC findings and states"
+  default_prompt: "Use $maxtac-core-ledger to track, update, and deduplicate vulnerability findings."

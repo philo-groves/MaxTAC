@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC SAST OpenGrep"
+  short_description: "OpenGrep rule authoring guidance"
+  default_prompt: "Use $maxtac-sast-opengrep to write and run OpenGrep rules for vulnerability triage."

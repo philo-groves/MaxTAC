@@ -1,4 +1,4 @@
 interface:
-  display_name: "MaxTAC ASB Program Info"
-  short_description: "Target flags for Apple Security Bounty"
-  default_prompt: "Use $maxtac-asb-target-flags guidance related to Apple target flag capture."
+  display_name: "MaxTAC ASB Flag Proof"
+  short_description: "Apple bounty target flag proofing"
+  default_prompt: "Use $maxtac-asb-flag-proof to capture Apple target-flag proof for an exploit chain."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC ASB IPSW"
+  short_description: "Apple firmware RE with ipsw"
+  default_prompt: "Use $maxtac-asb-ipsw to extract, diff, and analyze Apple IPSW firmware artifacts."

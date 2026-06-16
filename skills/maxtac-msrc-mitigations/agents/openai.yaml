@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC MSRC Mitigations"
+  short_description: "Windows mitigation bypass guidance"
+  default_prompt: "Use $maxtac-msrc-mitigations to reason about Windows defenses and bypass constraints."

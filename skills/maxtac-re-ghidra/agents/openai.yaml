@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC RE Ghidra"
+  short_description: "Ghidra reverse engineering guidance"
+  default_prompt: "Use $maxtac-re-ghidra to analyze binaries with Ghidra, decompiler output, and scripts."

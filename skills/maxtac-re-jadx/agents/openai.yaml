@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC RE JADX"
+  short_description: "JADX Android reverse engineering"
+  default_prompt: "Use $maxtac-re-jadx to decompile and inspect Android APK, DEX, resource, and smali artifacts."

@@ -1,5 +1,4 @@
 interface:
   display_name: "MaxTAC SAST Surface Triage"
-  short_description: "Map SAST surfaces and route auditors"
-  default_prompt: "Use $maxtac-sast-surface-triage to map trust boundaries and choose targeted MaxTAC auditors."
-
+  short_description: "Map SAST surfaces and auditors"
+  default_prompt: "Use $maxtac-sast-surface-triage to map trust boundaries and route targeted auditors."

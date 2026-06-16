@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC RE Radare2"
+  short_description: "Radare2 reverse engineering guidance"
+  default_prompt: "Use $maxtac-re-radare2 to triage, search, emulate, diff, or debug binaries with radare2."
