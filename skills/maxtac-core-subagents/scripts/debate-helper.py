@@ -29,7 +29,19 @@ def enrich_prompt(prompt_file: Path) -> None:
     debate_dir.mkdir(parents=True, exist_ok=False)
 
     prompt_path = debate_dir / "prompt.md"
-    enriched = f"""{raw_prompt}
+    enriched = f"""## Codex Goal Instructions
+
+Before doing any debate work, start the Codex goal mechanism using `/goal` in chat or `create_goal` when available. Use this goal prompt:
+
+Positive objective: evaluate the single binary debate proposition from the supplied evidence and persist one well-supported ballot to `{debate_dir}`.
+
+Negative end outcome: if the proposition cannot be judged from the supplied or directly referenced evidence within a bounded pass, stop broadening scope and persist a ballot with low confidence, explicit blockers, and the side defined by the proposition as not-proven; when unclear, choose `no`.
+
+Bounds: review only the debate prompt, supplied evidence, directly referenced files/artifacts, and immediately necessary context needed to cast the ballot. Do not launch new audits, fuzzing, PoV construction, or broad discovery. Do not complete the subagent run until the goal is either achieved or ended with the negative outcome above.
+
+## Debate Task
+
+{raw_prompt}
 
 ---
 

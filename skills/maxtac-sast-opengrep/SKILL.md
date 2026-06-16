@@ -30,7 +30,7 @@ Search queries consist of rules, which are sets of pattern matching logic and da
 When writing rules for SAST, consider the following:
 - **Narrow Focus**: Target one boundary, sink, guard, or bug class at a time.
 - **Data Flow Analysis**: Track how attacker-controlled data moves through the application when simple pattern matching is too shallow.
-- **Evidence Handoff**: Summarize matches as paths, guard questions, and file/function references for CFG analysis or targeted auditors.
+- **Evidence Handoff**: Summarize matches as paths, guard questions, and file/function references for CFG analysis or targeted, goal-bounded auditors.
 - **Comprehensive Coverage**: Leverage OpenGrep's ability to analyze both source code and decompiled binaries for comprehensive coverage.
 
 ### Custom Rules
@@ -54,7 +54,7 @@ Treat OpenGrep results as leads until the relevant path and guard behavior are m
 - Confirm the matched code is reachable from the actor and entrypoint in the surface triage packet.
 - Confirm the dangerous argument, receiver, index, length, path, credential, or state field is attacker-influenced.
 - Confirm whether a sanitizer, authorization check, type check, bounds check, entitlement check, or state check dominates the sink.
-- Deduplicate repeated framework patterns before sending results to auditors.
+- Deduplicate repeated framework patterns before sending results to goal-bounded auditors.
 - Preserve negative evidence when it closes a hypothesis, such as a guard that dominates every matched sink.
 - Use `maxtac-sast-control-flow-graph` when a result depends on interprocedural reachability, callbacks, cleanup paths, or guard ordering.
 

@@ -391,7 +391,19 @@ def persist_audit_prompt(root: Path, raw_prompt: str) -> dict[str, Any]:
     audit_dir.mkdir(parents=True, exist_ok=False)
     assessment_path = audit_dir / "assessment.md"
     prompt_path = audit_dir / "prompt.md"
-    enriched = f"""{raw_prompt.rstrip()}
+    enriched = f"""## Codex Goal Instructions
+
+Before doing any audit work, start the Codex goal mechanism using `/goal` in chat or `create_goal` when available. Use this goal prompt:
+
+Positive objective: produce a focused MaxTAC audit assessment for the supplied hypothesis, auditor specialty, and evidence, then persist it to `{assessment_path}`.
+
+Negative end outcome: if the supplied context, directly referenced files, or available tools are insufficient to decide the hypothesis within a bounded pass, stop broadening scope and persist an assessment with blockers, missing evidence, and the safest recommended next step.
+
+Bounds: inspect the supplied packet/evidence, directly referenced files/functions, and immediately necessary callers/callees only. Do not start broad repo discovery, fuzzing, PoV construction, or unrelated refactors unless this prompt explicitly grants that scope. Do not complete the subagent run until the goal is either achieved or ended with the negative outcome above.
+
+## Audit Task
+
+{raw_prompt.rstrip()}
 
 ---
 
@@ -451,7 +463,19 @@ def persist_debate_prompt(root: Path, raw_prompt: str) -> dict[str, Any]:
         debate_dir = ensure_within(root, root / "debates" / debate_id, "debate directory")
     debate_dir.mkdir(parents=True, exist_ok=False)
     prompt_path = debate_dir / "prompt.md"
-    enriched = f"""{raw_prompt.rstrip()}
+    enriched = f"""## Codex Goal Instructions
+
+Before doing any debate work, start the Codex goal mechanism using `/goal` in chat or `create_goal` when available. Use this goal prompt:
+
+Positive objective: evaluate the single binary debate proposition from the supplied evidence and persist one well-supported ballot to `{debate_dir}`.
+
+Negative end outcome: if the proposition cannot be judged from the supplied or directly referenced evidence within a bounded pass, stop broadening scope and persist a ballot with low confidence, explicit blockers, and the side defined by the proposition as not-proven; when unclear, choose `no`.
+
+Bounds: review only the debate prompt, supplied evidence, directly referenced files/artifacts, and immediately necessary context needed to cast the ballot. Do not launch new audits, fuzzing, PoV construction, or broad discovery. Do not complete the subagent run until the goal is either achieved or ended with the negative outcome above.
+
+## Debate Task
+
+{raw_prompt.rstrip()}
 
 ---
 
@@ -807,7 +831,7 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": tool_workspace_init,
     },
     "audit_prompt_create": {
-        "description": "Create and persist an enriched MaxTAC auditor prompt under audits/<audit-id>/.",
+        "description": "Create and persist a goal-bounded MaxTAC auditor prompt under audits/<audit-id>/.",
         "inputSchema": schema(
             {
                 "workspace_root": {"type": "string"},
@@ -824,7 +848,7 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": tool_audit_prompt_create,
     },
     "debate_prompt_create": {
-        "description": "Create and persist an enriched MaxTAC binary debate prompt under debates/<debate-id>/.",
+        "description": "Create and persist a goal-bounded MaxTAC binary debate prompt under debates/<debate-id>/.",
         "inputSchema": schema(
             {
                 "workspace_root": {"type": "string"},

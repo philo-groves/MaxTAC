@@ -175,7 +175,19 @@ def enrich_prompt(prompt_file: Path) -> None:
 
     assessment_path = audit_dir / "assessment.md"
     prompt_path = audit_dir / "prompt.md"
-    enriched = f"""{raw_prompt}
+    enriched = f"""## Codex Goal Instructions
+
+Before doing any audit work, start the Codex goal mechanism using `/goal` in chat or `create_goal` when available. Use this goal prompt:
+
+Positive objective: produce a focused MaxTAC audit assessment for the supplied hypothesis, auditor specialty, and evidence, then persist it to `{assessment_path}`.
+
+Negative end outcome: if the supplied context, directly referenced files, or available tools are insufficient to decide the hypothesis within a bounded pass, stop broadening scope and persist an assessment with blockers, missing evidence, and the safest recommended next step.
+
+Bounds: inspect the supplied packet/evidence, directly referenced files/functions, and immediately necessary callers/callees only. Do not start broad repo discovery, fuzzing, PoV construction, or unrelated refactors unless this prompt explicitly grants that scope. Do not complete the subagent run until the goal is either achieved or ended with the negative outcome above.
+
+## Audit Task
+
+{raw_prompt}
 
 ---
 

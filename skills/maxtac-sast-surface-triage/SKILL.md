@@ -14,7 +14,7 @@ Use this skill as the first static-analysis pass for a target slice. The goal is
 - Capture why a path matters: actor, trust boundary, controlled fields, protected asset, and security invariant.
 - Prefer 2-4 strong hypotheses over many shallow guesses.
 - Use `maxtac-sast-opengrep` for repeatable source-to-sink searches and `maxtac-sast-control-flow-graph` when reachability, guard ordering, state transitions, locks, or cleanup paths matter.
-- Use `maxtac-core-subagents` after triage to route each hypothesis to a targeted auditor.
+- Use `maxtac-core-subagents` after triage to route each hypothesis to a targeted, goal-bounded auditor.
 - Do not create or promote findings from triage alone. Triage produces candidate hypotheses and evidence plans.
 
 ## Triage Workflow
@@ -134,7 +134,7 @@ python3 <skill-dir>/scripts/packet.py prompt surface-packet.md cfg-evidence.md o
   --output audit-prompt.md
 ```
 
-The helper refuses to convert invalid packets unless `--allow-invalid` is passed. Do not use `--allow-invalid` for normal workflow handoff. The generated auditor prompt explicitly tells auditors that packets are structured triage and evidence, not proof of a validated, proofed, or reportable finding.
+The helper refuses to convert invalid packets unless `--allow-invalid` is passed. Do not use `--allow-invalid` for normal workflow handoff. The generated auditor prompt explicitly tells auditors that packets are structured triage and evidence, not proof of a validated, proofed, or reportable finding. Before spawning a subagent from a generated auditor prompt, pass it through `maxtac-core-subagents` via `audit-helper.py --prompt-file` or `audit_prompt_create` so the final subagent prompt includes Codex goal instructions and persistence paths.
 
 Produce this compact packet before spawning auditors or writing rules:
 
@@ -163,7 +163,7 @@ Produce this compact packet before spawning auditors or writing rules:
 - Use `maxtac-sast-control-flow-graph` when a hypothesis depends on path feasibility, guard dominance, call chains, callbacks, lock order, cleanup paths, or multi-function state transitions.
 - Use RE skills such as Ghidra, Radare2, or JADX when source is unavailable, decompiled output is required, or binary-level xrefs and call graphs are the best evidence.
 - Use DAST skills when the triage path needs runtime confirmation, fuzzing, debugging, or a controlled proof environment.
-- Use `maxtac-core-subagents` when linted packets are clear enough for a targeted auditor to assess a bug class or mitigation boundary. Prefer an auditor prompt produced by `packet.py prompt` so surface, CFG, and OpenGrep evidence stay structured.
+- Use `maxtac-core-subagents` when linted packets are clear enough for a targeted, goal-bounded auditor to assess a bug class or mitigation boundary. Prefer an auditor prompt produced by `packet.py prompt` so surface, CFG, and OpenGrep evidence stay structured, then wrap it with the subagent helper before spawning.
 
 ## Output Quality
 

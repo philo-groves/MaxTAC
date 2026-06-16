@@ -23,7 +23,7 @@ Use this skill when a security hypothesis cannot be answered by reading one func
 - Follow callbacks, async jobs, timers, work queues, signal handlers, event listeners, or IPC replies.
 - Understand state-machine transitions, one-time actions, replay paths, approval flows, and rollback behavior.
 - Resolve whether a lock, reference, handle, or object remains valid across a call chain.
-- Prepare concise evidence for a targeted auditor or debate prompt.
+- Prepare concise evidence for a targeted, goal-bounded auditor or debate prompt.
 
 ## Graph Workflow
 
@@ -94,7 +94,7 @@ Use this skill when a security hypothesis cannot be answered by reading one func
 
 - Use `maxtac-sast-surface-triage` before graphing to define the boundary, invariant, actor, and target slice.
 - Use `maxtac-sast-opengrep` when the same graph question needs repeatable rule searches across many similar files.
-- Use `maxtac-core-subagents` after graphing to send the narrowed path to an auditor such as race, memory lifetime, authorization, parser, business logic, or chain-building.
+- Use `maxtac-core-subagents` after graphing to send the narrowed path to a goal-bounded auditor such as race, memory lifetime, authorization, parser, business logic, or chain-building.
 - Use DAST debugger or fuzzer skills when graph evidence leaves an edge uncertain and runtime behavior can decide it.
 
 Good CFG work shrinks uncertainty. If the graph grows until it resembles the whole program, stop and split the question into smaller entrypoint-to-sink or state-transition paths.
