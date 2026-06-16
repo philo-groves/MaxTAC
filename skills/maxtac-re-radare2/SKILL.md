@@ -1,6 +1,6 @@
 ---
 name: maxtac-re-radare2
-description: Use for guidance on using radare2 for reverse engineering and binary analysis.
+description: Use the radare2 framework for binary reverse engineering, binary analysis, binary expression/string searches, binary diffing, binary debugging, ESIL emulation, and hex utilities.
 ---
 
 # MaxTAC RE with Radare2
