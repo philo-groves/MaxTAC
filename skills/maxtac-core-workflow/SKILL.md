@@ -88,7 +88,7 @@ Analyze previously conducted recon, threat modeling, and research to come up wit
 For each hypothesis, spawn one or more auditor subagents with `maxtac-core-subagents` skill guidance to scan for unique vulnerabilities. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `<skill-dir>/audits/` directory.
 
 #### Update Findings
-Based on audit results, use `maxtac-core-finding-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state. Only update `<skill-dir>/research/` markdown or submodules in the scan phase if it relates to a finding demotion; research for new findings is persisted after validation.
+Based on audit results, use `maxtac-core-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state. Only update `<skill-dir>/research/` markdown or submodules in the scan phase if it relates to a finding demotion; research for new findings is persisted after validation.
 
 ### 3. Validation
 Go to this phase after the Scan phase or when additional pre-proofing validation is required.
@@ -97,7 +97,7 @@ Go to this phase after the Scan phase or when additional pre-proofing validation
 For each new finding or pre-proofing requirement, spawn three subagents with the `maxtac-core-subagents` skill to judge its validity. If the finding is a chain, also judge its reachability and exploitability. Each debater votes each finding as valid or invalid.
 
 #### Update Findings
-If at least two subagents vote invalid, go to the Scan phase where more auditing may be conducted, or the finding may be `de-escalated`. If at least two subagents vote valid, the finding is promoted to `validated` using `maxtac-core-finding-ledger` guidance and update the research (see next section). Before any promotion action, search the finding ledger to determine if the finding already exists, and if it does, use `maxtac-core-finding-ledger` guidance to mark the `duplicate` state. If the finding is original, move to the Proof phase.
+If at least two subagents vote invalid, go to the Scan phase where more auditing may be conducted, or the finding may be `de-escalated`. If at least two subagents vote valid, the finding is promoted to `validated` using `maxtac-core-ledger` guidance and update the research (see next section). Before any promotion action, search the finding ledger to determine if the finding already exists, and if it does, use `maxtac-core-ledger` guidance to mark the `duplicate` state. If the finding is original, move to the Proof phase.
 
 #### Update Research
 After promoting any finding to `validated`, evidence from its audit(s) is incorporated into the research workspace. Determine whether a submodule and/or markdown file already exists for this subsystem; if not, created the file system resource(s). Do not copy audit information directly; instead, rewrite the information to fit fluently within the research workspace.
@@ -109,7 +109,7 @@ Go to this phase after the Validation phase completes with at least one valid no
 Construct and execute an isolated proof-of-vulnerability (PoV) primitive that plausibly validates the vulnerable behavior, inputs, and pre-conditions. Primitive proofing is intentionally more lax than chain proofing. This stage is meant to prove a standalone flaw exists, but it does not guarantee a reportable chain. Spawn three debater subagents using `maxtac-core-subagents` guidance to vote whether the PoV reproduces the described primitive: `valid` or `invalid`.
 
 #### Update Findings
-If at least two subagents vote invalid, revise the PoV or use `maxtac-core-finding-ledger` guidance to de-escalate the primitive as debunked or out-of-scope. Confirmed primitives are marked as proofed according to `maxtac-core-finding-ledger` guidance, even if they are not reachable or exploitable. If a primitive cannot be proven nor debunked, it is marked as `limited`.
+If at least two subagents vote invalid, revise the PoV or use `maxtac-core-ledger` guidance to de-escalate the primitive as debunked or out-of-scope. Confirmed primitives are marked as proofed according to `maxtac-core-ledger` guidance, even if they are not reachable or exploitable. If a primitive cannot be proven nor debunked, it is marked as `limited`.
 
 #### Update Research
 After executing any primitive PoV, identify the submodule and markdown for the related subsystem. These file system resources were likely already created during the Validation phase flow; however, if there was a deletion or mistake, the resources may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positives results, do not overwrite any information that may be important later; prefer to append to a research document instead.
@@ -124,7 +124,7 @@ Go to this phase after a Primitive Proof or Scanning phase results in one or mor
 For each validated chain, create and execute a realistic end-to-end proof-of-vulnerability (PoV) reproduction of the vulnerability. The PoV must not mock any portion of the chain. The PoV chain must be reachable from a non-self or security sandboxed vector. The PoV chain must demonstrate an exploitable vulnerability that is not documented as an accepted risk or shared responsibility. Spawn three debater subagents using `maxtac-core-subagents` guidance to vote whether the PoV reproduces the described chain: `valid` or `invalid`.
 
 #### Update Findings
-If at least two subagents vote invalid, revise the PoV or use `maxtac-core-finding-ledger` guidance to de-escalate the chain. If at least two subagents vote the PoV as valid, promote it to `proofed`. After marking a PoV as `proofed`, write a submission-ready report which includes it.
+If at least two subagents vote invalid, revise the PoV or use `maxtac-core-ledger` guidance to de-escalate the chain. If at least two subagents vote the PoV as valid, promote it to `proofed`. After marking a PoV as `proofed`, write a submission-ready report which includes it.
 
 #### Update Research
 After executing any chain PoV, identify the submodule(s) and markdown(s) for the related subsystem(s). Since chains combine primitives, research may span multiple submodules or markdown files. These file system resources were likely already created during the Validation or Primitive Proof phase flows; however, if there was a deletion or mistake, the resources may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positives results, do not overwrite any information that may be important later; prefer to append to a research document instead.
