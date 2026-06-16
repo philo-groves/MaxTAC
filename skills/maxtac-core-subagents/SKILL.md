@@ -18,7 +18,7 @@ python <skill-dir>/scripts/readiness-check.py --subagents <count>
 The script prints `parallel` or `sequential` after checking available system resources against the requested subagent count. If the result is `parallel`, spawn subagents using standard Codex subagent spawning mechanisms without waiting for each to finish. If the result is `sequential`, spawn one subagent at a time, waiting for it to finish before spawning the next.
 
 ## Auditor Subagents
-An auditor subagent is a specialist vulnerability researcher for an individual bug class, mitigation, or other security topic. 
+An auditor subagent is a specialist vulnerability researcher for an individual bug class, mitigation, or other security topic.
 
 ### Auditor Flow
 Every audit follows the same 5-step flow.

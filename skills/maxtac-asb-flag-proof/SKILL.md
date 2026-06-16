@@ -63,7 +63,7 @@ integrity_flag|0
 sqlite> INSERT OR REPLACE INTO integrity_flag (key, value) VALUES ('integrity_flag', 1);
 sqlite> select * from integrity_flag;
 integrity_flag|1
-% tccutil flag check 
+% tccutil flag check
 User: modified
 System: default
 ```

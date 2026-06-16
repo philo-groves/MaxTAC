@@ -15,9 +15,9 @@ There are no known exploitation primitives or bypass techniques for KIP on a ful
 Starting with the Apple A11 Bionic and S3 SoCs, a new hardware primitive was introduced. This primitive, Fast Permission Restrictions, includes a CPU register that quickly restricts permissions per thread. With Fast Permission Restrictions (also known as APRR registers), supported operating systems can remove execute permissions from memory without the overhead of a system call and a page table walk or flush. These registers provide one more level of mitigation for attacks from the web, particularly for code compiled at runtime (just-in-time compiled)—because memory can’t be effectively executed at the same time it’s being read from and written to.
 
 ### Bypassing APRR
-- **Control Flow Hijacking**: Redirecting execution to JIT unlocking functions (like `performJITMemcpy`) or using ROP/JOP chains to temporarily modify APRR register indices, allowing writes to the JIT region. 
-- **Memory Corruption**: Corrupting heap buffers containing JIT machine code before they are copied into the JIT region, often exploiting race conditions or use-after-free vulnerabilities. 
-- **PAC Bypasses**: Since Pointer Authentication Codes (PAC) protect JIT code integrity, attackers often require a separate PAC bypass (such as forging signatures or exploiting PAC key leakage) to execute arbitrary code in the JIT region after APRR restrictions are lifted. 
+- **Control Flow Hijacking**: Redirecting execution to JIT unlocking functions (like `performJITMemcpy`) or using ROP/JOP chains to temporarily modify APRR register indices, allowing writes to the JIT region.
+- **Memory Corruption**: Corrupting heap buffers containing JIT machine code before they are copied into the JIT region, often exploiting race conditions or use-after-free vulnerabilities.
+- **PAC Bypasses**: Since Pointer Authentication Codes (PAC) protect JIT code integrity, attackers often require a separate PAC bypass (such as forging signatures or exploiting PAC key leakage) to execute arbitrary code in the JIT region after APRR restrictions are lifted.
 - **Signal Handling Exploits**: Crashing threads during JIT code copying to gain control over register context, which can be used to bypass both APRR and PAC checks by manipulating the execution state.
 
 These vulnerabilities were notably exploited in CVE-2020-9870 and CVE-2020-9910.
