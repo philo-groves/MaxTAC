@@ -94,6 +94,46 @@ Use `maxtac-core-subagents` and `audit-helper.py --filter "<text>"` to find the 
 
 ## Handoff Template
 
+Use `python3 <skill-dir>/scripts/packet.py` to create, lint, and convert SAST packets instead of relying on loose prose. The helper supports these packet types:
+
+- `surface`: this skill's Surface Triage Packet.
+- `cfg`: `maxtac-sast-control-flow-graph` Control-Flow Evidence.
+- `opengrep`: `maxtac-sast-opengrep` Result Packet.
+
+Create a blank packet:
+
+```
+python3 <skill-dir>/scripts/packet.py create surface --output surface-packet.md
+```
+
+Create a packet with fields populated:
+
+```
+python3 <skill-dir>/scripts/packet.py create surface --output surface-packet.md \
+  --set "Target slice=..." \
+  --set "Actor and starting privileges=..." \
+  --set "Protected asset or trust boundary=..." \
+  --set "Candidate hypothesis=..." \
+  --set "Confidence=medium"
+```
+
+Lint packets before they are used for auditor routing or finding updates:
+
+```
+python3 <skill-dir>/scripts/packet.py lint surface-packet.md cfg-evidence.md opengrep-result.md --strict
+```
+
+Convert one or more valid packets into a focused auditor prompt:
+
+```
+python3 <skill-dir>/scripts/packet.py prompt surface-packet.md cfg-evidence.md opengrep-result.md \
+  --auditor-filter authz \
+  --focus "Check actor reachability and guard dominance" \
+  --output audit-prompt.md
+```
+
+The helper refuses to convert invalid packets unless `--allow-invalid` is passed. Do not use `--allow-invalid` for normal workflow handoff. The generated auditor prompt explicitly tells auditors that packets are structured triage and evidence, not proof of a validated, proofed, or reportable finding.
+
 Produce this compact packet before spawning auditors or writing rules:
 
 ```markdown
@@ -121,7 +161,7 @@ Produce this compact packet before spawning auditors or writing rules:
 - Use `maxtac-sast-control-flow-graph` when a hypothesis depends on path feasibility, guard dominance, call chains, callbacks, lock order, cleanup paths, or multi-function state transitions.
 - Use RE skills such as Ghidra, Radare2, or JADX when source is unavailable, decompiled output is required, or binary-level xrefs and call graphs are the best evidence.
 - Use DAST skills when the triage path needs runtime confirmation, fuzzing, debugging, or a controlled proof environment.
-- Use `maxtac-core-subagents` when the packet is clear enough for a targeted auditor to assess a bug class or mitigation boundary.
+- Use `maxtac-core-subagents` when linted packets are clear enough for a targeted auditor to assess a bug class or mitigation boundary. Prefer an auditor prompt produced by `packet.py prompt` so surface, CFG, and OpenGrep evidence stay structured.
 
 ## Output Quality
 
