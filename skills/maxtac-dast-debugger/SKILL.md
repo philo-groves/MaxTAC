@@ -1,6 +1,6 @@
 ---
 name: maxtac-dast-debugger
-description: Use debugging to learn about runtime behavior and perform controlled instrumentation of software. Documented tools include Radare2 DBG, LLDB, GDB, x64dbg, WinDbg, Frida, ADB, xcrun, Chrome DevTools Protocol (CDP), WebDriver BiDi, and WebKit Debugging.
+description: "Use this skill when dynamic analysis requires debugger, instrumentation, device, browser, or runtime tooling such as Radare2 DBG, LLDB, GDB, x64dbg, WinDbg, Frida, ADB, xcrun, CDP, WebDriver BiDi, or WebKit debugging."
 ---
 
 # MaxTAC DAST Debugger

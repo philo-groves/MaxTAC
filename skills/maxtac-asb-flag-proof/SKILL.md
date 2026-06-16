@@ -1,6 +1,6 @@
 ---
 name: maxtac-asb-flag-proof
-description: Guidance for capturing target flags, proofing mechanisms that are built into every major Apple OS. Includes the types of target flags, examples of their capture, and when they should be captured.
+description: "Use this skill when an Apple Security Bounty chain needs target-flag proof for register control, arbitrary read/write, arbitrary code execution, or TCC modification on iOS, iPadOS, macOS, tvOS, visionOS, or watchOS."
 ---
 
 # MaxTAC ASB Flag Proof

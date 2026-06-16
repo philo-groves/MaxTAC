@@ -1,6 +1,6 @@
 ---
 name: maxtac-sast-surface-triage
-description: Use this skill to perform lightweight static surface triage before targeted MaxTAC auditors. Identifies trust boundaries, dangerous code areas, entrypoints, sinks, security invariants, and routes each hypothesis to maxtac-core-subagents auditors, maxtac-sast-opengrep, or maxtac-sast-control-flow-graph. Use when starting a SAST scan, preparing auditor prompts, or deciding which bug-class auditor should investigate a source-code or decompiled-code target.
+description: "Use this skill when starting static surface triage for source or decompiled code to map trust boundaries, dangerous code areas, entrypoints, sinks, invariants, and route hypotheses to auditors, OpenGrep, or control-flow graph analysis."
 ---
 
 # MaxTAC SAST Surface Triage

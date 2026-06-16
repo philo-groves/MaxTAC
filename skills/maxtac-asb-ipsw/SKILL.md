@@ -1,6 +1,6 @@
 ---
 name: maxtac-asb-ipsw
-description: "Use ipsw for Apple iOS, iPadOS, tvOS, watchOS, visionOS, and macOS firmware reverse engineering: downloading IPSW/OTA builds, extracting kernelcache, dyld_shared_cache, DeviceTree, DMG, IMG4, iBoot, SEP, coprocessor, trust cache, and filesystem artifacts, mounting restore images, parsing Mach-O/kernel/dyld metadata, diffing firmware releases, and preparing Apple Security Bounty evidence."
+description: "Use this skill when Apple firmware reverse engineering requires ipsw for IPSW/OTA download, extraction, kernelcache, dyld_shared_cache, DeviceTree, DMG, IMG4, iBoot, SEP, coprocessor, trust cache, filesystem, mount, diff, or Apple Security Bounty evidence workflows."
 ---
 
 # MaxTAC ASB IPSW

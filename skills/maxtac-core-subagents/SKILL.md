@@ -1,6 +1,6 @@
 ---
 name: maxtac-core-subagents
-description: Use this skill to spawn subagents for auditing or debating. Auditor subagents are specialist vulnerability researchers for an individual bug class, mitigation, or other security topic. Debater subagents review a debate topic, then vote on a ballot and explain their reasoning.
+description: "Use this skill when MaxTAC research needs auditor subagents, verifier debate subagents, specialist bug-class review, mitigation review, or independent votes on a vulnerability hypothesis or PoV."
 ---
 
 ## Parallel or Sequential

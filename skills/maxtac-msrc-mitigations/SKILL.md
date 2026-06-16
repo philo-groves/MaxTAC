@@ -1,6 +1,6 @@
 ---
 name: maxtac-msrc-mitigations
-description: "Use this skill when Windows, Windows Server, Microsoft endpoint, browser, Office, kernel, driver, sandbox, credential, or local privilege escalation research produces unexpected behavior that may be caused by Windows defenses or exploit mitigations. Covers VBS, HVCI, KDP, CET shadow stacks, CFG/XFG/KCFG, exploit protection, PPL, Credential Guard, AppContainer/LPAC, WDAC/App Control, Smart App Control, vulnerable driver blocklists, Administrator Protection, DMA protection, and common mitigation bypass patterns."
+description: "Use this skill when Windows vulnerability research shows unexpected runtime behavior that may be caused by Microsoft platform mitigations, and the task is to reason about bypasses, constraints, or workaround paths."
 ---
 
 ## Virtualization-Based Security (VBS) and Virtual Secure Mode (VSM)

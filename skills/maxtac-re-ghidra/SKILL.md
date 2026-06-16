@@ -1,6 +1,6 @@
 ---
 name: maxtac-re-ghidra
-description: Use Ghidra as a first choice for binary reverse engineering, headless analysis, decompilation, p-code inspection, scripting automation, binary search, data type recovery, version tracking, BSim similarity, debugging, and emulation.
+description: "Use this skill when binary reverse engineering needs Ghidra for headless analysis, decompilation, p-code inspection, scripting automation, binary search, data type recovery, version tracking, BSim similarity, debugging, or emulation."
 ---
 
 # MaxTAC RE Ghidra

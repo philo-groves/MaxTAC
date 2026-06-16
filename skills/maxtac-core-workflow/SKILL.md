@@ -1,6 +1,6 @@
 ---
 name: maxtac-core-workflow
-description: Use this skill as the primary workflow controller. Includes a standard directory structure, research phases to work through, and instructions for proper analysis.
+description: "Use this skill when starting, organizing, or continuing an authorized MaxTAC vulnerability research session with standard directories, phases, subsystem notes, validation, proof, and reporting flow."
 ---
 
 # MaxTAC Core Workflow

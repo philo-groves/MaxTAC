@@ -1,6 +1,6 @@
 ---
 name: maxtac-dast-virtualization
-description: Use virtualization to create controlled environments for testing and analysis.
+description: "Use this skill when dynamic testing or exploit validation needs controlled virtualized environments, snapshots, isolation, guest networking, hypervisors, containers, or repeatable lab setup."
 ---
 
 # MaxTAC DAST Virtualization

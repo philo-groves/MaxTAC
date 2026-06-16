@@ -1,6 +1,6 @@
 ---
 name: maxtac-core-ledger
-description: Maintain MaxTAC finding state for authorized systems vulnerability research. Use for adding and updating findings for state tracking and deduplication.
+description: "Use this skill when MaxTAC vulnerability research needs finding state tracking, deduplication, promotion, de-escalation, report linkage, or proof status updates."
 ---
 
 # MaxTAC Ledger

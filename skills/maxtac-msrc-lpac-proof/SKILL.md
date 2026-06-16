@@ -1,6 +1,6 @@
 ---
 name: maxtac-msrc-lpac-proof
-description: "Use this skill when proving Microsoft Windows Insider Preview local sandbox attack scenarios for MSRC bounty submissions, especially LPAC-based sandbox escapes or private data access using microsoft/SandboxSecurityTools LaunchAppContainer and EdgeSandboxTestTool. Covers eligible sandboxes, latest Canary requirements, LaunchSandboxMSRC.bat, LPAC and win32k-lockdown proof setup, capability restrictions, BuildLabEx evidence, debugger limits, and distinguishing Attack Scenario Awards from lesser General Awards."
+description: "Use this skill when proving Microsoft Windows Insider Preview local sandbox attack scenarios for MSRC bounty submissions, especially LPAC sandbox escapes or private data access using microsoft/SandboxSecurityTools LaunchAppContainer or EdgeSandboxTestTool."
 ---
 
 # MaxTAC MSRC LPAC Proof

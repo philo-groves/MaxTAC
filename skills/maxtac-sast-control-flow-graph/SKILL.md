@@ -1,6 +1,6 @@
 ---
 name: maxtac-sast-control-flow-graph
-description: Use this skill to build and interpret static control-flow and call-graph evidence for MaxTAC SAST. Applies when a vulnerability hypothesis depends on reachability, guard dominance, path feasibility, callbacks, lock order, cleanup paths, state transitions, or source-to-sink paths across functions in source code or decompiled code.
+description: "Use this skill when SAST needs static control-flow or call-graph evidence for reachability, guard dominance, path feasibility, callbacks, lock order, cleanup paths, state transitions, or source-to-sink paths in source or decompiled code."
 ---
 
 # MaxTAC SAST Control-Flow Graph

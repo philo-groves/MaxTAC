@@ -1,6 +1,6 @@
 ---
 name: maxtac-dast-fuzzer
-description: Use fuzzing to dynamically discover vulnerability primitives in parsers, native libraries, binaries, kernels, protocols, APIs, web applications, browsers, mobile apps, and managed runtimes. Documented technologies include AFL++, libFuzzer, FuzzTest/Centipede, LibAFL, WinAFL, Honggfuzz, cargo-fuzz, Go fuzzing, Jazzer, Atheris, syzkaller, boofuzz, RESTler, Schemathesis, Nuclei, Burp Intruder, ZAP Fuzzer, ffuf, Fuzzilli, Domato, libprotobuf-mutator, Grammarinator, Nautilus, Radamsa, Android Monkey, ClusterFuzzLite, OSS-Fuzz, and FuzzBench.
+description: "Use this skill when dynamic testing needs fuzzing for parsers, binaries, kernels, protocols, APIs, web apps, browsers, mobile apps, managed runtimes, coverage-guided engines, grammar fuzzers, or harness selection."
 ---
 
 # MaxTAC DAST Fuzzer

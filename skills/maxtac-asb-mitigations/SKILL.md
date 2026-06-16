@@ -1,6 +1,6 @@
 ---
 name: maxtac-asb-mitigations
-description: Use this skill when Apple research results in unexpected runtime behavior, possibly due to attacker mitigations in Apple software architectures. Encountering a mitigation is not a direct blocker; there may be a bypass or workaround available.
+description: "Use this skill when Apple research shows unexpected runtime behavior that may be caused by Apple software or hardware mitigations, and the task is to reason about bypasses, constraints, or workaround paths."
 ---
 
 ## Kernel Integrity Protection (KIP)

@@ -1,6 +1,6 @@
 ---
 name: maxtac-re-jadx
-description: Use JADX for Android reverse engineering, dex/apk/jar/aar/aab/smali decompilation, resource decoding, deobfuscation, mappings, GUI search, smali debugging, programmatic API automation, and plugin workflows.
+description: "Use this skill when Android reverse engineering needs JADX for APK, DEX, JAR, AAR, AAB, smali, resource decoding, deobfuscation, mappings, GUI search, smali debugging, API automation, or plugin workflows."
 ---
 
 # MaxTAC RE JADX
