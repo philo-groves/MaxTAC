@@ -7,6 +7,11 @@ description: Use this skill as a secondary workflow controller for Apple platfor
 
 This workflow is supplemental to the primary `maxtac-core-workflow` and focuses on the specific considerations for testing on Apple platforms, particularly iOS and macOS.
 
+## Program Information
+- Guidelines: https://security.apple.com/bounty/guidelines/
+- Categories: https://security.apple.com/bounty/categories/
+- Target Flags: https://security.apple.com/bounty/target-flags/
+
 ## Prefer Physical iOS
 Simulator environments for iOS often reuse macOS components and do not reflect the security characteristics of physical iOS devices. For accurate testing, prefer to use physical iOS devices instead of simulators.
 
