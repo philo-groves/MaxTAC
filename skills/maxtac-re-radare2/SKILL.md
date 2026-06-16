@@ -3,8 +3,8 @@ name: maxtac-re-radare2
 description: Use the radare2 framework for binary reverse engineering, binary analysis, binary expression/string searches, binary diffing, binary debugging, ESIL emulation, and hex utilities.
 ---
 
-# MaxTAC RE with Radare2
-r2 provides a set of libraries, tools and plugins to ease reverse engineering tasks. r2 can edit files on local hard drives, view kernel memory, and debug programs locally or via a remote gdb/windbg servers. r2's wide architecture support allows you to analyze, emulate, debug, modify, and disassemble any binary.
+# MaxTAC RE Radare2
+r2 (Radare2) provides a set of libraries, tools and plugins to ease reverse engineering (RE) tasks. r2 can edit files on local hard drives, view kernel memory, and debug programs locally or via a remote gdb/windbg servers. r2's wide architecture support allows you to analyze, emulate, debug, modify, and disassemble any binary.
 
 ## Readiness Check
 Before using this skill, ensure Radare2 is installed and properly configured on the system. Check if Radare2 is accessible by running:
