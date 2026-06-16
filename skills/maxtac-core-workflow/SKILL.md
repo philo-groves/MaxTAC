@@ -19,7 +19,21 @@ debates/           # debater subagent results
 audits/            # auditor subagent results
 proof/             # proof-of-vulnerability (PoV) development
 fuzz/              # fuzzing inputs, scripts, and artifacts
+reports/           # submission-ready reports and evidence indexes
 ```
+
+## Workspace Helper Script
+
+Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations instead of hand-creating the standard files and directories:
+
+- `init`: create the canonical workspace directories, seed `program-info.md`, initialize empty finding ledgers, and record the starting phase.
+- `status`: summarize workspace health, ledger counts, oversized research markdown, phase state, and report readiness.
+- `phase`: show or update the current workflow phase. The canonical forward path is `prepare` -> `scan` -> `validation` -> `primitive-proof` -> `chain-proof` -> `reporting`; the helper also allows documented returns to earlier phases when evidence invalidates a path.
+- `new-submodule`: create a research submodule under `research/`, with an `artifacts/` directory and optional subsystem markdown from `references/subsystem.template.md`.
+- `split-large-markdown`: split a markdown file over the large-file threshold into a submodule. Retain the source by default; delete it only with `--verified --delete-source` after confirming the transcription.
+- `report-ready`: check whether a proofed chain has the minimum workspace evidence needed to move into reporting.
+
+The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script.
 
 ## Research Workspace
 MaxTAC is designed as a modular research workspace meant to scale for scopes of any size, continuously building a knowledge base that provides better context than most security researchers traditionally have access to. Models often persist every research file to the base directory, or fail to persist important knowledge at all; this guidance prevents that behavior.
@@ -61,9 +75,9 @@ The workflow is optimized for three primary goals:
 Go to this phase at the start of the workflow or when additional threat modeling is required.
 
 #### First Run Setup
-Assume the first run is active if `<skill-dir>/references/program-info.md` does not exist. Ingest the program information to `<skill-dir>/references/program-info.md` as a preliminary step. Some programs have streamlined information via skills, others are more generic.
+Assume the first run is active if `<workspace-root>/program-info.md` does not exist. Ingest the program information to `<workspace-root>/program-info.md` as a preliminary step. Some programs have streamlined information via skills, others are more generic.
 
-- Apple: If the `maxtac-asb-program-info` skill is enabled and the target subsystem seems to be Apple-related, copy the skill markdown directly into the `<skill-dir>/references/program-info.md` file.
+- Apple: If the `maxtac-asb-program-info` skill is enabled and the target subsystem seems to be Apple-related, copy the skill markdown directly into the `<workspace-root>/program-info.md` file.
 - Other: Use `<skill-dir>/references/program-info.template.md` relative to this skill as a template and fill in the missing sections. Key information is usually publicly available via an official site: MSRC, Apple Security, Google VRP, Meta Security, HackerOne, and Bugcrowd program information is accessible on their public websites.
 
 #### Target Setup
@@ -94,7 +108,7 @@ Analyze previously conducted recon, threat modeling, research, and surface triag
 For each hypothesis, spawn one or more targeted auditor subagents with `maxtac-core-subagents` skill guidance to scan for unique vulnerabilities. Use the surface triage packet and `audit-helper.py --filter` output to select the narrowest suitable auditor set, usually 1-4 auditors. Avoid a broad "logic analysis" audit when a specific business logic, authorization, parser, race, memory safety, platform, or mitigation auditor fits. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `<workspace-root>/audits/` directory.
 
 #### Update Findings
-Based on audit results, use `maxtac-core-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state. Only update `<skill-dir>/research/` markdown or submodules in the scan phase if it relates to a finding demotion; research for new findings is persisted after validation.
+Based on audit results, use `maxtac-core-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state. Only update `<workspace-root>/research/` markdown or submodules in the scan phase if it relates to a finding demotion; research for new findings is persisted after validation.
 
 ### 3. Validation
 Go to this phase after the Scan phase or when additional pre-proofing validation is required.
@@ -134,3 +148,10 @@ If at least two subagents vote invalid, revise the PoV or use `maxtac-core-ledge
 
 #### Update Research
 After executing any chain PoV, identify the submodule(s) and markdown(s) for the related subsystem(s). Since chains combine primitives, research may span multiple submodules or markdown files. These file system resources were likely already created during the Validation or Primitive Proof phase flows; however, if there was a deletion or mistake, the resources may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positives results, do not overwrite any information that may be important later; prefer to append to a research document instead.
+
+### 6. Reporting
+Go to this phase after Chain Proof produces at least one proofed chain with accepted evidence.
+
+Run `python3 <skill-dir>/scripts/workspace.py report-ready` before drafting or finalizing a submission report. If the helper reports missing proof, scope, ledger, or phase evidence, return to the phase that can produce the missing artifact.
+
+Write submission-ready reports under `<workspace-root>/reports/`. Reports should be based on proofed chains, not standalone primitives. Include the validated chain summary, attacker reachability, exploitability, affected versions or targets, reproduction steps, observed impact, proof artifacts, limitations, and any program-specific evidence requirements.
