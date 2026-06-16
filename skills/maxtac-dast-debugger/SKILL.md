@@ -36,11 +36,11 @@ Preferred for all mobile platforms, supplementing other mobile debug tools like 
 
 ## Web Debuggers
 
-### Chrome DevTools Protocol (CDP)
-Preferred for Chromium-based browsers. A mature but limited web debugging protocol.
-
 ## WebDriver BiDi
 Preferred for modern web browsers. Newest web debugging protocol.
+
+### Chrome DevTools Protocol (CDP)
+Preferred for Chromium-based browsers without support for WebDriver BiDi. A mature but limited web debugging protocol.
 
 ## WebKit Debugging
 Preferred for Safari and WebKit-based mobile browsers. Safari and WebKit-based mobile browsers only.
