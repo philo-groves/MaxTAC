@@ -3,6 +3,13 @@ Maximize your verified OpenAI Trusted Access for Cyber (TAC) membership with a p
 
 This plugin is heavily inspired by [MDASH](https://www.microsoft.com/en-us/security/blog/2026/05/12/defense-at-ai-speed-microsofts-new-multi-model-agentic-security-system-tops-leading-industry-benchmark/).
 
+## Problems & Solutions
+This plugin was created to resolve several issues that exist for general AI-based security research.
+
+- **No Directory Structure**: By default, models will persist all files to the base directory of the workspace, turning a knowledge base into a scrambled mess. The solution is a directory hierarchy that transforms and grows with the research program.
+- **Minimal Tool Knowledge**: By default, models will only have knowledge of tools within their training data. Advanced, uncommon, and newer features are limited. The solution is guidance for advanced tools (e.g. radare2, opengrep).
+- **Unverified Findings**: By default, models will consider bug candidates to be confirmed before verification. The solution is a debate mechanism with several isolated voters to prevent self-bias, plus a stateful finding ledger.
+
 ## Skills
 The `maxtac-core-*`, `maxtac-sast-*`, `maxtac-dast-*`, and `maxtac-re-*` skills must always be enabled for the plugin to work correctly.
 
