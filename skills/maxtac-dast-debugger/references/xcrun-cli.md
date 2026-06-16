@@ -396,7 +396,7 @@ Directory copy behavior has varied by Xcode and domain. If a directory pull
 fails, list first, then copy explicit files. For automated evidence collection,
 write target output to a known file under `Documents` or `Library/Caches`.
 
-Avoid `/tmp` for durable PoC output. On iOS it is inside the app sandbox and may
+Avoid `/tmp` for durable PoV output. On iOS it is inside the app sandbox and may
 be cleared across reinstall, relaunch, or cleanup paths. Resolve the app's
 Documents directory at runtime and write evidence there.
 
@@ -612,7 +612,7 @@ File copy cannot find expected output
 - App wrote to a container path that changed after reinstall.
 - `/tmp` or caches were cleared.
 - The output path was created in a different app group/container.
-- List files before copying and write future PoC output to `Documents`.
+- List files before copying and write future PoV output to `Documents`.
 
 ## Evidence Checklist
 

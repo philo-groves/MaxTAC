@@ -13,7 +13,7 @@ restricted context is achieved with Microsoft `SandboxSecurityTools`, especially
 the `LaunchAppContainer` tool using the LPAC flag.
 
 Do not treat "runs from AppContainer" as enough. For the larger local sandbox
-award, the PoC must run from an eligible sandbox context, trigger a vulnerability
+award, the PoV must run from an eligible sandbox context, trigger a vulnerability
 in shipped Windows code, reproduce on the latest Windows Insider Preview Canary
 Channel build, and demonstrate the security impact.
 
@@ -46,7 +46,7 @@ finishing privilege.
 
 For every LPAC proof package, capture:
 
-- Windows Insider Preview Canary Channel build used for the original PoC.
+- Windows Insider Preview Canary Channel build used for the original PoV.
 - `BuildLabEx` from:
 
 ```powershell
@@ -56,8 +56,8 @@ Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' |
 
 - Date tested.
 - `SandboxSecurityTools` commit hash.
-- Exact command line used to launch the PoC.
-- Whether the PoC targets an eligible sandbox or only a generic LPAC/AC context.
+- Exact command line used to launch the PoV.
+- Whether the PoV targets an eligible sandbox or only a generic LPAC/AC context.
 - Whether any debugger was used, and whether the exploit depends on the debugger.
 
 MSRC states that Attack Scenario submissions relying exclusively on a debugger
@@ -109,7 +109,7 @@ For LPAC proofing, prefer the included MSRC batch file:
 The batch file currently expands to:
 
 ```powershell
-LaunchAppContainer.exe -m 1.0.0.0_x86_en-us_TestProgram_wvx3sa3v3dj1m -c lpacCom;registryRead -w -l -k -i <PoC>
+LaunchAppContainer.exe -m 1.0.0.0_x86_en-us_TestProgram_wvx3sa3v3dj1m -c lpacCom;registryRead -w -l -k -i <PoV>
 ```
 
 Meaning:
@@ -148,7 +148,7 @@ Consequences:
 
 The `-k` flag enables `PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_ALWAYS_ON`.
 That means no win32k system calls and no UI element creation. Console output is
-redirected to the parent console. PoCs run with `-k` should avoid imports or
+redirected to the parent console. PoVs run with `-k` should avoid imports or
 runtimes that call win32k; the tool README recommends static VC runtime linking
 for console applications that must run under win32k lockdown.
 
@@ -181,7 +181,7 @@ only escape, or normal resource access granted by the supplied capabilities.
 
 ## Baseline Then Exploit
 
-Structure the PoC as two phases:
+Structure the PoV as two phases:
 
 1. Baseline restrictions:
    - Print process ID.
@@ -194,7 +194,7 @@ Structure the PoC as two phases:
    - Repeat the target operation through the vulnerable path.
    - Print or save the resulting privilege/data proof.
 
-Useful commands around the PoC:
+Useful commands around the PoV:
 
 ```powershell
 whoami /all
@@ -203,7 +203,7 @@ icacls <target-path>
 reg query <target-key>
 ```
 
-For token-level proof, prefer a tiny helper in the PoC that calls
+For token-level proof, prefer a tiny helper in the PoV that calls
 `OpenProcessToken` and `GetTokenInformation` for `TokenIntegrityLevel`,
 `TokenIsAppContainer`, `TokenAppContainerSid`, `TokenCapabilities`, and
 `TokenUser`. Do not rely only on screenshots.
@@ -221,21 +221,21 @@ Choose the harness based on the claim:
   also explain how the shipped sandboxed component reaches the same vulnerable
   code in the real product.
 
-The MSRC local Attack Scenario language requires the PoC to elevate privileges
-under the restricted context of an eligible sandbox. If the PoC only works from
+The MSRC local Attack Scenario language requires the PoV to elevate privileges
+under the restricted context of an eligible sandbox. If the PoV only works from
 generic LPAC and there is no path from an eligible sandboxed Windows component,
 route the finding as a possible General Award instead.
 
 ## Common Failure Modes
 
-- Adding broad capabilities to make the PoC work. This usually destroys Attack
+- Adding broad capabilities to make the PoV work. This usually destroys Attack
   Scenario eligibility.
 - Dropping `-k` because a GUI/runtime import fails. MSRC requires disallow
   win32k for the LaunchAppContainer LPAC flow.
 - Testing on Windows 10, Windows Server, Beta/Dev, or a stale Canary build.
   Current bounty eligibility requires the latest Canary Channel build.
 - Exercising a vulnerability only in a custom server, custom client, custom
-  harness, or fuzz target. Attack Scenario PoCs must exercise shipped Windows
+  harness, or fuzz target. Attack Scenario PoVs must exercise shipped Windows
   application, service, or component code.
 - Using a debugger to suspend threads, rewrite memory, bypass checks, or create
   the primitive. That is not an eligible Attack Scenario proof.
@@ -253,14 +253,14 @@ Include:
   `UtcDecoderHost.exe`.
 - Canary build and `BuildLabEx`.
 - `SandboxSecurityTools` commit and tool used.
-- Exact command line, preferably `LaunchSandboxMSRC.bat <PoC>` output.
-- PoC source and binary, with build instructions.
+- Exact command line, preferably `LaunchSandboxMSRC.bat <PoV>` output.
+- PoV source and binary, with build instructions.
 - Token/capability dump from inside the sandbox before exploitation.
 - Baseline denied operation.
 - Exploit success operation.
 - Finishing privilege or data accessed.
 - Explanation of the shipped Windows component and vulnerability path.
-- Statement that the PoC does not rely exclusively on debugger actions.
+- Statement that the PoV does not rely exclusively on debugger actions.
 - Any optional debugger-assisted reproduction steps clearly marked optional.
 
 ## Source Anchors

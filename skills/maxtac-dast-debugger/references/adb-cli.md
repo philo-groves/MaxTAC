@@ -378,7 +378,7 @@ adb -s "$SERIAL" shell am start-foreground-service -n "$PACKAGE/.ExampleService"
 ```
 
 Important security caveat: `adb shell am` runs as the shell UID. It is useful
-for exercising components, but it is not a substitute for a third-party PoC app
+for exercising components, but it is not a substitute for a third-party PoV app
 when proving exported-component reachability, permission bypass, or intent
 spoofing impact. For exploit claims, reproduce from an app with realistic
 permissions.
@@ -911,7 +911,7 @@ Install fails with downgrade or test-only errors
 
 - The component/provider may be non-exported or permission-protected.
 - Shell UID is privileged but not all-powerful.
-- Prove third-party exploitability with a realistic app PoC when needed.
+- Prove third-party exploitability with a realistic app PoV when needed.
 
 No traffic in proxy
 
@@ -947,7 +947,7 @@ Collect:
 - Screenshots or screen recordings where UI state matters.
 - Private app data pulled with `run-as`, noting debuggable-build dependency.
 - Whether evidence came from `adb shell`, `run-as`, root/userdebug, or an
-  unprivileged app PoC.
+  unprivileged app PoV.
 
 ## References
 
