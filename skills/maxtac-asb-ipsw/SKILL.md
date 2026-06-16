@@ -17,6 +17,54 @@ path, original file hash, selected restore identity, architecture, `ipsw`
 version, command line, and whether facts came from archive metadata, extracted
 files, reconstructed Mach-O output, or later RE tooling.
 
+## Provenance Helper
+
+Use `python3 <skill-dir>/scripts/ipsw-provenance.py` to keep firmware-derived
+facts tied to one build, source hash, restore identity, architecture, tool
+version, command line, and fact source. The helper creates a bundle under
+`<workspace-root>/research/apple-firmware/<case-id>/` and lints whether the
+minimum provenance fields are present.
+
+Initialize a provenance bundle:
+
+```bash
+python3 <skill-dir>/scripts/ipsw-provenance.py init \
+  --device iPhone16,1 \
+  --model D84AP \
+  --product-version 18.2 \
+  --build 22C150 \
+  --firmware-source ./firmware.ipsw \
+  --restore-identity "BuildIdentity-0" \
+  --architecture arm64e \
+  --command "ipsw info firmware.ipsw --json"
+```
+
+Record commands and classify where facts came from:
+
+```bash
+python3 <skill-dir>/scripts/ipsw-provenance.py record-command <case-id> \
+  --command "ipsw extract --kernel --json -o evidence/extract firmware.ipsw" \
+  --fact-source extracted-file \
+  --capture
+```
+
+Attach build-specific outputs:
+
+```bash
+python3 <skill-dir>/scripts/ipsw-provenance.py add-artifact <case-id> \
+  --category kernelcache \
+  --fact-source extracted-file \
+  --command "ipsw extract --kernel --json -o evidence/extract firmware.ipsw" \
+  --artifact ./evidence/extract/kernelcache.release.iphone
+```
+
+Before using firmware evidence in a report or handoff, run:
+
+```bash
+python3 <skill-dir>/scripts/ipsw-provenance.py lint <case-id> --strict
+python3 <skill-dir>/scripts/ipsw-provenance.py summary <case-id>
+```
+
 ## Readiness Check
 
 Identify the installed `ipsw` entrypoint and current command surface before

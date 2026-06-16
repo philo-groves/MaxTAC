@@ -65,6 +65,58 @@ for suspending threads or modifying memory/code are not eligible. A debugger can
 be included only as an optional aid for faster reproduction when the
 vulnerability is otherwise demonstrated without it.
 
+## Proof Evidence Helper
+
+Use `python3 <skill-dir>/scripts/lpac-proof.py` to collect and lint the LPAC
+proof packet before report drafting. The helper creates a proof bundle under
+`<workspace-root>/proof/<case-id>/`, copies source/binary/evidence artifacts,
+records command output, and checks the report packet checklist below.
+
+Initialize a proof case:
+
+```powershell
+python3 <skill-dir>/scripts/lpac-proof.py init `
+  --attack-scenario sandbox-escape `
+  --eligible-sandbox edge-renderer `
+  --canary-build "Canary 99999.1" `
+  --build-lab-ex "99999.1.amd64fre.canary.260616-0000" `
+  --sandbox-tools-commit "<SandboxSecurityTools commit>" `
+  --tool-used LaunchAppContainer `
+  --launch-command "LaunchSandboxMSRC.bat C:\path\to\pov.exe" `
+  --no-debugger-used `
+  --debugger-dependency none `
+  --pov-source .\pov.cpp `
+  --pov-binary .\pov.exe `
+  --build-instructions "msbuild pov.sln /p:Configuration=Release /p:Platform=x64" `
+  --baseline-denied-operation "direct access returns access denied" `
+  --exploit-success-operation "vulnerable path grants access" `
+  --finishing-privilege-or-data "file written outside AppContainer profile" `
+  --shipped-component "Windows component reached from the sandbox" `
+  --vulnerability-path "explain the shipped-code path"
+```
+
+Attach checklist artifacts with explicit categories:
+
+```powershell
+python3 <skill-dir>/scripts/lpac-proof.py add-artifact <case-id> --category token-dump --artifact .\token.txt
+python3 <skill-dir>/scripts/lpac-proof.py add-artifact <case-id> --category baseline-denied --artifact .\baseline.txt
+python3 <skill-dir>/scripts/lpac-proof.py add-artifact <case-id> --category exploit-success --artifact .\success.txt
+python3 <skill-dir>/scripts/lpac-proof.py add-artifact <case-id> --category finishing-proof --artifact .\finish.txt
+```
+
+Capture launcher, token, or system evidence command output:
+
+```powershell
+python3 <skill-dir>/scripts/lpac-proof.py capture <case-id> --label launch --command "LaunchSandboxMSRC.bat C:\path\to\pov.exe"
+```
+
+Before claiming Attack Scenario readiness, run:
+
+```powershell
+python3 <skill-dir>/scripts/lpac-proof.py lint <case-id> --strict
+python3 <skill-dir>/scripts/lpac-proof.py summary <case-id>
+```
+
 ## Build the Microsoft Tools
 
 Use the official repository:
