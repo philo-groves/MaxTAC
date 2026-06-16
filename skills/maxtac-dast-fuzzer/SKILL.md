@@ -8,6 +8,9 @@ MaxTAC uses fuzzing to discover vulnerability primitives by repeatedly exercisin
 
 Only fuzz targets that are inside the authorized program scope. Prefer local, isolated, virtualized, or device-lab targets before any shared service. Do not run high-rate fuzzing against production or third-party infrastructure without explicit permission, rate limits, and cleanup rules.
 
+## Fuzzing Persistence
+All fuzzing inputs, scripts, and artifacts should be saved in the `fuzz/` directory of the research workspace for easy pruning, evidence collection, and handoff. This includes harnesses, generated grammars, seed corpus, dictionaries, command lines, environment variables, build flags, sanitizer flags, target versions, crash inputs, minimized reproducers, replay commands, debugger output, sanitizer reports, stack traces, logs, core dumps, screenshots or recordings when UI state matters, and for APIs the full request sequence with auth context and resource IDs.
+
 ## Fuzzing Strategy
 
 Prefer the narrowest executable trust boundary with the strongest feedback signal:

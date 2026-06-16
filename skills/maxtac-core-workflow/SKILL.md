@@ -18,6 +18,7 @@ research/          # scalable markdown research library
 debates/           # debater subagent results
 audits/            # auditor subagent results
 proof/             # proof-of-vulnerability (PoV) development
+fuzz/              # fuzzing inputs, scripts, and artifacts
 ```
 
 ## Research Workspace
