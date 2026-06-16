@@ -35,6 +35,26 @@ python -c "import pyghidra; print(pyghidra.__version__)"
 
 If Ghidra is not installed, ask before installing. Official prebuilt releases require a 64-bit JDK 21, and the correct release asset is the `ghidra_<version>_<release>_<date>.zip` archive, not GitHub's generated source archives.
 
+Use the readiness helper when Ghidra evidence needs to be repeatable or compared with radare2/JADX evidence:
+
+```
+python3 <skill-dir>/scripts/re-readiness.py --tool ghidra --target ./target.bin --output re-readiness.md
+```
+
+Use `ghidra-export.py` to preserve input hashes, project settings, loader/processor/compiler overrides, script paths, analysis timeouts, and the exact `analyzeHeadless` command before running headless analysis. It plans by default and only executes with `--run`:
+
+```
+python3 <skill-dir>/scripts/ghidra-export.py ./target.bin \
+  --ghidra-home "$GHIDRA_HOME" \
+  --project-dir ./ghidra-projects \
+  --project-name target-analysis \
+  --output-dir ./ghidra-evidence \
+  --analysis-timeout 300 \
+  --post-script ExportEvidence.java
+```
+
+Add `--run` only after reviewing the generated command in `command.txt`.
+
 ## Usage Guidance
 
 ### Headless Analysis

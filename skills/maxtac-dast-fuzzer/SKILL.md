@@ -11,6 +11,44 @@ Only fuzz targets that are inside the authorized program scope. Prefer local, is
 ## Fuzzing Persistence
 All fuzzing inputs, scripts, and artifacts should be saved in the `fuzz/` directory of the research workspace for easy pruning, evidence collection, and handoff. This includes harnesses, generated grammars, seed corpus, dictionaries, command lines, environment variables, build flags, sanitizer flags, target versions, crash inputs, minimized reproducers, replay commands, debugger output, sanitizer reports, stack traces, logs, core dumps, screenshots or recordings when UI state matters, and for APIs the full request sequence with auth context and resource IDs.
 
+Use `python3 <skill-dir>/scripts/fuzz-campaign.py` to create and lint fuzzing evidence bundles instead of tracking campaign facts in loose notes.
+
+Initialize a campaign under `<workspace-root>/fuzz/<campaign-id>/`:
+
+```
+python3 <skill-dir>/scripts/fuzz-campaign.py init \
+  --target "parser component" \
+  --target-version "1.2.3 build 456" \
+  --tool AFL++ \
+  --version-command "afl-fuzz -V" \
+  --scope "authorized local lab target" \
+  --environment "Windows VM snapshot abc123" \
+  --rate-limits "local only" \
+  --instrumentation "ASan + coverage" \
+  --command "afl-fuzz -i seeds -o out -- ./harness @@" \
+  --harness ./harness.cc \
+  --seed-corpus ./seeds
+```
+
+Attach a reproduced crash or logic/API result:
+
+```
+python3 <skill-dir>/scripts/fuzz-campaign.py add-run fuzz-20260616T000000Z-abc123 \
+  --kind crash \
+  --replay-command "./harness crash.min" \
+  --crash-input ./crash.raw \
+  --minimized-reproducer ./crash.min \
+  --sanitizer-report ./asan.txt \
+  --stack-trace ./stack.txt
+```
+
+Before handoff, run:
+
+```
+python3 <skill-dir>/scripts/fuzz-campaign.py lint fuzz-20260616T000000Z-abc123 --kind crash --strict
+python3 <skill-dir>/scripts/fuzz-campaign.py summary fuzz-20260616T000000Z-abc123
+```
+
 ## Fuzzing Strategy
 
 Prefer the narrowest executable trust boundary with the strongest feedback signal:

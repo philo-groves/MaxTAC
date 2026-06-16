@@ -34,6 +34,24 @@ cd jadx
 
 On Windows, use `gradlew.bat dist`. If JADX is not installed, ask before installing.
 
+Use the generic RE readiness helper from the Ghidra skill to record Java/JADX availability and input hashes before report-grade Android RE work:
+
+```
+python3 <plugin-root>/skills/maxtac-re-ghidra/scripts/re-readiness.py --tool jadx --target ./target.apk --output re-readiness.md
+```
+
+Use `python3 <skill-dir>/scripts/jadx-export.py` to preserve input hashes, JADX version, export mode, deobfuscation flags, plugin options, CFG settings, and the exact command line. It plans by default and only executes with `--run`:
+
+```
+python3 <skill-dir>/scripts/jadx-export.py ./target.apk \
+  --output-dir ./jadx-evidence \
+  --mode all \
+  --deobf \
+  --cfg
+```
+
+Add `--run` only after reviewing the generated command in `command.txt`.
+
 ## Usage Guidance
 
 ### CLI, Export, and Batch Runs

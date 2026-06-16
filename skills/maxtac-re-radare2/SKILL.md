@@ -36,6 +36,20 @@ make.bat               REM run ninja -C b
 prefix\bin\radare2.exe
 ```
 
+Use the generic RE readiness helper from the Ghidra skill to record tool versions and target hashes before report-grade RE work:
+
+```
+python3 <plugin-root>/skills/maxtac-re-ghidra/scripts/re-readiness.py --tool radare2 --target ./target.bin --output re-readiness.md
+```
+
+Use `python3 <skill-dir>/scripts/r2-triage.py` to collect repeatable binary triage evidence with `rabin2`, `rahash2`, and optional read-only `r2` analysis:
+
+```
+python3 <skill-dir>/scripts/r2-triage.py ./target.bin --output-dir ./r2-evidence
+```
+
+Use `--skip-r2` when only metadata/hashes are needed, and `--deep` only when deeper `r2` analysis is worth the runtime.
+
 ## Usage Guidance
 
 ### Binary Triage

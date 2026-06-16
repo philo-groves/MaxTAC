@@ -6,6 +6,47 @@ description: "Use this skill when dynamic analysis requires debugger, instrument
 # MaxTAC DAST Debugger
 MaxTAC performs debugging to understand the runtime behavior of the target and identify vulnerabilities that may not be apparent through static analysis.
 
+## Evidence Helper
+
+Use `python3 <skill-dir>/scripts/debug-evidence.py` to collect debugger, instrumentation, replay, device, browser, or crash evidence into `<workspace-root>/proof/<case-id>/`.
+
+Initialize a debug evidence case:
+
+```
+python3 <skill-dir>/scripts/debug-evidence.py init \
+  --tool lldb \
+  --version-command "lldb --version" \
+  --target "local parser harness" \
+  --target-version "1.2.3 build 456" \
+  --target-file ./harness \
+  --scope "authorized local lab target" \
+  --environment "macOS VM snapshot abc123" \
+  --command-line "lldb -- ./harness crash.min"
+```
+
+Capture command output:
+
+```
+python3 <skill-dir>/scripts/debug-evidence.py capture debug-20260616T000000Z-abc123 \
+  --label replay \
+  --command "lldb --batch -o run -o bt -- ./harness crash.min"
+```
+
+Attach artifacts such as crash logs, traces, bugreports, screenshots, recordings, or core dumps:
+
+```
+python3 <skill-dir>/scripts/debug-evidence.py add-artifact debug-20260616T000000Z-abc123 \
+  --category crash-log \
+  --artifact ./crash.log
+```
+
+Before proof or report handoff, run:
+
+```
+python3 <skill-dir>/scripts/debug-evidence.py lint debug-20260616T000000Z-abc123 --strict
+python3 <skill-dir>/scripts/debug-evidence.py summary debug-20260616T000000Z-abc123
+```
+
 ## Binary Debuggers
 
 ### LLDB
