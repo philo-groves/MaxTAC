@@ -24,7 +24,7 @@
   "interface": {
     "displayName": "MaxTAC",
     "shortDescription": "Multi-agent systems vulnerability research for TAC",
-    "longDescription": "MaxTAC coordinates authorized vulnerability research campaigns across XNU, focused Apple platform bypass research, Windows kernel-adjacent artifacts, native binaries, and open-source systems code. It prepares target profiles, routes specialized Auditor subagents, tracks findings, keeps Apple domain research notes, debates reachability and exploitability, proofs issues in lab environments, and packages concise reports.",
+    "longDescription": "MaxTAC coordinates authorized vulnerability research campaigns across XNU, focused Apple platform bypass research, Windows kernel-adjacent artifacts, native binaries, and open-source systems code. It prepares target profiles, performs SAST surface triage, routes specialized Auditor subagents, tracks findings, keeps Apple domain research notes, debates reachability and exploitability, proofs issues in lab environments, and packages concise reports.",
     "developerName": "MaxTAC Contributors",
     "category": "Security",
     "capabilities": [
@@ -35,7 +35,7 @@
     "defaultPrompt": [
       "Use MaxTAC to prepare this systems target and select Auditor subagents.",
       "Use MaxTAC Apple Workspace and focused Apple skills to analyze exploitability blockers for this target.",
-      "Run a MaxTAC discovery campaign against this authorized kernel or binary target.",
+      "Run a MaxTAC SAST surface triage and discovery campaign against this authorized target.",
       "Triage this finding with MaxTAC Debaters and decide whether it is confident.",
       "Proof this MaxTAC finding in a clean lab and create a report packet."
     ],

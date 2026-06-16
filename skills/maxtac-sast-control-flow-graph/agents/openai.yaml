@@ -1,0 +1,5 @@
+interface:
+  display_name: "MaxTAC SAST Control-Flow Graph"
+  short_description: "Build static reachability evidence"
+  default_prompt: "Use $maxtac-sast-control-flow-graph to analyze reachability, guards, and path feasibility."
+

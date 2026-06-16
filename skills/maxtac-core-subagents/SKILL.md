@@ -8,6 +8,8 @@ Use this guidance before spawning any group of auditor or debater subagents. Ide
 
 Debater agents are always spawned in groups of three, so the parallel vs sequential decision is especially important for them. Auditor agents are spawned in groups of any size; the maximum number of auditors is 6, the Codex limit.
 
+Use the active Python executable for helper scripts. If `python` is not on PATH in Codex Desktop, call `codex_app.load_workspace_dependencies` and use the bundled Python executable it returns.
+
 To determine whether to spawn subagents in parallel or sequentially, run:
 ```
 python <skill-dir>/scripts/readiness-check.py --subagents <count>
@@ -29,7 +31,9 @@ python <skill-dir>/scripts/audit-helper.py --filter <filter>
 python <skill-dir>/scripts/audit-helper.py --show <auditor id>
 ```
 
-Each of the above scripts result in one or more auditors. The `--list` and `--filter` options print condensed information for a list of auditors, while the `--show` option prints the full markdown instructions for a specific auditor.
+Each of the above scripts result in one or more auditors. The `--list` and `--filter` options print condensed information for a list of auditors, while the `--show` option prints the full markdown instructions for a specific auditor. When a SAST scan produced a `maxtac-sast-surface-triage` packet, use its suggested auditor filters as the first `--filter` inputs.
+
+Prefer focused auditors over broad review. For example, use a specific `logic-*` auditor for authentication state, entitlement, replay, approval, tenant relationship, destructive action, AI-agent authority, or specification drift instead of asking for generic logic analysis. Use generic business logic only when the target is truly workflow-centered and no narrower logic auditor fits.
 
 2. **Write the audit prompt**: after reading the specialist usage and related markdown, write a prompt for its subject matter and the current target. Do not use the specialist markdown directly as a prompt; instead, adapt its guidance for the current context. Persist the prompt to a file in a temporary directory (%temp% on Windows, /tmp on Unix), then run:
 
@@ -38,6 +42,8 @@ python <skill-dir>/scripts/audit-helper.py --prompt-file <file path>
 ```
 
 The above script prints an enriched prompt; enrichment appends instructions to persist audit assessment files to `<workspace-root>/audits/<audit-id>/`. The script also creates the `<workspace-root>/audits/<audit-id>/` directory, then persists the subagent prompt there.
+
+Include the triage packet, relevant graph evidence, OpenGrep result summaries, and exact file/function references in the prompt. Omit unrelated checklist text and avoid asking the auditor to rediscover the whole target.
 
 3. **Spawn the auditor**: use the enriched prompt to spawn the auditor subagent. There is no script for this phase; use standard Codex subagent spawning mechanisms. If the session is at maximum subagents and one is stopped, replace a stopped subagent. See the "Parallel or Sequential" section above for parallelism guidance. These subagents use gpt-5.5 as a model with xhigh reasoning effort.
 

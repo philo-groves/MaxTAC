@@ -21,9 +21,9 @@ The `maxtac-core-*` skills work together to create healthy research sessions(s) 
 
 The `maxtac-sast-*` skills are used to perform Static Application Security Testing (SAST).
 
-- `maxtac-sast-control-flow-graph`: 
-- `maxtac-sast-logic-analysis`: 
-- `maxtac-sast-opengrep`: Provides instructions and references for writing and using OpenGrep rules.
+- `maxtac-sast-surface-triage`: Maps source-code and decompiled-code trust boundaries, danger areas, invariants, and auditor routing hints before targeted scans.
+- `maxtac-sast-control-flow-graph`: Builds focused reachability, guard dominance, path feasibility, callback, cleanup, lock, and state-transition evidence for SAST hypotheses.
+- `maxtac-sast-opengrep`: Provides instructions and references for writing and using OpenGrep rules, then packaging match evidence for CFG analysis or targeted auditors.
 
 The `maxtac-dast-*` skills are used to perform Dynamic Application Security Testing (DAST).
 

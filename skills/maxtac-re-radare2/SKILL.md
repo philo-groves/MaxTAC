@@ -9,7 +9,7 @@ r2 (Radare2) provides a set of libraries, tools and plugins to ease reverse engi
 ## Readiness Check
 Before using this skill, ensure Radare2 is installed and properly configured on the system. Check if Radare2 is accessible by running:
 ```
-r2 --version
+r2 -v
 ```
 
 If there is no output or an error occurs, Radare2 may not be installed. Follow the installation instructions:

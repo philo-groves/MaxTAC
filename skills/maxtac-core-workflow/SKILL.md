@@ -82,11 +82,16 @@ Binary targets are more difficult to recon than source code, but not impossible.
 ### 2. Scan
 Go to this phase after the Prepare phase or when additional vulnerability discovery is required.
 
+#### Surface Triage
+For source-code and decompiled-code targets, use `maxtac-sast-surface-triage` before spawning auditors. Produce a compact surface triage packet that names the target slice, actor, trust boundary, controlled inputs, security invariant, suspect guard or sink, evidence already collected, and suggested auditor filters.
+
+If the triage packet depends on path feasibility, guard dominance, callback ordering, state transitions, lock order, or cleanup behavior, use `maxtac-sast-control-flow-graph` to narrow the path before audit handoff. If the packet needs repeatable pattern, source-to-sink, constant-propagation, or symbolic-propagation searches across many files, use `maxtac-sast-opengrep` before or during audit handoff.
+
 #### Hypothesize
-Analyze previously conducted recon, threat modeling, and research to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.
+Analyze previously conducted recon, threat modeling, research, and surface triage to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.
 
 #### Spawn Auditors
-For each hypothesis, spawn one or more auditor subagents with `maxtac-core-subagents` skill guidance to scan for unique vulnerabilities. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `<skill-dir>/audits/` directory.
+For each hypothesis, spawn one or more targeted auditor subagents with `maxtac-core-subagents` skill guidance to scan for unique vulnerabilities. Use the surface triage packet and `audit-helper.py --filter` output to select the narrowest suitable auditor set, usually 1-4 auditors. Avoid a broad "logic analysis" audit when a specific business logic, authorization, parser, race, memory safety, platform, or mitigation auditor fits. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `<workspace-root>/audits/` directory.
 
 #### Update Findings
 Based on audit results, use `maxtac-core-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state. Only update `<skill-dir>/research/` markdown or submodules in the scan phase if it relates to a finding demotion; research for new findings is persisted after validation.
