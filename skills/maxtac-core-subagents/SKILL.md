@@ -28,6 +28,9 @@ The generated prompt also requires a visible goal-activation record in the persi
 
 Bound each subagent goal tightly enough to avoid long-running drift but wide enough to be useful. For auditors, bound the goal to one hypothesis, one auditor specialty, the supplied packet/evidence, directly referenced files/functions, and immediately necessary callers/callees. For debaters, bound the goal to one binary proposition and the supplied or directly referenced evidence. Subagents must not broaden into repo-wide discovery, new fuzzing campaigns, new PoV construction, or unrelated refactors unless the prompt explicitly grants that scope.
 
+## Attention Review Subagents
+When `workspace_status` reports an attention-lock warning, the parent may spawn a single goal-bounded auditor as an independent attention reviewer. The prompt should include the attention report, current phase, recent ledger summary, active branch, and the exact decision options: deepen, pivot, consolidate, phase-shift, or delegate-review. Use `audit-helper.py --prompt-file` or `audit_prompt_create`; do not spawn the reviewer from a raw prompt. The reviewer should persist an assessment under `audits/` that recommends one action and names the evidence or absence of evidence behind it.
+
 ## Auditor Subagents
 An auditor subagent is a specialist vulnerability researcher for an individual bug class, mitigation, or other security topic.
 

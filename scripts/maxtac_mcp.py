@@ -536,6 +536,8 @@ def tool_workspace_status(args: dict[str, Any]) -> dict[str, Any]:
     mod = workspace_module()
     state = mod.load_state(root)
     max_lines = int(args.get("max_lines") or mod.LARGE_MARKDOWN_LINES)
+    attention_window_minutes = int(args.get("attention_window_minutes") or mod.ATTENTION_WINDOW_MINUTES)
+    attention_file_count = int(args.get("attention_file_count") or mod.ATTENTION_FILE_COUNT)
     payload: dict[str, Any] = {
         "workspace_root": str(root),
         "phase": state.get("current_phase") if state else None,
@@ -543,6 +545,11 @@ def tool_workspace_status(args: dict[str, Any]) -> dict[str, Any]:
         "directories": {},
         "ledgers": {},
         "large_markdown": [],
+        "research_hygiene": {
+            "markdown_under_artifacts": [],
+            "tool_named_research_dirs": [],
+        },
+        "attention": mod.attention_report(root, attention_window_minutes, attention_file_count),
         "report_ready": mod.report_readiness(root, args.get("chain")),
     }
     for filename in mod.WORKSPACE_FILES:
@@ -559,6 +566,12 @@ def tool_workspace_status(args: dict[str, Any]) -> dict[str, Any]:
     payload["large_markdown"] = [
         {"path": mod.relative_to(path, root), "lines": lines}
         for path, lines in mod.large_markdown_files(root, max_lines)
+    ]
+    payload["research_hygiene"]["markdown_under_artifacts"] = [
+        mod.relative_to(path, root) for path in mod.markdown_under_artifacts(root)
+    ]
+    payload["research_hygiene"]["tool_named_research_dirs"] = [
+        mod.relative_to(path, root) for path in mod.tool_named_research_dirs(root)
     ]
     return payload
 
@@ -583,8 +596,25 @@ def tool_workspace_phase(args: dict[str, Any]) -> dict[str, Any]:
         return {"workspace_root": str(root), "current_phase": current, "allowed_next": sorted(mod.PHASE_TRANSITIONS[current])}
     target = mod.normalize_phase(str(target_raw))
     if target == current:
+        if args.get("note"):
+            timestamp = mod.now()
+            state["updated_at"] = timestamp
+            state.setdefault("phase_history", []).append(
+                {
+                    "time": timestamp,
+                    "from": current,
+                    "to": target,
+                    "note": str(args.get("note") or ""),
+                    "renewal": True,
+                }
+            )
         mod.save_state(root, state)
-        return {"workspace_root": str(root), "current_phase": current, "changed": False}
+        return {
+            "workspace_root": str(root),
+            "current_phase": current,
+            "changed": False,
+            "renewed": bool(args.get("note")),
+        }
     allowed = mod.PHASE_TRANSITIONS[current]
     if target not in allowed and not args.get("force", False):
         raise ToolFailure(f"Invalid transition {current} -> {target}. Allowed: {', '.join(sorted(allowed))}. Use force to override.")
@@ -1539,18 +1569,20 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": tool_workspace_init,
     },
     "workspace_status": {
-        "description": "Inspect MaxTAC workspace health, phase state, ledger counts, large markdown files, and report readiness.",
+        "description": "Inspect MaxTAC workspace health, phase state, ledger counts, research hygiene, attention-lock warnings, large markdown files, and report readiness.",
         "inputSchema": schema(
             {
                 "workspace_root": {"type": "string"},
                 "chain": {"type": "string"},
                 "max_lines": {"type": "integer", "minimum": 1, "default": 300},
+                "attention_window_minutes": {"type": "integer", "minimum": 1, "default": 90},
+                "attention_file_count": {"type": "integer", "minimum": 1, "default": 40},
             }
         ),
         "handler": tool_workspace_status,
     },
     "workspace_phase": {
-        "description": "Show, list, or update the current MaxTAC workflow phase with transition validation.",
+        "description": "Show, list, update, or renew the current MaxTAC workflow phase with transition validation and timestamped notes.",
         "inputSchema": schema(
             {
                 "workspace_root": {"type": "string"},

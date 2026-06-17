@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
+import os
 import re
 import shutil
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -81,6 +83,84 @@ TOOL_DIRECTORY_NAMES = {
     "r2",
     "radare2",
 }
+ATTENTION_WINDOW_MINUTES = 90
+ATTENTION_FILE_COUNT = 40
+ATTENTION_PHASE_REVIEW_MINUTES = 120
+ATTENTION_LEDGER_REVIEW_MINUTES = 90
+ATTENTION_DOMINANCE_RATIO = 0.7
+ATTENTION_MIN_RESEARCH_FILES = 8
+ATTENTION_TOP_LEVEL_DIRS = (
+    "research",
+    "audits",
+    "debates",
+    "proof",
+    "fuzz",
+    "tmp",
+    "reporting",
+)
+ATTENTION_EVIDENCE_TOP_LEVEL_DIRS = {
+    "audits",
+    "debates",
+    "proof",
+    "fuzz",
+    "tmp",
+}
+ATTENTION_TRACKED_SUFFIXES = {
+    ".c",
+    ".cpp",
+    ".h",
+    ".hpp",
+    ".json",
+    ".log",
+    ".m",
+    ".md",
+    ".mm",
+    ".opengrep",
+    ".plist",
+    ".py",
+    ".rule",
+    ".rules",
+    ".semgrep",
+    ".sh",
+    ".swift",
+    ".txt",
+    ".yaml",
+    ".yml",
+}
+ATTENTION_PRUNE_DIRS = {
+    ".build",
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "deriveddata",
+    "node_modules",
+    "products",
+    "venv",
+}
+ATTENTION_ARTIFACT_DIR_NAMES = {
+    "artifact",
+    "artifacts",
+    "captures",
+    "extract",
+    "extracted",
+    "generated",
+    "log",
+    "logs",
+    "output",
+    "outputs",
+    "packets",
+    "raw",
+    "screenshots",
+    "traces",
+}
+ATTENTION_DECISION_OPTIONS = (
+    "deepen",
+    "pivot",
+    "consolidate",
+    "phase-shift",
+    "delegate-review",
+)
 
 
 def now() -> str:
@@ -275,6 +355,252 @@ def tool_named_research_dirs(root: Path) -> list[Path]:
     return result
 
 
+def parse_timestamp(value: Any) -> datetime | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        timestamp = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=timezone.utc)
+    return timestamp.astimezone(timezone.utc)
+
+
+def latest_phase_timestamp(state: dict[str, Any] | None) -> datetime | None:
+    if not state:
+        return None
+    history = state.get("phase_history")
+    if isinstance(history, list):
+        for item in reversed(history):
+            if isinstance(item, dict):
+                timestamp = parse_timestamp(item.get("time"))
+                if timestamp:
+                    return timestamp
+    return parse_timestamp(state.get("updated_at")) or parse_timestamp(state.get("created_at"))
+
+
+def file_timestamp(path: Path) -> datetime | None:
+    try:
+        return datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
+    except OSError:
+        return None
+
+
+def latest_ledger_timestamp(root: Path) -> datetime | None:
+    timestamps = [
+        timestamp
+        for relative_path in LEDGER_FILES.values()
+        if (timestamp := file_timestamp(root / relative_path)) is not None
+    ]
+    return max(timestamps) if timestamps else None
+
+
+def minutes_since(timestamp: datetime | None, now_dt: datetime) -> int | None:
+    if timestamp is None:
+        return None
+    return max(0, int((now_dt - timestamp).total_seconds() // 60))
+
+
+def format_minutes(value: int | None) -> str:
+    if value is None:
+        return "unknown"
+    if value < 60:
+        return f"{value}m"
+    hours, minutes = divmod(value, 60)
+    if minutes == 0:
+        return f"{hours}h"
+    return f"{hours}h {minutes}m"
+
+
+def top_level_area(path: Path, root: Path) -> str | None:
+    try:
+        parts = path.relative_to(root).parts
+    except ValueError:
+        return None
+    return parts[0] if parts else None
+
+
+def has_artifactish_dir(path: Path, root: Path) -> bool:
+    try:
+        parts = path.relative_to(root).parts
+    except ValueError:
+        return False
+    return any(part.lower() in ATTENTION_ARTIFACT_DIR_NAMES for part in parts)
+
+
+def research_module_key(path: Path, root: Path) -> str | None:
+    try:
+        parts = path.relative_to(root).parts
+    except ValueError:
+        return None
+    if not parts or parts[0] != "research":
+        return None
+
+    module_parts = ["research"]
+    for part in parts[1:-1]:
+        if part.lower() in ATTENTION_ARTIFACT_DIR_NAMES:
+            break
+        module_parts.append(part)
+        if len(module_parts) >= 4:
+            break
+    if len(module_parts) == 1 and len(parts) > 1:
+        module_parts.append(parts[1])
+    return "/".join(module_parts)
+
+
+def recent_attention_files(root: Path, window_minutes: int, limit: int) -> list[tuple[Path, datetime]]:
+    window_minutes = max(1, int(window_minutes))
+    limit = max(1, int(limit))
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
+    result: list[tuple[Path, datetime]] = []
+
+    for dirname in ATTENTION_TOP_LEVEL_DIRS:
+        base = root / dirname
+        if not base.exists() or not base.is_dir():
+            continue
+        for dirpath, dirnames, filenames in os.walk(base):
+            dirnames[:] = [
+                item
+                for item in dirnames
+                if item.lower() not in ATTENTION_PRUNE_DIRS
+            ]
+            for filename in filenames:
+                path = Path(dirpath) / filename
+                if path.suffix.lower() not in ATTENTION_TRACKED_SUFFIXES:
+                    continue
+                timestamp = file_timestamp(path)
+                if timestamp is None or timestamp < cutoff:
+                    continue
+                result.append((path, timestamp))
+
+    result.sort(key=lambda item: item[1], reverse=True)
+    return result[:limit]
+
+
+def attention_report(root: Path, window_minutes: int = ATTENTION_WINDOW_MINUTES, file_count: int = ATTENTION_FILE_COUNT) -> dict[str, Any]:
+    now_dt = datetime.now(timezone.utc)
+    state = load_state(root)
+    phase_timestamp = latest_phase_timestamp(state)
+    ledger_timestamp = latest_ledger_timestamp(root)
+    phase_age = minutes_since(phase_timestamp, now_dt)
+    ledger_age = minutes_since(ledger_timestamp, now_dt)
+    recent_files = recent_attention_files(root, window_minutes, file_count)
+
+    area_counts: Counter[str] = Counter()
+    module_counts: Counter[str] = Counter()
+    durable_research_markdown = 0
+    evidence_files = 0
+
+    for path, _ in recent_files:
+        area = top_level_area(path, root) or "unknown"
+        area_counts[area] += 1
+        if area == "research":
+            module = research_module_key(path, root)
+            if module:
+                module_counts[module] += 1
+            if path.suffix.lower() == ".md" and not has_artifactish_dir(path, root):
+                durable_research_markdown += 1
+        if area in ATTENTION_EVIDENCE_TOP_LEVEL_DIRS or has_artifactish_dir(path, root):
+            evidence_files += 1
+
+    research_file_count = sum(module_counts.values())
+    dominant_module: dict[str, Any] | None = None
+    if module_counts:
+        module, count = module_counts.most_common(1)[0]
+        ratio = count / research_file_count if research_file_count else 0.0
+        dominant_module = {
+            "module": module,
+            "count": count,
+            "ratio": round(ratio, 3),
+        }
+
+    warnings: list[dict[str, str]] = []
+    current_phase = state.get("current_phase") if state else None
+    if phase_age is not None and phase_age >= ATTENTION_PHASE_REVIEW_MINUTES:
+        warnings.append(
+            {
+                "kind": "phase-age",
+                "message": (
+                    f"Current phase `{current_phase}` has been active for {format_minutes(phase_age)}; "
+                    "record a phase note, shift phase, or explicitly renew the current phase with a narrower next checkpoint."
+                ),
+            }
+        )
+    if (
+        dominant_module
+        and research_file_count >= ATTENTION_MIN_RESEARCH_FILES
+        and dominant_module["ratio"] >= ATTENTION_DOMINANCE_RATIO
+    ):
+        warnings.append(
+            {
+                "kind": "module-dominance",
+                "message": (
+                    f"{dominant_module['module']} accounts for "
+                    f"{dominant_module['count']}/{research_file_count} recent research files; "
+                    "close the branch or choose an explicit deepen, pivot, consolidate, or delegate-review action."
+                ),
+            }
+        )
+    if module_counts and len(module_counts) >= 4 and max(module_counts.values()) <= 2:
+        warnings.append(
+            {
+                "kind": "shallow-hopping",
+                "message": (
+                    f"{len(module_counts)} research modules were touched with no module receiving more than two tracked files; "
+                    "pick one branch to deepen or consolidate before opening another surface."
+                ),
+            }
+        )
+    if evidence_files >= 8 and durable_research_markdown == 0:
+        warnings.append(
+            {
+                "kind": "evidence-without-library-update",
+                "message": (
+                    f"{evidence_files} recent evidence/artifact files were tracked with no durable research markdown update; "
+                    "incorporate reusable knowledge into the research library or mark the branch artifact-only."
+                ),
+            }
+        )
+    if ledger_age is not None and ledger_age >= ATTENTION_LEDGER_REVIEW_MINUTES and recent_files:
+        warnings.append(
+            {
+                "kind": "ledger-stale",
+                "message": (
+                    f"The latest ledger file update is {format_minutes(ledger_age)} old while workspace files changed recently; "
+                    "add a finding, milestone, de-escalation, or explicit no-finding closure if the branch produced a decision."
+                ),
+            }
+        )
+
+    return {
+        "window_minutes": max(1, int(window_minutes)),
+        "file_count_limit": max(1, int(file_count)),
+        "phase": current_phase,
+        "phase_started_at": phase_timestamp.isoformat() if phase_timestamp else None,
+        "phase_age_minutes": phase_age,
+        "latest_ledger_update": ledger_timestamp.isoformat() if ledger_timestamp else None,
+        "ledger_age_minutes": ledger_age,
+        "recent_files_considered": len(recent_files),
+        "recent_area_counts": dict(sorted(area_counts.items())),
+        "recent_research_modules": [
+            {"module": module, "count": count}
+            for module, count in module_counts.most_common()
+        ],
+        "dominant_research_module": dominant_module,
+        "durable_research_markdown_recent": durable_research_markdown,
+        "evidence_artifact_files_recent": evidence_files,
+        "decision_options": list(ATTENTION_DECISION_OPTIONS),
+        "decision_required": bool(warnings),
+        "warnings": warnings,
+    }
+
+
 def check_program_info(root: Path) -> tuple[bool, str]:
     path = root / "program-info.md"
     if not path.exists():
@@ -365,6 +691,31 @@ def print_checks(result: dict[str, Any]) -> None:
         print(f"- {mark}: {check['name']} - {check['detail']}")
 
 
+def print_attention(result: dict[str, Any]) -> None:
+    print("Attention cadence:")
+    print(
+        f"- window: latest {result['window_minutes']}m, "
+        f"{result['recent_files_considered']} tracked file(s)"
+    )
+    print(
+        f"- phase age: {format_minutes(result['phase_age_minutes'])} "
+        f"({result['phase'] or 'not initialized'})"
+    )
+    print(f"- ledger age: {format_minutes(result['ledger_age_minutes'])}")
+    dominant = result.get("dominant_research_module")
+    if dominant:
+        ratio = int(float(dominant["ratio"]) * 100)
+        print(f"- dominant research module: {dominant['module']} ({ratio}% of recent research files)")
+    else:
+        print("- dominant research module: none")
+    if result["warnings"]:
+        print("- decision required: choose deepen, pivot, consolidate, phase-shift, or delegate-review")
+        for warning in result["warnings"]:
+            print(f"- review: {warning['message']}")
+    else:
+        print("- warnings: none")
+
+
 def cmd_init(args: argparse.Namespace) -> None:
     root = root_path(args.root)
     phase = normalize_phase(args.phase)
@@ -400,6 +751,7 @@ def cmd_init(args: argparse.Namespace) -> None:
 def cmd_status(args: argparse.Namespace) -> None:
     root = root_path(args.root)
     state = load_state(root)
+    attention = attention_report(root, args.attention_window_minutes, args.attention_file_count)
 
     if args.json:
         payload: dict[str, Any] = {
@@ -413,6 +765,7 @@ def cmd_status(args: argparse.Namespace) -> None:
                 "markdown_under_artifacts": [],
                 "tool_named_research_dirs": [],
             },
+            "attention": attention,
             "report_ready": report_readiness(root, args.chain),
         }
         for filename in WORKSPACE_FILES:
@@ -495,6 +848,7 @@ def cmd_status(args: argparse.Namespace) -> None:
     else:
         print("Research hygiene warnings: none")
 
+    print_attention(attention)
     print_checks(report_readiness(root, args.chain))
 
 
@@ -520,7 +874,21 @@ def cmd_phase(args: argparse.Namespace) -> None:
 
     target = normalize_phase(args.phase)
     if target == current:
-        print(f"Phase unchanged: {current}")
+        if args.note:
+            timestamp = now()
+            state["updated_at"] = timestamp
+            state.setdefault("phase_history", []).append(
+                {
+                    "time": timestamp,
+                    "from": current,
+                    "to": target,
+                    "note": args.note,
+                    "renewal": True,
+                }
+            )
+            print(f"Phase renewed: {current}")
+        else:
+            print(f"Phase unchanged: {current}")
         save_state(root, state)
         return
 
@@ -850,6 +1218,8 @@ def base_parser() -> argparse.ArgumentParser:
     add_root_arg(status)
     status.add_argument("--chain", help="Specific chain id for report readiness checks")
     status.add_argument("--max-lines", type=int, default=LARGE_MARKDOWN_LINES)
+    status.add_argument("--attention-window-minutes", type=int, default=ATTENTION_WINDOW_MINUTES)
+    status.add_argument("--attention-file-count", type=int, default=ATTENTION_FILE_COUNT)
     status.add_argument("--json", action="store_true")
     status.set_defaults(func=cmd_status)
 

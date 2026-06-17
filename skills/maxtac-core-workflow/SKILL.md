@@ -28,8 +28,8 @@ tmp/               # temporary files that can be deleted between sessions
 Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations instead of hand-creating the standard files and directories:
 
 - `init`: create the canonical workspace directories, seed `program-info.md`, initialize empty finding ledgers, and record the starting phase.
-- `status`: summarize workspace health, ledger counts, oversized research markdown, phase state, and report readiness.
-- `phase`: show or update the current workflow phase. The canonical forward path is `prepare` -> `scan` -> `validation` -> `primitive-proof` -> `chain-proof` -> `reporting`; the helper also allows documented returns to earlier phases when evidence invalidates a path.
+- `status`: summarize workspace health, ledger counts, oversized research markdown, research hygiene, attention-lock warnings, phase state, and report readiness.
+- `phase`: show or update the current workflow phase. The canonical forward path is `prepare` -> `scan` -> `validation` -> `primitive-proof` -> `chain-proof` -> `reporting`; the helper also allows documented returns to earlier phases when evidence invalidates a path. Repeating the current phase with `--note` records a timestamped phase renewal.
 - `new-submodule`: create a durable research submodule under `research/`, with an `artifacts/` directory for raw evidence and optional subsystem markdown from `references/subsystem.template.md`.
 - `split-large-markdown`: split a markdown file over the large-file threshold into a submodule. Retain the source by default; delete it only with `--verified --delete-source` after confirming the transcription.
 - `report-ready`: check whether a proofed chain has the minimum workspace evidence needed to move into reporting.
@@ -106,6 +106,26 @@ Every substantial scan, RE branch, proof branch, or negative result should close
 - **Deferred**: the branch is incomplete; leave a pointer in `tmp/`, `audits/`, or a ledger evidence link, not as a misleading library chapter.
 
 This prevents session goals from becoming the library structure and prevents `artifacts/` from becoming a hidden markdown knowledge base.
+
+### Attention Cadence
+
+Long-running research has two common failure modes: tunnel vision inside one submodule, and shallow hopping across many surfaces without enough depth. Do not let the current context decide the next move by inertia.
+
+At the start of a session, after a phase change, every 45-60 minutes of active research, after about 10-15 meaningful workspace writes, and before continuing a branch that has stopped producing new evidence, run `workspace_status` or:
+
+```
+python <skill-dir>/scripts/workspace.py status --root <workspace-root>
+```
+
+The status helper uses phase timestamps, ledger file timestamps, recent research-library file mtimes, and recent evidence/artifact mtimes to report attention warnings. Treat these warnings as a required decision point, not an automatic stop. Choose and record one action:
+
+- **Deepen**: continue the same subsystem only with a narrower evidence target, a specific caller/callee, a proof gate, or a short next checkpoint.
+- **Pivot**: move to a sibling or child subsystem, a new bug-class route, or a different phase when the current branch is stale.
+- **Consolidate**: stop exploratory work and rewrite reusable knowledge into the research library, update the ledger, or close the branch as artifact-only.
+- **Phase-shift**: use `workspace_phase --note ...` when the work has crossed from prepare to scan, scan to validation, validation to proof, or back to a prior phase.
+- **Delegate-review**: spawn a goal-bounded auditor/debater to independently judge whether to deepen, pivot, consolidate, or de-escalate.
+
+Intentional deep work is allowed, but the attention budget must be renewed by new evidence, a branch closure, a ledger milestone, or a timestamped phase note. Do not spend more than one attention interval in the same subsystem or phase without one of those renewals. Likewise, do not open more surfaces after a shallow-hopping warning until one branch has been deepened or consolidated.
 
 ## Research Phases
 

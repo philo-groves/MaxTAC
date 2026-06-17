@@ -8,6 +8,8 @@ Use this skill as the single-source-of-truth for findings and their states. The 
 
 The ledger tracks finding state; it is not a replacement for the research library. When a ledger milestone records durable subsystem knowledge, a confirmed negative result, or an architectural invariant, also rewrite that knowledge into the relevant `research/` markdown file and link the ledger entry to the supporting artifact.
 
+Ledger updates are also part of the MaxTAC attention cadence. If a branch produces a promote, de-escalate, duplicate, limited, or no-finding decision, record that decision as a finding update or milestone instead of letting the next session infer it from old artifacts. These timestamps help distinguish useful deep work from tunnel vision.
+
 - Primitives path: `primitives.json`
 - Chains path: `chains.json`
 
