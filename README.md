@@ -6,6 +6,8 @@ This plugin is heavily inspired by [MDASH](https://www.microsoft.com/en-us/secur
 ## Architecture
 ![MaxTAC Architecture Diagram](https://i.imgur.com/6RnsUeO.png)
 
+### Core Workflow
+
 See the `maxtac-core-workflow` skill for related documentation.
 
 ### Problems & Solutions
@@ -58,3 +60,7 @@ MaxTAC includes a small Python MCP server declared in `.mcp.json`. When enabled 
 
 ## How to Install
 Just ask Codex to install the plugin for you. With how fast Codex plugins are moving, any list of installation steps given may be invalid next week.
+
+## License
+
+MIT
