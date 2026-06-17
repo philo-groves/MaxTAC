@@ -1,7 +1,15 @@
 ## MaxTAC
-Maximize your verified OpenAI Trusted Access for Cyber (TAC) membership with a plugin that identifies and proves vulnerabilities in source code, binaries, and web services. Optional skills for Apple and Microsoft vulnerability research are also included.
+<p align="center">
+  <img src="assets/icon.png" alt="MaxTAC logo" width="150">
+</p>
 
-This plugin is heavily inspired by [MDASH](https://www.microsoft.com/en-us/security/blog/2026/05/12/defense-at-ai-speed-microsofts-new-multi-model-agentic-security-system-tops-leading-industry-benchmark/).
+<p align="center">
+  <a href=".codex-plugin/plugin.json">Manifest</a> ·
+  <a href="#skills">Skills</a> ·
+  <a href="TOOLING.md">Tooling</a>
+</p>
+
+Maximize your verified OpenAI Trusted Access for Cyber (TAC) membership with a plugin that identifies and proves vulnerabilities in source code, binaries, and web services. Optional skills for Apple and Microsoft vulnerability research are also included.
 
 ## System Requirements
 
