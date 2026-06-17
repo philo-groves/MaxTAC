@@ -23,15 +23,13 @@ Use the generic RE readiness helper from the Ghidra skill to record tool version
 python3 <plugin-root>/skills/maxtac-re-ghidra/scripts/re-readiness.py --tool radare2 --target ./target.bin --output re-readiness.md
 ```
 
-When the MaxTAC MCP server is available, prefer `re_readiness_check` for this readiness evidence before falling back to `re-readiness.py`.
+MaxTAC MCP convention: use `re_readiness_check` for readiness and `r2_triage` for triage when available; otherwise use `re-readiness.py` and `scripts/r2-triage.py`.
 
 Use `python3 <skill-dir>/scripts/r2-triage.py` to collect repeatable binary triage evidence with `rabin2`, `rahash2`, and optional read-only `r2` analysis:
 
 ```
 python3 <skill-dir>/scripts/r2-triage.py ./target.bin --output-dir ./r2-evidence
 ```
-
-When the MaxTAC MCP server is available, prefer `r2_triage` before invoking `r2-triage.py` directly. It calls the same collector and returns the generated manifest JSON.
 
 Use `--skip-r2` when only metadata/hashes are needed, and `--deep` only when deeper `r2` analysis is worth the runtime.
 

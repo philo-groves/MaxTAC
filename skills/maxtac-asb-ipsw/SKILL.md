@@ -13,7 +13,7 @@ Treat every output as build-specific. Preserve the device product type, model or
 
 Use `python3 <skill-dir>/scripts/ipsw-provenance.py` to keep firmware-derived facts tied to one build, source hash, restore identity, architecture, tool version, command line, and fact source. The helper creates a bundle under `<workspace-root>/research/apple-firmware/<case-id>/` and lints whether the minimum provenance fields are present.
 
-When the MaxTAC MCP server is available, prefer the `ipsw_provenance` tool before invoking the script directly. Set `action` to `init`, `record-command`, `add-artifact`, `lint`, or `summary`; the MCP tool calls the same helper and returns captured stdout plus parsed JSON for summaries.
+MaxTAC MCP convention: use `ipsw_provenance` before `scripts/ipsw-provenance.py` when available; actions mirror the script (`init`, `record-command`, `add-artifact`, `lint`, `summary`).
 
 Initialize a provenance bundle:
 

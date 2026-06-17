@@ -100,7 +100,7 @@ Use `python3 <skill-dir>/scripts/packet.py` to create, lint, and convert SAST pa
 - `cfg`: `maxtac-sast-control-flow-graph` Control-Flow Evidence.
 - `opengrep`: `maxtac-sast-opengrep` Result Packet.
 
-When the MaxTAC MCP server is available, prefer `packet_validate` before routing packet content into auditors or ledger updates. Use `audit_prompt_create` with `packet_paths` when a validated packet set should become a persisted auditor prompt.
+MaxTAC MCP convention: use `packet_validate` before routing packets into auditors or ledger updates, and use `audit_prompt_create` with `packet_paths` for persisted auditor prompts when available.
 
 Create a blank packet:
 

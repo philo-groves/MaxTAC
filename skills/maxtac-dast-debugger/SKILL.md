@@ -9,7 +9,7 @@ description: "Use this skill when dynamic analysis requires debugger, instrument
 
 Use `python3 <skill-dir>/scripts/debug-evidence.py` to collect debugger, instrumentation, replay, device, browser, or crash evidence into `<workspace-root>/proof/<case-id>/`.
 
-When the MaxTAC MCP server is available, prefer the `debug_evidence` tool before invoking the script directly. Set `action` to `init`, `capture`, `add-artifact`, `lint`, or `summary`; the MCP tool calls the same helper and returns captured stdout plus parsed JSON for summaries.
+MaxTAC MCP convention: use `debug_evidence` before `scripts/debug-evidence.py` when available; actions mirror the script (`init`, `capture`, `add-artifact`, `lint`, `summary`).
 
 Initialize a debug evidence case:
 

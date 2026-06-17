@@ -15,11 +15,9 @@ To determine whether to spawn subagents in parallel or sequentially, run:
 python <skill-dir>/scripts/readiness-check.py --subagents <count>
 ```
 
-When the MaxTAC MCP server is available, prefer `subagent_readiness` for this check before falling back to `readiness-check.py`.
+MaxTAC MCP convention: use `subagent_readiness` for readiness, `audit_prompt_create` / `debate_prompt_create` for persisted prompts, and `debate_tally` for ballot validation when available; the parent still owns final summaries.
 
 The script prints `parallel` or `sequential` after checking available system resources against the requested subagent count. If the result is `parallel`, spawn subagents using standard Codex subagent spawning mechanisms without waiting for each to finish. If the result is `sequential`, spawn one subagent at a time, waiting for it to finish before spawning the next.
-
-When the MaxTAC MCP server is available, prefer `audit_prompt_create` and `debate_prompt_create` for persisted subagent prompts. These tools create the `audits/<audit-id>/prompt.md` or `debates/<debate-id>/prompt.md` files and append the persistence instructions that subagents need. After debater ballots are written, use `debate_tally` to validate ballot JSON, count votes, compute average confidence, and write `debates/<debate-id>/tally.md`; the parent agent still owns the final summary and ledger state change.
 
 ## Goal-Bounded Subagent Runs
 Always spawn auditor and debater subagents with a Codex goal prompt, not only a task prompt. The first instruction in the subagent prompt must be to start the Codex goal mechanism using `/goal` in chat or `create_goal` when available, then work under that active goal. The goal must include a positive objective and a negative end outcome: the positive objective names the useful artifact the subagent should produce, while the negative end outcome names when the subagent should stop and persist blockers instead of expanding scope.

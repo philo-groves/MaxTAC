@@ -36,7 +36,7 @@ Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations 
 
 The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script.
 
-When the MaxTAC MCP server is available, prefer its workflow tools before falling back to `scripts/workspace.py`: `workspace_init`, `workspace_status`, `workspace_phase`, `workspace_new_submodule`, `workspace_split_large_markdown`, and `workspace_report_ready`. Use `evidence_pack` for generic proof evidence bundles that need copied artifacts, SHA-256 hashes, tool versions, command lines, export settings, related findings, and notes; use specialized MCP evidence tools or domain scripts when their stricter packet shape applies.
+MaxTAC MCP convention: use `workspace_init`, `workspace_status`, `workspace_phase`, `workspace_new_submodule`, `workspace_split_large_markdown`, and `workspace_report_ready` before `scripts/workspace.py` when available; use `evidence_pack` for generic proof bundles.
 
 ## Research Workspace
 MaxTAC is designed as a modular research workspace meant to scale for scopes of any size, continuously building a knowledge base that provides better context than most security researchers traditionally have access to. Models often persist every research file to the base directory, or fail to persist important knowledge at all; this guidance prevents that behavior.
