@@ -6,9 +6,31 @@ This plugin is heavily inspired by [MDASH](https://www.microsoft.com/en-us/secur
 ## Architecture
 ![MaxTAC Architecture Diagram](https://i.imgur.com/6RnsUeO.png)
 
-### Core Workflow
+### Workflow Phases
+Codex will work through these phases in any order.
 
-See the `maxtac-core-workflow` skill for related documentation.
+1. **Prepare**: Perform recon and threat modeling on the target.
+2. **Scan**: Spawn auditor subagents to search for vulnerabilities.
+3. **Validation**: Confirm logical validity and de-duplicate findings.
+4. **Primitive Proof**: Prove an individual primitive in isolation.
+5. **Chain Proof**: Realistically end-to-end prove a chain of primitives.
+6. **Reporting**: Write a report for a proven chain.
+
+### Workspace Structure
+Codex will create and manage the following relative files and directories.
+
+```
+program-info.md    # authorized scope and exclusions
+primitives.json    # individual findings (primitives) of all states
+chains.json        # combined findings (chains) of all states
+reporting/         # submission-ready reports and evidence indexes
+research/          # scalable markdown research library
+debates/           # debater subagent results
+audits/            # auditor subagent results
+proof/             # proof-of-vulnerability (PoV) development
+fuzz/              # fuzzing inputs, scripts, and artifacts
+tmp/               # temporary files that can be deleted between sessions
+```
 
 ### Problems & Solutions
 This plugin was created to resolve several issues that exist for general AI-based security research.
