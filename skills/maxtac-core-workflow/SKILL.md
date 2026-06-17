@@ -36,7 +36,7 @@ Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations 
 
 The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script.
 
-When the MaxTAC MCP server is available, prefer `workspace_init` for first-run workspace setup before falling back to `scripts/workspace.py init`. Use `evidence_pack` for generic proof evidence bundles that need copied artifacts, SHA-256 hashes, tool versions, command lines, export settings, related findings, and notes; specialized DAST, RE, LPAC, and IPSW evidence scripts should still be used when their stricter packet shape applies.
+When the MaxTAC MCP server is available, prefer its workflow tools before falling back to `scripts/workspace.py`: `workspace_init`, `workspace_status`, `workspace_phase`, `workspace_new_submodule`, `workspace_split_large_markdown`, and `workspace_report_ready`. Use `evidence_pack` for generic proof evidence bundles that need copied artifacts, SHA-256 hashes, tool versions, command lines, export settings, related findings, and notes; use specialized MCP evidence tools or domain scripts when their stricter packet shape applies.
 
 ## Research Workspace
 MaxTAC is designed as a modular research workspace meant to scale for scopes of any size, continuously building a knowledge base that provides better context than most security researchers traditionally have access to. Models often persist every research file to the base directory, or fail to persist important knowledge at all; this guidance prevents that behavior.
@@ -155,6 +155,6 @@ After executing any chain PoV, identify the submodule(s) and markdown(s) for the
 ### 6. Reporting
 Go to this phase after Chain Proof produces at least one proofed chain with accepted evidence.
 
-Run `python3 <skill-dir>/scripts/workspace.py report-ready` before drafting or finalizing a submission report. If the helper reports missing proof, scope, ledger, or phase evidence, return to the phase that can produce the missing artifact.
+Run `workspace_report_ready` or `python3 <skill-dir>/scripts/workspace.py report-ready` before drafting or finalizing a submission report. If the helper reports missing proof, scope, ledger, or phase evidence, return to the phase that can produce the missing artifact.
 
 Write submission-ready reports under `<workspace-root>/reporting/`. Reports should be based on proofed chains, not standalone primitives. Include the validated chain summary, attacker reachability, exploitability, affected versions or targets, reproduction steps, observed impact, proof artifacts, limitations, and any program-specific evidence requirements.

@@ -56,7 +56,7 @@ The `maxtac-core-*`, `maxtac-sast-*`, `maxtac-dast-*`, and `maxtac-re-*` skills 
 - `maxtac-msrc-mitigations`: Reasons about Microsoft platform mitigations, bypass constraints, unexpected runtime behavior, and workaround paths.
 
 ## MCP Tools
-MaxTAC includes a small Python MCP server declared in `.mcp.json`. When enabled in Codex, it exposes deterministic tools for workspace setup, ledger operations, auditor/debater prompt persistence, debate tallying, SAST packet validation, and generic evidence packing. These tools are intended to replace "remember to run this script" moments with callable functions while preserving the same JSON and markdown artifacts used by the skills.
+MaxTAC includes a small Python MCP server declared in `.mcp.json`. When enabled in Codex, it exposes deterministic tools for workspace setup and status, phase management, research submodules, ledger operations, auditor/debater prompt persistence, debate tallying, SAST packet validation, and evidence packing. It also wraps the existing debugger, fuzzing, LPAC, IPSW, Ghidra, JADX, radare2, and RE-readiness helper scripts so agents can call the same evidence collectors through MCP while preserving their JSON and markdown artifacts.
 
 ## How to Install
 Just ask Codex to install the plugin for you. With how fast Codex plugins are moving, any list of installation steps given may be invalid next week.

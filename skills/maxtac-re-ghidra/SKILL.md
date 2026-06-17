@@ -41,6 +41,8 @@ Use the readiness helper when Ghidra evidence needs to be repeatable or compared
 python3 <skill-dir>/scripts/re-readiness.py --tool ghidra --target ./target.bin --output re-readiness.md
 ```
 
+When the MaxTAC MCP server is available, prefer `re_readiness_check` for this readiness evidence before falling back to `re-readiness.py`.
+
 Use `ghidra-export.py` to preserve input hashes, project settings, loader/processor/compiler overrides, script paths, analysis timeouts, and the exact `analyzeHeadless` command before running headless analysis. It plans by default and only executes with `--run`:
 
 ```
@@ -52,6 +54,8 @@ python3 <skill-dir>/scripts/ghidra-export.py ./target.bin \
   --analysis-timeout 300 \
   --post-script ExportEvidence.java
 ```
+
+When the MaxTAC MCP server is available, prefer `ghidra_export` before invoking `ghidra-export.py` directly. It calls the same planner/runner and returns the generated manifest JSON.
 
 Add `--run` only after reviewing the generated command in `command.txt`.
 

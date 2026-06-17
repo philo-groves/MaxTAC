@@ -10,6 +10,8 @@ MaxTAC performs debugging to understand the runtime behavior of the target and i
 
 Use `python3 <skill-dir>/scripts/debug-evidence.py` to collect debugger, instrumentation, replay, device, browser, or crash evidence into `<workspace-root>/proof/<case-id>/`.
 
+When the MaxTAC MCP server is available, prefer the `debug_evidence` tool before invoking the script directly. Set `action` to `init`, `capture`, `add-artifact`, `lint`, or `summary`; the MCP tool calls the same helper and returns captured stdout plus parsed JSON for summaries.
+
 Initialize a debug evidence case:
 
 ```

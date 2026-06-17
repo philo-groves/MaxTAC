@@ -40,6 +40,8 @@ Use the generic RE readiness helper from the Ghidra skill to record Java/JADX av
 python3 <plugin-root>/skills/maxtac-re-ghidra/scripts/re-readiness.py --tool jadx --target ./target.apk --output re-readiness.md
 ```
 
+When the MaxTAC MCP server is available, prefer `re_readiness_check` for this readiness evidence before falling back to `re-readiness.py`.
+
 Use `python3 <skill-dir>/scripts/jadx-export.py` to preserve input hashes, JADX version, export mode, deobfuscation flags, plugin options, CFG settings, and the exact command line. It plans by default and only executes with `--run`:
 
 ```
@@ -49,6 +51,8 @@ python3 <skill-dir>/scripts/jadx-export.py ./target.apk \
   --deobf \
   --cfg
 ```
+
+When the MaxTAC MCP server is available, prefer `jadx_export` before invoking `jadx-export.py` directly. It calls the same planner/runner and returns the generated manifest JSON.
 
 Add `--run` only after reviewing the generated command in `command.txt`.
 

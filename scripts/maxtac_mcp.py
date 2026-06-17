@@ -10,6 +10,7 @@ import os
 import re
 import secrets
 import shutil
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -67,6 +68,10 @@ PACKET_TYPES = ("auto", "surface", "cfg", "opengrep")
 class ToolFailure(Exception):
     """A user-facing tool failure."""
 
+    def __init__(self, message: str, payload: dict[str, Any] | None = None) -> None:
+        super().__init__(message)
+        self.payload = payload
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -106,6 +111,20 @@ def workspace_module() -> ModuleType:
 
 def packet_module() -> ModuleType:
     return load_script("maxtac_packet_helper", PLUGIN_ROOT / "skills" / "maxtac-sast-surface-triage" / "scripts" / "packet.py")
+
+
+HELPER_SCRIPTS = {
+    "workspace": PLUGIN_ROOT / "skills" / "maxtac-core-workflow" / "scripts" / "workspace.py",
+    "readiness": PLUGIN_ROOT / "skills" / "maxtac-core-subagents" / "scripts" / "readiness-check.py",
+    "debug_evidence": PLUGIN_ROOT / "skills" / "maxtac-dast-debugger" / "scripts" / "debug-evidence.py",
+    "fuzz_campaign": PLUGIN_ROOT / "skills" / "maxtac-dast-fuzzer" / "scripts" / "fuzz-campaign.py",
+    "lpac_proof": PLUGIN_ROOT / "skills" / "maxtac-msrc-lpac-proof" / "scripts" / "lpac-proof.py",
+    "ipsw_provenance": PLUGIN_ROOT / "skills" / "maxtac-asb-ipsw" / "scripts" / "ipsw-provenance.py",
+    "re_readiness": PLUGIN_ROOT / "skills" / "maxtac-re-ghidra" / "scripts" / "re-readiness.py",
+    "ghidra_export": PLUGIN_ROOT / "skills" / "maxtac-re-ghidra" / "scripts" / "ghidra-export.py",
+    "jadx_export": PLUGIN_ROOT / "skills" / "maxtac-re-jadx" / "scripts" / "jadx-export.py",
+    "r2_triage": PLUGIN_ROOT / "skills" / "maxtac-re-radare2" / "scripts" / "r2-triage.py",
+}
 
 
 def resolve_workspace_root(value: str | None = None, *, must_exist: bool = True) -> Path:
@@ -160,6 +179,88 @@ def as_list(value: Any) -> list[str]:
     if isinstance(value, str):
         return [value] if value.strip() else []
     raise ToolFailure("Expected a string array")
+
+
+def require_text(args: dict[str, Any], key: str) -> str:
+    value = args.get(key)
+    if value is None or not str(value).strip():
+        raise ToolFailure(f"Missing required field: {key}")
+    return str(value)
+
+
+def kebab(value: str) -> str:
+    return value.replace("_", "-")
+
+
+def append_option(argv: list[str], key: str, value: Any, *, flag: str | None = None) -> None:
+    if value is None:
+        return
+    if isinstance(value, str) and not value.strip():
+        return
+    argv.extend([flag or f"--{kebab(key)}", str(value)])
+
+
+def append_many(argv: list[str], key: str, value: Any, *, flag: str | None = None) -> None:
+    for item in as_list(value):
+        argv.extend([flag or f"--{kebab(key)}", item])
+
+
+def append_flag(argv: list[str], key: str, value: Any, *, flag: str | None = None) -> None:
+    if bool(value):
+        argv.append(flag or f"--{kebab(key)}")
+
+
+def append_boolean_optional(argv: list[str], key: str, value: Any) -> None:
+    if value is None:
+        return
+    argv.append(f"--{kebab(key)}" if bool(value) else f"--no-{kebab(key)}")
+
+
+def parse_stdout_json(stdout: str) -> Any | None:
+    text = stdout.strip()
+    if not text or text[0] not in "[{":
+        return None
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return None
+
+
+def run_helper_script(script_key: str, argv: list[str], *, cwd: Path | None = None, timeout: int = 3600) -> dict[str, Any]:
+    script = HELPER_SCRIPTS[script_key]
+    command = [sys.executable, str(script), *argv]
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=str(cwd or PLUGIN_ROOT),
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        payload = {
+            "script": str(script.relative_to(PLUGIN_ROOT)),
+            "argv": argv,
+            "timeout_seconds": timeout,
+            "stdout": (exc.stdout or "").strip() if isinstance(exc.stdout, str) else "",
+            "stderr": (exc.stderr or "").strip() if isinstance(exc.stderr, str) else "",
+        }
+        raise ToolFailure(f"Helper script timed out: {script.name}", payload) from exc
+
+    payload: dict[str, Any] = {
+        "script": str(script.relative_to(PLUGIN_ROOT)),
+        "argv": argv,
+        "exit_code": completed.returncode,
+        "stdout": completed.stdout.strip(),
+        "stderr": completed.stderr.strip(),
+    }
+    parsed = parse_stdout_json(completed.stdout)
+    if parsed is not None:
+        payload["json"] = parsed
+    if completed.returncode != 0:
+        raise ToolFailure(f"Helper script failed: {script.name}", payload)
+    return payload
 
 
 def selected_ledger_types(raw_type: str | None, *, allow_all: bool, default_type: str = "primitive") -> list[str]:
@@ -332,6 +433,65 @@ def tool_ledger_update(args: dict[str, Any]) -> dict[str, Any]:
     return {"workspace_root": str(root), "path": str(path), "finding": finding}
 
 
+def tool_ledger_summary(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    mod = ledger_module()
+    result = []
+    for ledger_type in selected_ledger_types_for_args(args, allow_all=True):
+        path = ledger_path(root, ledger_type, args.get("file"))
+        ledger = mod.load_ledger(path, ledger_type)
+        counts: dict[str, int] = {state: 0 for state in STATES}
+        for finding in ledger.get("findings", []):
+            state = str(finding.get("state") or "unknown")
+            counts[state] = counts.get(state, 0) + 1
+        active = [finding for finding in ledger.get("findings", []) if finding.get("state") not in {"duplicate", "de-escalated"}]
+        result.append(
+            {
+                "type": ledger_type,
+                "path": str(path),
+                "total": len(ledger.get("findings", [])),
+                "active": len(active),
+                "counts": {state: count for state, count in counts.items() if count},
+                "active_findings": active,
+            }
+        )
+    return {"workspace_root": str(root), "ledgers": result}
+
+
+def tool_ledger_list(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    state = args.get("state")
+    if state and state not in STATES:
+        raise ToolFailure(f"Unknown finding state: {state}")
+    limit = int(args.get("limit") or 0)
+    mod = ledger_module()
+    findings = []
+    for ledger_type in selected_ledger_types_for_args(args, allow_all=True):
+        path = ledger_path(root, ledger_type, args.get("file"))
+        ledger = mod.load_ledger(path, ledger_type)
+        selected = ledger.get("findings", [])
+        if state:
+            selected = [finding for finding in selected if finding.get("state") == state]
+        if limit:
+            selected = selected[:limit]
+        for finding in selected:
+            findings.append({"type": ledger_type, "path": str(path), "finding": finding})
+    return {"workspace_root": str(root), "findings": findings}
+
+
+def tool_ledger_milestone(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    finding_id = require_text(args, "finding_id")
+    note = require_text(args, "note")
+    mod = ledger_module()
+    ledger_type, path, ledger, finding = find_ledger_finding(root, args, finding_id)
+    finding.setdefault("milestones", []).append({"time": mod.now(), "note": note})
+    finding["type"] = ledger_type
+    finding["updated_at"] = mod.now()
+    mod.save_ledger(path, ledger, ledger_type)
+    return {"workspace_root": str(root), "path": str(path), "finding": finding}
+
+
 def tool_workspace_init(args: dict[str, Any]) -> dict[str, Any]:
     root = resolve_workspace_root(args.get("workspace_root"))
     mod = workspace_module()
@@ -367,6 +527,117 @@ def tool_workspace_init(args: dict[str, Any]) -> dict[str, Any]:
         "program_info": {"path": str(program_info), "status": program_info_status},
         "ledgers": ledger_results,
         "state": {"path": str(root / STATE_FILE), "status": state_status, "phase": state.get("current_phase")},
+    }
+
+
+def tool_workspace_status(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    mod = workspace_module()
+    state = mod.load_state(root)
+    max_lines = int(args.get("max_lines") or mod.LARGE_MARKDOWN_LINES)
+    payload: dict[str, Any] = {
+        "workspace_root": str(root),
+        "phase": state.get("current_phase") if state else None,
+        "files": {},
+        "directories": {},
+        "ledgers": {},
+        "large_markdown": [],
+        "report_ready": mod.report_readiness(root, args.get("chain")),
+    }
+    for filename in mod.WORKSPACE_FILES:
+        payload["files"][filename] = (root / filename).exists()
+    for dirname in WORKSPACE_DIRS:
+        payload["directories"][dirname] = (root / dirname).is_dir()
+    for ledger_type in LEDGER_FILES:
+        path, ledger, error = mod.load_ledger(root, ledger_type)
+        payload["ledgers"][ledger_type] = {
+            "path": str(path),
+            "error": error,
+            "counts": mod.ledger_counts(ledger) if ledger else {},
+        }
+    payload["large_markdown"] = [
+        {"path": mod.relative_to(path, root), "lines": lines}
+        for path, lines in mod.large_markdown_files(root, max_lines)
+    ]
+    return payload
+
+
+def tool_workspace_phase(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    mod = workspace_module()
+    if args.get("list"):
+        return {
+            "workspace_root": str(root),
+            "phases": [
+                {"phase": phase, "next": sorted(mod.PHASE_TRANSITIONS[phase])}
+                for phase in mod.PHASES
+            ],
+        }
+    state = mod.load_state(root)
+    if state is None:
+        state = mod.initial_state("prepare", "Workspace phase initialized.")
+    current = str(state.get("current_phase", "prepare"))
+    target_raw = args.get("phase")
+    if not target_raw:
+        return {"workspace_root": str(root), "current_phase": current, "allowed_next": sorted(mod.PHASE_TRANSITIONS[current])}
+    target = mod.normalize_phase(str(target_raw))
+    if target == current:
+        mod.save_state(root, state)
+        return {"workspace_root": str(root), "current_phase": current, "changed": False}
+    allowed = mod.PHASE_TRANSITIONS[current]
+    if target not in allowed and not args.get("force", False):
+        raise ToolFailure(f"Invalid transition {current} -> {target}. Allowed: {', '.join(sorted(allowed))}. Use force to override.")
+    timestamp = mod.now()
+    state["current_phase"] = target
+    state["updated_at"] = timestamp
+    state.setdefault("phase_history", []).append(
+        {
+            "time": timestamp,
+            "from": current,
+            "to": target,
+            "note": str(args.get("note") or ""),
+        }
+    )
+    mod.save_state(root, state)
+    return {"workspace_root": str(root), "previous_phase": current, "current_phase": target, "changed": True}
+
+
+def tool_workspace_new_submodule(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    argv = ["new-submodule", "--root", str(root), require_text(args, "name")]
+    append_option(argv, "parent", args.get("parent"))
+    append_many(argv, "markdown", args.get("markdown"))
+    append_option(argv, "title", args.get("title"))
+    append_flag(argv, "no_artifacts", args.get("no_artifacts"))
+    append_flag(argv, "force", args.get("force"))
+    append_flag(argv, "overwrite", args.get("overwrite"))
+    result = run_helper_script("workspace", argv, cwd=root)
+    result["workspace_root"] = str(root)
+    return result
+
+
+def tool_workspace_split_large_markdown(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    argv = ["split-large-markdown", "--root", str(root), require_text(args, "markdown_file")]
+    append_option(argv, "submodule", args.get("submodule"))
+    append_option(argv, "large_threshold", args.get("large_threshold"))
+    append_option(argv, "max_lines", args.get("max_lines"))
+    append_many(argv, "copy_artifact", args.get("copy_artifact"))
+    append_flag(argv, "delete_source", args.get("delete_source"))
+    append_flag(argv, "delete_artifacts", args.get("delete_artifacts"))
+    append_flag(argv, "verified", args.get("verified"))
+    append_flag(argv, "force", args.get("force"))
+    result = run_helper_script("workspace", argv, cwd=root)
+    result["workspace_root"] = str(root)
+    return result
+
+
+def tool_workspace_report_ready(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    mod = workspace_module()
+    return {
+        "workspace_root": str(root),
+        **mod.report_readiness(root, args.get("chain"), require_report_file=bool(args.get("require_report_file", False))),
     }
 
 
@@ -734,6 +1005,312 @@ def tool_evidence_pack(args: dict[str, Any]) -> dict[str, Any]:
     return {"workspace_root": str(root), "pack_dir": str(pack_dir), "manifest_path": str(manifest_path), "manifest": manifest}
 
 
+def require_items(args: dict[str, Any], key: str) -> list[str]:
+    items = as_list(args.get(key))
+    if not items:
+        raise ToolFailure(f"Missing required field: {key}")
+    return items
+
+
+def tool_subagent_readiness(args: dict[str, Any]) -> dict[str, Any]:
+    count = int(args.get("subagents") or 1)
+    if count < 1 or count > 6:
+        raise ToolFailure("subagents must be between 1 and 6")
+    return run_helper_script("readiness", ["--subagents", str(count)], timeout=30)
+
+
+def tool_debug_evidence(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    action = require_text(args, "action")
+    argv = [action, "--root", str(root)]
+    if action == "init":
+        for key in ("tool", "target", "target_version", "scope", "environment"):
+            require_text(args, key)
+        for key in ("case_id", "tool", "tool_version", "version_command", "target", "target_version", "target_file", "scope", "environment", "command_line", "note", "timeout"):
+            append_option(argv, key, args.get(key))
+        append_many(argv, "env", args.get("env"))
+        append_many(argv, "artifact", args.get("artifacts") or args.get("artifact"))
+        append_flag(argv, "no_copy", args.get("no_copy"))
+        append_flag(argv, "force", args.get("force"))
+    elif action == "capture":
+        argv.append(require_text(args, "case"))
+        append_option(argv, "command", require_text(args, "command"))
+        append_option(argv, "label", args.get("label"))
+        append_many(argv, "env", args.get("env"))
+        append_option(argv, "timeout", args.get("timeout"))
+    elif action == "add-artifact":
+        argv.append(require_text(args, "case"))
+        require_items(args, "artifacts")
+        append_many(argv, "artifact", args.get("artifacts"))
+        append_option(argv, "category", args.get("category"))
+        append_option(argv, "note", args.get("note"))
+        append_flag(argv, "no_copy", args.get("no_copy"))
+    elif action == "lint":
+        argv.append(require_text(args, "case"))
+        append_flag(argv, "strict", args.get("strict"))
+    elif action == "summary":
+        argv.append(require_text(args, "case"))
+        argv.append("--json")
+    else:
+        raise ToolFailure(f"Unknown debug evidence action: {action}")
+    result = run_helper_script("debug_evidence", argv, cwd=root, timeout=int(args.get("mcp_timeout_seconds") or 3600))
+    result["workspace_root"] = str(root)
+    return result
+
+
+def tool_fuzz_campaign(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    action = require_text(args, "action")
+    argv = [action, "--root", str(root)]
+    if action == "init":
+        for key in ("target", "target_version", "tool", "scope", "environment", "rate_limits", "instrumentation"):
+            require_text(args, key)
+        for key in ("campaign_id", "target", "target_version", "target_file", "tool", "tool_version", "version_command", "scope", "environment", "rate_limits", "instrumentation", "note"):
+            append_option(argv, key, args.get(key))
+        for key in ("command", "env", "build_flag", "sanitizer_flag", "harness", "grammar", "model", "artifact"):
+            append_many(argv, key, args.get(f"{key}s") or args.get(key))
+        append_many(argv, "schema", args.get("schemas") or args.get("schema"))
+        append_many(argv, "request_template", args.get("request_templates") or args.get("request_template"))
+        append_many(argv, "ui_script", args.get("ui_scripts") or args.get("ui_script"))
+        append_many(argv, "seed_corpus", args.get("seed_corpora") or args.get("seed_corpus"))
+        append_many(argv, "dictionary", args.get("dictionaries") or args.get("dictionary"))
+        append_flag(argv, "no_copy", args.get("no_copy"))
+        append_flag(argv, "force", args.get("force"))
+    elif action == "add-run":
+        argv.append(require_text(args, "campaign"))
+        append_option(argv, "kind", args.get("kind"))
+        append_option(argv, "command", args.get("command"))
+        append_many(argv, "env", args.get("env"))
+        append_option(argv, "exit_code", args.get("exit_code"))
+        append_option(argv, "replay_command", args.get("replay_command"))
+        for key in ("log", "artifact", "crash_input", "minimized_reproducer", "debugger_output", "sanitizer_report", "stack_trace", "core_dump", "screenshot", "api_request_sequence"):
+            append_many(argv, key, args.get(f"{key}s") or args.get(key))
+        append_option(argv, "auth_context", args.get("auth_context"))
+        append_many(argv, "resource_id", args.get("resource_ids") or args.get("resource_id"))
+        append_many(argv, "cleanup_action", args.get("cleanup_actions") or args.get("cleanup_action"))
+        for key in ("invariant", "expected", "observed", "replay_stability", "note"):
+            append_option(argv, key, args.get(key))
+        append_flag(argv, "no_copy", args.get("no_copy"))
+    elif action == "lint":
+        argv.append(require_text(args, "campaign"))
+        append_option(argv, "kind", args.get("kind"))
+        append_flag(argv, "strict", args.get("strict"))
+    elif action == "summary":
+        argv.append(require_text(args, "campaign"))
+        append_option(argv, "kind", args.get("kind"))
+        argv.append("--json")
+    else:
+        raise ToolFailure(f"Unknown fuzz campaign action: {action}")
+    result = run_helper_script("fuzz_campaign", argv, cwd=root, timeout=int(args.get("mcp_timeout_seconds") or 3600))
+    result["workspace_root"] = str(root)
+    return result
+
+
+def tool_lpac_proof(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    action = require_text(args, "action")
+    argv = [action, "--root", str(root)]
+    if action == "init":
+        for key in (
+            "attack_scenario",
+            "eligible_sandbox",
+            "canary_build",
+            "tool_used",
+            "launch_command",
+            "debugger_dependency",
+            "build_instructions",
+            "baseline_denied_operation",
+            "exploit_success_operation",
+            "finishing_privilege_or_data",
+            "shipped_component",
+            "vulnerability_path",
+        ):
+            require_text(args, key)
+        for key in (
+            "case_id",
+            "attack_scenario",
+            "eligible_sandbox",
+            "sandbox_notes",
+            "canary_build",
+            "build_lab_ex",
+            "date_tested",
+            "sandbox_tools_repo",
+            "sandbox_tools_commit",
+            "tool_used",
+            "launch_command",
+            "debugger_dependency",
+            "optional_debugger_steps",
+            "build_instructions",
+            "baseline_denied_operation",
+            "exploit_success_operation",
+            "finishing_privilege_or_data",
+            "shipped_component",
+            "vulnerability_path",
+            "note",
+        ):
+            append_option(argv, key, args.get(key))
+        append_flag(argv, "capture_windows_build", args.get("capture_windows_build"))
+        append_boolean_optional(argv, "debugger_used", args.get("debugger_used"))
+        append_many(argv, "pov_source", args.get("pov_source"))
+        append_many(argv, "pov_binary", args.get("pov_binary"))
+        append_many(argv, "artifact", args.get("artifacts") or args.get("artifact"))
+        append_flag(argv, "no_copy", args.get("no_copy"))
+        append_flag(argv, "force", args.get("force"))
+    elif action == "capture":
+        argv.append(require_text(args, "case"))
+        append_option(argv, "command", require_text(args, "command"))
+        append_option(argv, "label", args.get("label"))
+        append_option(argv, "timeout", args.get("timeout"))
+    elif action == "add-artifact":
+        argv.append(require_text(args, "case"))
+        append_option(argv, "category", require_text(args, "category"))
+        require_items(args, "artifacts")
+        append_many(argv, "artifact", args.get("artifacts"))
+        append_option(argv, "note", args.get("note"))
+        append_flag(argv, "no_copy", args.get("no_copy"))
+    elif action == "lint":
+        argv.append(require_text(args, "case"))
+        append_flag(argv, "strict", args.get("strict"))
+    elif action == "summary":
+        argv.append(require_text(args, "case"))
+        argv.append("--json")
+    else:
+        raise ToolFailure(f"Unknown LPAC proof action: {action}")
+    result = run_helper_script("lpac_proof", argv, cwd=root, timeout=int(args.get("mcp_timeout_seconds") or 3600))
+    result["workspace_root"] = str(root)
+    return result
+
+
+def tool_ipsw_provenance(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root"))
+    action = require_text(args, "action")
+    argv = [action, "--root", str(root)]
+    if action == "init":
+        for key in ("device", "product_version", "build", "firmware_source", "restore_identity", "architecture"):
+            require_text(args, key)
+        for key in (
+            "case_id",
+            "device",
+            "model",
+            "board",
+            "product_version",
+            "build",
+            "firmware_source",
+            "firmware_sha256",
+            "restore_identity",
+            "architecture",
+            "artifact_type",
+            "ipsw",
+            "ipsw_version",
+            "fact_source",
+            "note",
+        ):
+            append_option(argv, key, args.get(key))
+        append_many(argv, "command", args.get("commands") or args.get("command"))
+        append_many(argv, "artifact", args.get("artifacts") or args.get("artifact"))
+        append_flag(argv, "no_copy", args.get("no_copy"))
+        append_flag(argv, "force", args.get("force"))
+    elif action == "record-command":
+        argv.append(require_text(args, "case"))
+        append_option(argv, "command", require_text(args, "command"))
+        append_option(argv, "fact_source", require_text(args, "fact_source"))
+        append_flag(argv, "capture", args.get("capture"))
+        append_option(argv, "label", args.get("label"))
+        append_option(argv, "timeout", args.get("timeout"))
+    elif action == "add-artifact":
+        argv.append(require_text(args, "case"))
+        require_items(args, "artifacts")
+        append_many(argv, "artifact", args.get("artifacts"))
+        append_option(argv, "category", require_text(args, "category"))
+        append_option(argv, "fact_source", require_text(args, "fact_source"))
+        append_option(argv, "command", args.get("command"))
+        append_option(argv, "note", args.get("note"))
+        append_flag(argv, "no_copy", args.get("no_copy"))
+    elif action == "lint":
+        argv.append(require_text(args, "case"))
+        append_flag(argv, "strict", args.get("strict"))
+    elif action == "summary":
+        argv.append(require_text(args, "case"))
+        argv.append("--json")
+    else:
+        raise ToolFailure(f"Unknown IPSW provenance action: {action}")
+    result = run_helper_script("ipsw_provenance", argv, cwd=root, timeout=int(args.get("mcp_timeout_seconds") or 3600))
+    result["workspace_root"] = str(root)
+    return result
+
+
+def tool_re_readiness_check(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root")) if args.get("workspace_root") else PLUGIN_ROOT
+    argv: list[str] = []
+    append_many(argv, "tool", args.get("tools") or args.get("tool"))
+    append_many(argv, "target", args.get("targets") or args.get("target"))
+    for key in ("output", "ghidra_home", "java", "r2", "rabin2", "rahash2", "rafind2", "radiff2", "jadx", "jadx_gui"):
+        append_option(argv, key, args.get(key))
+    argv.append("--json")
+    result = run_helper_script("re_readiness", argv, cwd=root, timeout=int(args.get("mcp_timeout_seconds") or 120))
+    if args.get("output"):
+        output_path = Path(str(args["output"])).expanduser()
+        if not output_path.is_absolute():
+            output_path = root / output_path
+        if output_path.exists():
+            try:
+                result["output_json"] = json.loads(output_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                result["output_text"] = output_path.read_text(encoding="utf-8", errors="replace")
+    result["workspace_root"] = str(root)
+    return result
+
+
+def tool_ghidra_export(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root")) if args.get("workspace_root") else PLUGIN_ROOT
+    argv = [require_text(args, "input")]
+    for key in ("output_dir", "project_dir"):
+        append_option(argv, key, require_text(args, key))
+    for key in ("project_name", "ghidra_home", "analyze_headless", "processor", "compiler", "loader", "analysis_timeout", "log", "script_log", "timeout"):
+        append_option(argv, key, args.get(key))
+    for key in ("loader_arg", "script_path", "pre_script", "post_script", "extra_arg"):
+        append_many(argv, key, args.get(f"{key}s") or args.get(key))
+    for key in ("no_analysis", "overwrite", "read_only", "run"):
+        append_flag(argv, key, args.get(key))
+    argv.append("--json")
+    wait = int(args.get("timeout") or 3600) + 60
+    result = run_helper_script("ghidra_export", argv, cwd=root, timeout=int(args.get("mcp_timeout_seconds") or wait))
+    result["workspace_root"] = str(root)
+    return result
+
+
+def tool_jadx_export(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root")) if args.get("workspace_root") else PLUGIN_ROOT
+    argv = [require_text(args, "input")]
+    append_option(argv, "output_dir", require_text(args, "output_dir"))
+    for key in ("jadx", "mode", "export_gradle_type", "timeout", "hash_limit"):
+        append_option(argv, key, args.get(key))
+    append_many(argv, "plugin_option", args.get("plugin_options") or args.get("plugin_option"))
+    append_many(argv, "extra_arg", args.get("extra_args") or args.get("extra_arg"))
+    for key in ("deobf", "show_bad_code", "cfg", "export_gradle", "run"):
+        append_flag(argv, key, args.get(key))
+    argv.append("--json")
+    wait = int(args.get("timeout") or 3600) + 60
+    result = run_helper_script("jadx_export", argv, cwd=root, timeout=int(args.get("mcp_timeout_seconds") or wait))
+    result["workspace_root"] = str(root)
+    return result
+
+
+def tool_r2_triage(args: dict[str, Any]) -> dict[str, Any]:
+    root = resolve_workspace_root(args.get("workspace_root")) if args.get("workspace_root") else PLUGIN_ROOT
+    argv = [require_text(args, "target")]
+    append_option(argv, "output_dir", require_text(args, "output_dir"))
+    for key in ("r2", "rabin2", "rahash2", "timeout"):
+        append_option(argv, key, args.get(key))
+    append_flag(argv, "skip_r2", args.get("skip_r2"))
+    append_flag(argv, "deep", args.get("deep"))
+    argv.append("--json")
+    wait = int(args.get("timeout") or 120) + 60
+    result = run_helper_script("r2_triage", argv, cwd=root, timeout=int(args.get("mcp_timeout_seconds") or wait))
+    result["workspace_root"] = str(root)
+    return result
+
+
 def schema(properties: dict[str, Any], required: list[str] | None = None) -> dict[str, Any]:
     return {"type": "object", "properties": properties, "required": required or [], "additionalProperties": False}
 
@@ -815,6 +1392,44 @@ TOOLS: dict[str, dict[str, Any]] = {
         ),
         "handler": tool_ledger_update,
     },
+    "ledger_summary": {
+        "description": "Summarize primitive and/or chain ledgers with state counts and active findings.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "type": {"type": "string", "enum": list(LEDGER_TYPES), "default": "all"},
+                "file": {"type": "string"},
+            }
+        ),
+        "handler": tool_ledger_summary,
+    },
+    "ledger_list": {
+        "description": "List MaxTAC findings from primitive and/or chain ledgers, optionally filtered by state.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "type": {"type": "string", "enum": list(LEDGER_TYPES), "default": "all"},
+                "file": {"type": "string"},
+                "state": {"type": "string", "enum": list(STATES)},
+                "limit": {"type": "integer", "minimum": 0, "default": 0},
+            }
+        ),
+        "handler": tool_ledger_list,
+    },
+    "ledger_milestone": {
+        "description": "Append a timestamped milestone note to a MaxTAC primitive or chain finding.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "type": {"type": "string", "enum": list(LEDGER_TYPES), "default": "all"},
+                "file": {"type": "string"},
+                "finding_id": {"type": "string"},
+                "note": {"type": "string"},
+            },
+            ["finding_id", "note"],
+        ),
+        "handler": tool_ledger_milestone,
+    },
     "workspace_init": {
         "description": "Initialize canonical MaxTAC workspace directories, ledgers, program info, and phase state.",
         "inputSchema": schema(
@@ -829,6 +1444,77 @@ TOOLS: dict[str, dict[str, Any]] = {
             }
         ),
         "handler": tool_workspace_init,
+    },
+    "workspace_status": {
+        "description": "Inspect MaxTAC workspace health, phase state, ledger counts, large markdown files, and report readiness.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "chain": {"type": "string"},
+                "max_lines": {"type": "integer", "minimum": 1, "default": 300},
+            }
+        ),
+        "handler": tool_workspace_status,
+    },
+    "workspace_phase": {
+        "description": "Show, list, or update the current MaxTAC workflow phase with transition validation.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "phase": {"type": "string", "enum": list(PHASES)},
+                "list": {"type": "boolean", "default": False},
+                "force": {"type": "boolean", "default": False},
+                "note": {"type": "string"},
+            }
+        ),
+        "handler": tool_workspace_phase,
+    },
+    "workspace_new_submodule": {
+        "description": "Create a research submodule under research/ with optional artifacts/ and subsystem markdown files.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "name": {"type": "string"},
+                "parent": {"type": "string"},
+                "markdown": {"type": "array", "items": {"type": "string"}},
+                "title": {"type": "string"},
+                "no_artifacts": {"type": "boolean", "default": False},
+                "force": {"type": "boolean", "default": False},
+                "overwrite": {"type": "boolean", "default": False},
+            },
+            ["name"],
+        ),
+        "handler": tool_workspace_new_submodule,
+    },
+    "workspace_split_large_markdown": {
+        "description": "Split an oversized research markdown file into a submodule and write a split manifest.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "markdown_file": {"type": "string"},
+                "submodule": {"type": "string"},
+                "large_threshold": {"type": "integer", "minimum": 1, "default": 300},
+                "max_lines": {"type": "integer", "minimum": 1, "default": 220},
+                "copy_artifact": {"type": "array", "items": {"type": "string"}},
+                "delete_source": {"type": "boolean", "default": False},
+                "delete_artifacts": {"type": "boolean", "default": False},
+                "verified": {"type": "boolean", "default": False},
+                "force": {"type": "boolean", "default": False},
+            },
+            ["markdown_file"],
+        ),
+        "handler": tool_workspace_split_large_markdown,
+    },
+    "workspace_report_ready": {
+        "description": "Check whether selected proofed chains have the required scope, ledger, proof, phase, and report evidence.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "chain": {"type": "string"},
+                "require_report_file": {"type": "boolean", "default": False},
+            }
+        ),
+        "handler": tool_workspace_report_ready,
     },
     "audit_prompt_create": {
         "description": "Create and persist a goal-bounded MaxTAC auditor prompt under audits/<audit-id>/.",
@@ -874,6 +1560,16 @@ TOOLS: dict[str, dict[str, Any]] = {
         ),
         "handler": tool_debate_tally,
     },
+    "subagent_readiness": {
+        "description": "Check whether the requested number of MaxTAC subagents should run in parallel or sequentially.",
+        "inputSchema": schema(
+            {
+                "subagents": {"type": "integer", "minimum": 1, "maximum": 6},
+            },
+            ["subagents"],
+        ),
+        "handler": tool_subagent_readiness,
+    },
     "packet_validate": {
         "description": "Validate MaxTAC SAST surface, CFG, or OpenGrep packets and return lint results.",
         "inputSchema": schema(
@@ -906,6 +1602,282 @@ TOOLS: dict[str, dict[str, Any]] = {
             }
         ),
         "handler": tool_evidence_pack,
+    },
+    "debug_evidence": {
+        "description": "Run the debugger/runtime evidence helper actions: init, capture, add-artifact, lint, or summary.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "action": {"type": "string", "enum": ["init", "capture", "add-artifact", "lint", "summary"]},
+                "case": {"type": "string"},
+                "case_id": {"type": "string"},
+                "tool": {"type": "string"},
+                "tool_version": {"type": "string"},
+                "version_command": {"type": "string"},
+                "target": {"type": "string"},
+                "target_version": {"type": "string"},
+                "target_file": {"type": "string"},
+                "scope": {"type": "string"},
+                "environment": {"type": "string"},
+                "command_line": {"type": "string"},
+                "command": {"type": "string"},
+                "label": {"type": "string"},
+                "env": {"type": "array", "items": {"type": "string"}},
+                "artifacts": {"type": "array", "items": {"type": "string"}},
+                "category": {"type": "string"},
+                "note": {"type": "string"},
+                "timeout": {"type": "integer", "minimum": 1},
+                "strict": {"type": "boolean", "default": False},
+                "no_copy": {"type": "boolean", "default": False},
+                "force": {"type": "boolean", "default": False},
+                "mcp_timeout_seconds": {"type": "integer", "minimum": 1},
+            },
+            ["action"],
+        ),
+        "handler": tool_debug_evidence,
+    },
+    "fuzz_campaign": {
+        "description": "Run the fuzz campaign evidence helper actions: init, add-run, lint, or summary.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "action": {"type": "string", "enum": ["init", "add-run", "lint", "summary"]},
+                "campaign": {"type": "string"},
+                "campaign_id": {"type": "string"},
+                "target": {"type": "string"},
+                "target_version": {"type": "string"},
+                "target_file": {"type": "string"},
+                "tool": {"type": "string"},
+                "tool_version": {"type": "string"},
+                "version_command": {"type": "string"},
+                "scope": {"type": "string"},
+                "environment": {"type": "string"},
+                "rate_limits": {"type": "string"},
+                "instrumentation": {"type": "string"},
+                "commands": {"type": "array", "items": {"type": "string"}},
+                "command": {"type": "string"},
+                "env": {"type": "array", "items": {"type": "string"}},
+                "build_flags": {"type": "array", "items": {"type": "string"}},
+                "sanitizer_flags": {"type": "array", "items": {"type": "string"}},
+                "harnesses": {"type": "array", "items": {"type": "string"}},
+                "grammars": {"type": "array", "items": {"type": "string"}},
+                "schemas": {"type": "array", "items": {"type": "string"}},
+                "models": {"type": "array", "items": {"type": "string"}},
+                "request_templates": {"type": "array", "items": {"type": "string"}},
+                "ui_scripts": {"type": "array", "items": {"type": "string"}},
+                "seed_corpora": {"type": "array", "items": {"type": "string"}},
+                "dictionaries": {"type": "array", "items": {"type": "string"}},
+                "artifacts": {"type": "array", "items": {"type": "string"}},
+                "kind": {"type": "string", "enum": ["campaign", "crash", "api", "logic"]},
+                "exit_code": {"type": "integer"},
+                "replay_command": {"type": "string"},
+                "logs": {"type": "array", "items": {"type": "string"}},
+                "crash_inputs": {"type": "array", "items": {"type": "string"}},
+                "minimized_reproducers": {"type": "array", "items": {"type": "string"}},
+                "debugger_outputs": {"type": "array", "items": {"type": "string"}},
+                "sanitizer_reports": {"type": "array", "items": {"type": "string"}},
+                "stack_traces": {"type": "array", "items": {"type": "string"}},
+                "core_dumps": {"type": "array", "items": {"type": "string"}},
+                "screenshots": {"type": "array", "items": {"type": "string"}},
+                "api_request_sequences": {"type": "array", "items": {"type": "string"}},
+                "auth_context": {"type": "string"},
+                "resource_ids": {"type": "array", "items": {"type": "string"}},
+                "cleanup_actions": {"type": "array", "items": {"type": "string"}},
+                "invariant": {"type": "string"},
+                "expected": {"type": "string"},
+                "observed": {"type": "string"},
+                "replay_stability": {"type": "string"},
+                "note": {"type": "string"},
+                "strict": {"type": "boolean", "default": False},
+                "no_copy": {"type": "boolean", "default": False},
+                "force": {"type": "boolean", "default": False},
+                "mcp_timeout_seconds": {"type": "integer", "minimum": 1},
+            },
+            ["action"],
+        ),
+        "handler": tool_fuzz_campaign,
+    },
+    "lpac_proof": {
+        "description": "Run the MSRC LPAC proof evidence helper actions: init, capture, add-artifact, lint, or summary.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "action": {"type": "string", "enum": ["init", "capture", "add-artifact", "lint", "summary"]},
+                "case": {"type": "string"},
+                "case_id": {"type": "string"},
+                "attack_scenario": {"type": "string", "enum": ["sandbox-escape", "private-data-access"]},
+                "eligible_sandbox": {"type": "string"},
+                "sandbox_notes": {"type": "string"},
+                "canary_build": {"type": "string"},
+                "build_lab_ex": {"type": "string"},
+                "capture_windows_build": {"type": "boolean", "default": False},
+                "date_tested": {"type": "string"},
+                "sandbox_tools_repo": {"type": "string"},
+                "sandbox_tools_commit": {"type": "string"},
+                "tool_used": {"type": "string"},
+                "launch_command": {"type": "string"},
+                "debugger_used": {"type": "boolean"},
+                "debugger_dependency": {"type": "string", "enum": ["none", "optional", "required"]},
+                "optional_debugger_steps": {"type": "string"},
+                "pov_source": {"type": "array", "items": {"type": "string"}},
+                "pov_binary": {"type": "array", "items": {"type": "string"}},
+                "build_instructions": {"type": "string"},
+                "baseline_denied_operation": {"type": "string"},
+                "exploit_success_operation": {"type": "string"},
+                "finishing_privilege_or_data": {"type": "string"},
+                "shipped_component": {"type": "string"},
+                "vulnerability_path": {"type": "string"},
+                "artifacts": {"type": "array", "items": {"type": "string"}},
+                "category": {"type": "string"},
+                "command": {"type": "string"},
+                "label": {"type": "string"},
+                "timeout": {"type": "integer", "minimum": 1},
+                "note": {"type": "string"},
+                "strict": {"type": "boolean", "default": False},
+                "no_copy": {"type": "boolean", "default": False},
+                "force": {"type": "boolean", "default": False},
+                "mcp_timeout_seconds": {"type": "integer", "minimum": 1},
+            },
+            ["action"],
+        ),
+        "handler": tool_lpac_proof,
+    },
+    "ipsw_provenance": {
+        "description": "Run the ASB IPSW provenance helper actions: init, record-command, add-artifact, lint, or summary.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "action": {"type": "string", "enum": ["init", "record-command", "add-artifact", "lint", "summary"]},
+                "case": {"type": "string"},
+                "case_id": {"type": "string"},
+                "device": {"type": "string"},
+                "model": {"type": "string"},
+                "board": {"type": "string"},
+                "product_version": {"type": "string"},
+                "build": {"type": "string"},
+                "firmware_source": {"type": "string"},
+                "firmware_sha256": {"type": "string"},
+                "restore_identity": {"type": "string"},
+                "architecture": {"type": "string"},
+                "artifact_type": {"type": "string"},
+                "ipsw": {"type": "string"},
+                "ipsw_version": {"type": "string"},
+                "commands": {"type": "array", "items": {"type": "string"}},
+                "command": {"type": "string"},
+                "fact_source": {"type": "string", "enum": ["archive-metadata", "extracted-file", "reconstructed-macho", "later-re-tooling", "diff-output", "runtime-device", "other"]},
+                "artifacts": {"type": "array", "items": {"type": "string"}},
+                "category": {"type": "string"},
+                "capture": {"type": "boolean", "default": False},
+                "label": {"type": "string"},
+                "timeout": {"type": "integer", "minimum": 1},
+                "note": {"type": "string"},
+                "strict": {"type": "boolean", "default": False},
+                "no_copy": {"type": "boolean", "default": False},
+                "force": {"type": "boolean", "default": False},
+                "mcp_timeout_seconds": {"type": "integer", "minimum": 1},
+            },
+            ["action"],
+        ),
+        "handler": tool_ipsw_provenance,
+    },
+    "re_readiness_check": {
+        "description": "Run the generic reverse-engineering readiness helper for Ghidra, radare2, and/or JADX.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "tools": {"type": "array", "items": {"type": "string", "enum": ["all", "ghidra", "radare2", "jadx"]}},
+                "targets": {"type": "array", "items": {"type": "string"}},
+                "output": {"type": "string"},
+                "ghidra_home": {"type": "string"},
+                "java": {"type": "string"},
+                "r2": {"type": "string"},
+                "rabin2": {"type": "string"},
+                "rahash2": {"type": "string"},
+                "rafind2": {"type": "string"},
+                "radiff2": {"type": "string"},
+                "jadx": {"type": "string"},
+                "jadx_gui": {"type": "string"},
+                "mcp_timeout_seconds": {"type": "integer", "minimum": 1},
+            }
+        ),
+        "handler": tool_re_readiness_check,
+    },
+    "ghidra_export": {
+        "description": "Plan or run a Ghidra analyzeHeadless export and return the generated evidence manifest.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "input": {"type": "string"},
+                "output_dir": {"type": "string"},
+                "project_dir": {"type": "string"},
+                "project_name": {"type": "string"},
+                "ghidra_home": {"type": "string"},
+                "analyze_headless": {"type": "string"},
+                "processor": {"type": "string"},
+                "compiler": {"type": "string"},
+                "loader": {"type": "string"},
+                "loader_args": {"type": "array", "items": {"type": "string"}},
+                "analysis_timeout": {"type": "integer", "minimum": 1},
+                "script_paths": {"type": "array", "items": {"type": "string"}},
+                "pre_scripts": {"type": "array", "items": {"type": "string"}},
+                "post_scripts": {"type": "array", "items": {"type": "string"}},
+                "extra_args": {"type": "array", "items": {"type": "string"}},
+                "no_analysis": {"type": "boolean", "default": False},
+                "overwrite": {"type": "boolean", "default": False},
+                "read_only": {"type": "boolean", "default": False},
+                "log": {"type": "string"},
+                "script_log": {"type": "string"},
+                "run": {"type": "boolean", "default": False},
+                "timeout": {"type": "integer", "minimum": 1, "default": 3600},
+                "mcp_timeout_seconds": {"type": "integer", "minimum": 1},
+            },
+            ["input", "output_dir", "project_dir"],
+        ),
+        "handler": tool_ghidra_export,
+    },
+    "jadx_export": {
+        "description": "Plan or run a JADX export and return the generated evidence manifest.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "input": {"type": "string"},
+                "output_dir": {"type": "string"},
+                "jadx": {"type": "string"},
+                "mode": {"type": "string", "enum": ["all", "sources", "resources"], "default": "all"},
+                "deobf": {"type": "boolean", "default": False},
+                "show_bad_code": {"type": "boolean", "default": False},
+                "cfg": {"type": "boolean", "default": False},
+                "export_gradle": {"type": "boolean", "default": False},
+                "export_gradle_type": {"type": "string", "enum": ["auto", "android-app", "android-library", "simple-java"]},
+                "plugin_options": {"type": "array", "items": {"type": "string"}},
+                "extra_args": {"type": "array", "items": {"type": "string"}},
+                "run": {"type": "boolean", "default": False},
+                "timeout": {"type": "integer", "minimum": 1, "default": 3600},
+                "hash_limit": {"type": "integer", "minimum": 1, "default": 500},
+                "mcp_timeout_seconds": {"type": "integer", "minimum": 1},
+            },
+            ["input", "output_dir"],
+        ),
+        "handler": tool_jadx_export,
+    },
+    "r2_triage": {
+        "description": "Collect repeatable radare2/rabin2/rahash2 binary triage evidence and return the manifest.",
+        "inputSchema": schema(
+            {
+                "workspace_root": {"type": "string"},
+                "target": {"type": "string"},
+                "output_dir": {"type": "string"},
+                "r2": {"type": "string"},
+                "rabin2": {"type": "string"},
+                "rahash2": {"type": "string"},
+                "skip_r2": {"type": "boolean", "default": False},
+                "deep": {"type": "boolean", "default": False},
+                "timeout": {"type": "integer", "minimum": 1, "default": 120},
+                "mcp_timeout_seconds": {"type": "integer", "minimum": 1},
+            },
+            ["target", "output_dir"],
+        ),
+        "handler": tool_r2_triage,
     },
 }
 
@@ -959,7 +1931,10 @@ def handle_request(message: dict[str, Any]) -> dict[str, Any] | None:
             payload = TOOLS[name]["handler"](arguments)
             return response(message_id, tool_response(payload))
         except ToolFailure as exc:
-            return response(message_id, tool_response({"error": str(exc)}, is_error=True))
+            error_payload = exc.payload or {"error": str(exc)}
+            if "error" not in error_payload:
+                error_payload = {"error": str(exc), **error_payload}
+            return response(message_id, tool_response(error_payload, is_error=True))
         except SystemExit as exc:
             return response(message_id, tool_response({"error": str(exc)}, is_error=True))
         except Exception as exc:  # noqa: BLE001 - MCP server must return tool errors, not crash.

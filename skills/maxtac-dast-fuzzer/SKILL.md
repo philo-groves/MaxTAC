@@ -13,6 +13,8 @@ All fuzzing inputs, scripts, and artifacts should be saved in the `fuzz/` direct
 
 Use `python3 <skill-dir>/scripts/fuzz-campaign.py` to create and lint fuzzing evidence bundles instead of tracking campaign facts in loose notes.
 
+When the MaxTAC MCP server is available, prefer the `fuzz_campaign` tool before invoking the script directly. Set `action` to `init`, `add-run`, `lint`, or `summary`; the MCP tool calls the same helper and returns captured stdout plus parsed JSON for summaries.
+
 Initialize a campaign under `<workspace-root>/fuzz/<campaign-id>/`:
 
 ```

@@ -42,11 +42,15 @@ Use the generic RE readiness helper from the Ghidra skill to record tool version
 python3 <plugin-root>/skills/maxtac-re-ghidra/scripts/re-readiness.py --tool radare2 --target ./target.bin --output re-readiness.md
 ```
 
+When the MaxTAC MCP server is available, prefer `re_readiness_check` for this readiness evidence before falling back to `re-readiness.py`.
+
 Use `python3 <skill-dir>/scripts/r2-triage.py` to collect repeatable binary triage evidence with `rabin2`, `rahash2`, and optional read-only `r2` analysis:
 
 ```
 python3 <skill-dir>/scripts/r2-triage.py ./target.bin --output-dir ./r2-evidence
 ```
+
+When the MaxTAC MCP server is available, prefer `r2_triage` before invoking `r2-triage.py` directly. It calls the same collector and returns the generated manifest JSON.
 
 Use `--skip-r2` when only metadata/hashes are needed, and `--deep` only when deeper `r2` analysis is worth the runtime.
 
@@ -63,7 +67,7 @@ Includes `rafind2` plus in-session `/` searching for strings, wide strings, rege
 See: `<skill-dir>/references/radare2-search.md`
 
 ### Analysis Workflow
-Includes `aa/aaa/aab/aaaa`, `r2 -A/-AA, af*`, `afl/aflj`, `afi`, `afv`, `aft`, `ax*`, CFG/call graph workflows, and “do not overtrust auto-analysis” guidance. Use different analysis depths and fine-grained `anal.*` / `emu.*` configuration.
+Includes `aa/aaa/aab/aaaa`, `r2 -A/-AA, af*`, `afl/aflj`, `afi`, `afv`, `aft`, `ax*`, CFG/call graph workflows, and "do not overtrust auto-analysis" guidance. Use different analysis depths and fine-grained `anal.*` / `emu.*` configuration.
 
 See: `<skill-dir>/references/radare2-analysis-workflow.md`
 

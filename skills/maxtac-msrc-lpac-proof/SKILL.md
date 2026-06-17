@@ -54,6 +54,8 @@ MSRC states that Attack Scenario submissions relying exclusively on a debugger f
 
 Use `python3 <skill-dir>/scripts/lpac-proof.py` to collect and lint the LPAC proof packet before report drafting. The helper creates a proof bundle under `<workspace-root>/proof/<case-id>/`, copies source/binary/evidence artifacts, records command output, and checks the report packet checklist below.
 
+When the MaxTAC MCP server is available, prefer the `lpac_proof` tool before invoking the script directly. Set `action` to `init`, `capture`, `add-artifact`, `lint`, or `summary`; the MCP tool calls the same helper and returns captured stdout plus parsed JSON for summaries.
+
 Initialize a proof case:
 
 ```powershell

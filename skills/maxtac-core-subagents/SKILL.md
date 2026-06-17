@@ -15,6 +15,8 @@ To determine whether to spawn subagents in parallel or sequentially, run:
 python <skill-dir>/scripts/readiness-check.py --subagents <count>
 ```
 
+When the MaxTAC MCP server is available, prefer `subagent_readiness` for this check before falling back to `readiness-check.py`.
+
 The script prints `parallel` or `sequential` after checking available system resources against the requested subagent count. If the result is `parallel`, spawn subagents using standard Codex subagent spawning mechanisms without waiting for each to finish. If the result is `sequential`, spawn one subagent at a time, waiting for it to finish before spawning the next.
 
 When the MaxTAC MCP server is available, prefer `audit_prompt_create` and `debate_prompt_create` for persisted subagent prompts. These tools create the `audits/<audit-id>/prompt.md` or `debates/<debate-id>/prompt.md` files and append the persistence instructions that subagents need. After debater ballots are written, use `debate_tally` to validate ballot JSON, count votes, compute average confidence, and write `debates/<debate-id>/tally.md`; the parent agent still owns the final summary and ledger state change.
