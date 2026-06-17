@@ -11,6 +11,8 @@
 
 Maximize your verified OpenAI Trusted Access for Cyber (TAC) membership with a plugin that identifies and proves vulnerabilities in source code, binaries, and web services. Optional skills for Apple and Microsoft vulnerability research are also included.
 
+Warning: Using this plugin with non-TAC accounts will likely trigger OpenAI cyber policy violations. Violations may sometimes occur for TAC-verified users, but none were experienced during plugin testing.
+
 ## System Requirements
 
 - `python` must be on your path for MaxTAC tools to work correctly.
