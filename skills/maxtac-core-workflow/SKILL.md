@@ -80,8 +80,12 @@ Go to this phase at the start of the workflow or when additional threat modeling
 #### First Run Setup
 Assume the first run is active if `<workspace-root>/program-info.md` does not exist. Ingest the program information to `<workspace-root>/program-info.md` as a preliminary step. Some programs have streamlined information via skills, others are more generic.
 
-- Apple: If the `maxtac-asb-program-info` skill is enabled and the target subsystem seems to be Apple-related, copy the skill markdown directly into the `<workspace-root>/program-info.md` file.
-- Other: Use `<skill-dir>/references/program-info.template.md` relative to this skill as a template and fill in the missing sections. Key information is usually publicly available via an official site: MSRC, Apple Security, Google VRP, Meta Security, HackerOne, and Bugcrowd program information is accessible on their public websites.
+- Apple Security Bounty: https://security.apple.com/bounty/categories/
+- Microsoft Security Response Center (MSRC) WIP: https://www.microsoft.com/en-us/msrc/bounty-windows-insider-preview
+- HackerOne: https://hackerone.com/opportunities/all
+- Bugcrowd: https://bugcrowd.com/engagements
+
+Use `<skill-dir>/references/program-info.template.md` relative to this skill as a template and fill in the missing sections. Key information is usually publicly available via an official site: MSRC, Apple Security, Google VRP, Meta Security, HackerOne, and Bugcrowd program information is accessible on their public websites.
 
 #### Target Setup
 Determine if a submodule relevant to this session activity already exists, and if not, create a submodule. Use the associated submodule for persisting security research: documenting markdown and creating child submodules as needed. Avoid recreating similar submodules as it may cause duplicate work.
