@@ -37,6 +37,7 @@ This plugin was created to resolve several issues that exist for general AI-base
 
 - **No Directory Structure**: By default, models will persist all files to the base directory of the workspace, turning a knowledge base into a scrambled mess. The solution is a directory hierarchy that transforms and grows with the research program.
 - **Incomplete Subagents**: By default, spawned subagents are not guaranteed to complete a specific task. The solution is to use Codex-native goals with positive and negative gates for each subagent.
+- **Heavy Subagents**: By default, each subagent consumes several GB of RAM, which can quickly cause resource collapse. The solution is a script that measures available resources, then helps decide between serial vs parallel spawn behavior.
 - **Few Bug Classes**: By default, models prefer a set of popular bug classes and not less frequent bug classes when necessary. The solution is a collection of 80+ prompt templates for specialist auditor subagents.
 - **Unstructured Phases**: By default, models have trouble managing and remembering their own research state. The solution is a set of tools for managing this state with a file-based workflow tracker.
 - **Unverified Findings**: By default, models will consider bug candidates to be confirmed before verification. The solution is a debate mechanism with several isolated voters to prevent self-bias.
