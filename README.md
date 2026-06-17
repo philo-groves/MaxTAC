@@ -3,6 +3,10 @@ Maximize your verified OpenAI Trusted Access for Cyber (TAC) membership with a p
 
 This plugin is heavily inspired by [MDASH](https://www.microsoft.com/en-us/security/blog/2026/05/12/defense-at-ai-speed-microsofts-new-multi-model-agentic-security-system-tops-leading-industry-benchmark/).
 
+## System Requirements
+
+- `python` must be on your path for MaxTAC tools to work correctly
+
 ## Architecture
 ![MaxTAC Architecture Diagram](https://i.imgur.com/6RnsUeO.png)
 
