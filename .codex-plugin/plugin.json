@@ -28,6 +28,7 @@
     "longDescription": "MaxTAC coordinates authorized vulnerability research campaigns across XNU, focused Apple platform bypass research, Windows kernel-adjacent artifacts, native binaries, and open-source systems code. It prepares target profiles, performs SAST surface triage, routes specialized Auditor subagents, tracks findings, keeps Apple domain research notes, debates reachability and exploitability, proofs issues in lab environments, and packages concise reports.",
     "developerName": "Philo Groves",
     "category": "Security",
+    "website": "https://github.com/philo-groves/MaxTAC",
     "capabilities": [
       "Interactive",
       "Read",
