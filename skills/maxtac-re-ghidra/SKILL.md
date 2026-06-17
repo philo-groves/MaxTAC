@@ -39,6 +39,8 @@ python3 <skill-dir>/scripts/ghidra-export.py ./target.bin \
 
 Add `--run` only after reviewing the generated command in `command.txt`.
 
+Store Ghidra projects, scripts, command logs, JSON exports, decompiler dumps, graphs, and version-tracking artifacts as evidence artifacts. When Ghidra work establishes durable subsystem behavior, rewrite the conclusion into the stable research-library markdown and link back to the artifact directory. Avoid creating `research/<component>/ghidra/` as a research submodule unless Ghidra itself is the target.
+
 ## Usage Guidance
 
 ### Headless Analysis

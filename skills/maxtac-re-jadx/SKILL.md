@@ -40,6 +40,8 @@ python3 <skill-dir>/scripts/jadx-export.py ./target.apk \
 
 Add `--run` only after reviewing the generated command in `command.txt`.
 
+Store JADX projects, exports, logs, decoded resources, generated CFGs, mappings, and debugger traces as evidence artifacts. When JADX work establishes durable subsystem behavior, rewrite the conclusion into the stable research-library markdown and link back to the artifact directory. Avoid creating `research/<component>/jadx/` as a research submodule unless JADX itself is the target.
+
 ## Usage Guidance
 
 ### CLI, Export, and Batch Runs

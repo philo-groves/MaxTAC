@@ -1,4 +1,4 @@
 interface:
   display_name: "MaxTAC Core Subagents"
-  short_description: "Spawn audit and debate subagents"
+  short_description: "Spawn goal-bounded audit and review agents"
   default_prompt: "Use $maxtac-core-subagents to run MaxTAC audit or verifier-debate subagents."

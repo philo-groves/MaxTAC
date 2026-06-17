@@ -58,9 +58,10 @@ Use this skill when a security hypothesis cannot be answered by reading one func
    - Check whether state transitions can be repeated, reordered, rolled back, or reached directly.
 
 6. Persist the evidence.
-   - For a quick pass, write a markdown path summary in the audit or research note.
+   - For a quick pass, write a markdown path summary in the audit note or the relevant stable research-library note.
    - For complex paths, persist a DOT, Mermaid, or tool-generated graph under the relevant `audits/<audit-id>/` or `research/<submodule>/artifacts/` directory.
    - Include the commands or tool steps used to derive the graph when reproducibility matters.
+   - If the graph produces durable knowledge, rewrite the conclusion into the subsystem markdown; keep generated graph files and transcripts as artifacts.
 
 ## Evidence Template
 

@@ -33,6 +33,8 @@ python3 <skill-dir>/scripts/r2-triage.py ./target.bin --output-dir ./r2-evidence
 
 Use `--skip-r2` when only metadata/hashes are needed, and `--deep` only when deeper `r2` analysis is worth the runtime.
 
+Store r2 scripts, command transcripts, JSON, disassembly dumps, graph exports, and hashes as artifacts. When RE establishes reusable subsystem behavior, rewrite the conclusion into the stable research-library markdown and link to the artifact directory. Avoid creating `research/<component>/r2/` as a research submodule unless radare2 itself is the target.
+
 ## Usage Guidance
 
 ### Binary Triage
