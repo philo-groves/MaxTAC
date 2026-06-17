@@ -663,13 +663,28 @@ def persist_audit_prompt(root: Path, raw_prompt: str) -> dict[str, Any]:
     audit_dir.mkdir(parents=True, exist_ok=False)
     assessment_path = audit_dir / "assessment.md"
     prompt_path = audit_dir / "prompt.md"
-    enriched = f"""## Codex Goal Instructions
+    goal_objective = (
+        "Produce a focused MaxTAC audit assessment for the supplied hypothesis, auditor specialty, and evidence, "
+        f"then persist it to {assessment_path}. Negative end outcome: if the supplied context, directly referenced "
+        "files, or available tools are insufficient to decide the hypothesis within a bounded pass, stop broadening "
+        "scope and persist an assessment with blockers, missing evidence, and the safest recommended next step."
+    )
+    goal_call = json.dumps({"objective": goal_objective})
+    enriched = f"""FIRST ACTION REQUIRED: activate a Codex goal before doing any audit work.
 
-Before doing any audit work, start the Codex goal mechanism using `/goal` in chat or `create_goal` when available. Use this goal prompt:
+If the `create_goal` tool is available, your first tool call must be:
 
-Positive objective: produce a focused MaxTAC audit assessment for the supplied hypothesis, auditor specialty, and evidence, then persist it to `{assessment_path}`.
+```json
+{goal_call}
+```
 
-Negative end outcome: if the supplied context, directly referenced files, or available tools are insufficient to decide the hypothesis within a bounded pass, stop broadening scope and persist an assessment with blockers, missing evidence, and the safest recommended next step.
+If `create_goal` is unavailable but slash commands are available, send this before any other work:
+
+```text
+/goal {goal_objective}
+```
+
+Do not inspect files, run commands, reason through the hypothesis, or draft the assessment until goal activation has been attempted. Work inside that active goal. If goal activation is unavailable, continue only within the bounds below and record `Goal activation: unavailable` in the assessment.
 
 Bounds: inspect the supplied packet/evidence, directly referenced files/functions, and immediately necessary callers/callees only. Do not start broad repo discovery, fuzzing, PoV construction, or unrelated refactors unless this prompt explicitly grants that scope. Do not complete the subagent run until the goal is either achieved or ended with the negative outcome above.
 
@@ -684,7 +699,7 @@ Bounds: inspect the supplied packet/evidence, directly referenced files/function
 Audit ID: `{audit_id}`
 Audit directory: `{audit_dir}`
 
-Persist the final audit assessment to `{assessment_path}` before completing the subagent run. Use Markdown. Include the vulnerability hypothesis or audit focus, method, reviewed files or components, findings, evidence, exploitability notes, blockers, and a clear conclusion. Persist supporting evidence files in the same audit directory when useful.
+Persist the final audit assessment to `{assessment_path}` before completing the subagent run. Use Markdown. Include a `Goal Activation` section naming `create_goal`, `/goal`, or `unavailable`; then include the vulnerability hypothesis or audit focus, method, reviewed files or components, findings, evidence, exploitability notes, blockers, and a clear conclusion. Persist supporting evidence files in the same audit directory when useful.
 """
     prompt_path.write_text(enriched, encoding="utf-8")
     return {"audit_id": audit_id, "audit_dir": str(audit_dir), "prompt_path": str(prompt_path), "assessment_path": str(assessment_path), "prompt": enriched}
@@ -735,13 +750,28 @@ def persist_debate_prompt(root: Path, raw_prompt: str) -> dict[str, Any]:
         debate_dir = ensure_within(root, root / "debates" / debate_id, "debate directory")
     debate_dir.mkdir(parents=True, exist_ok=False)
     prompt_path = debate_dir / "prompt.md"
-    enriched = f"""## Codex Goal Instructions
+    goal_objective = (
+        "Evaluate the single binary debate proposition from the supplied evidence and persist one well-supported "
+        f"ballot to {debate_dir}. Negative end outcome: if the proposition cannot be judged from the supplied or "
+        "directly referenced evidence within a bounded pass, stop broadening scope and persist a ballot with low "
+        "confidence, explicit blockers, and the side defined by the proposition as not-proven; when unclear, choose no."
+    )
+    goal_call = json.dumps({"objective": goal_objective})
+    enriched = f"""FIRST ACTION REQUIRED: activate a Codex goal before doing any debate work.
 
-Before doing any debate work, start the Codex goal mechanism using `/goal` in chat or `create_goal` when available. Use this goal prompt:
+If the `create_goal` tool is available, your first tool call must be:
 
-Positive objective: evaluate the single binary debate proposition from the supplied evidence and persist one well-supported ballot to `{debate_dir}`.
+```json
+{goal_call}
+```
 
-Negative end outcome: if the proposition cannot be judged from the supplied or directly referenced evidence within a bounded pass, stop broadening scope and persist a ballot with low confidence, explicit blockers, and the side defined by the proposition as not-proven; when unclear, choose `no`.
+If `create_goal` is unavailable but slash commands are available, send this before any other work:
+
+```text
+/goal {goal_objective}
+```
+
+Do not inspect files, run commands, reason through the proposition, or draft the ballot until goal activation has been attempted. Work inside that active goal. If goal activation is unavailable, continue only within the bounds below and record `"goal_activation": "unavailable"` in the ballot.
 
 Bounds: review only the debate prompt, supplied evidence, directly referenced files/artifacts, and immediately necessary context needed to cast the ballot. Do not launch new audits, fuzzing, PoV construction, or broad discovery. Do not complete the subagent run until the goal is either achieved or ended with the negative outcome above.
 
@@ -762,6 +792,7 @@ Persist your ballot before completing the subagent run. Choose a stable subagent
 {{
   "debate": "{debate_id}",
   "subagent": "<subagent-name>",
+  "goal_activation": "create_goal",
   "choice": "yes",
   "confidence": 85,
   "reasoning": "detailed reasoning for the choice",
@@ -770,7 +801,7 @@ Persist your ballot before completing the subagent run. Choose a stable subagent
 }}
 ```
 
-The `choice` value must be either `yes` or `no`. The `confidence` value must be an integer from 0 to 100. Use `blockers` for blockers or concerns about the debate topic, otherwise use null.
+The `goal_activation` value must be `create_goal`, `/goal`, or `unavailable`. The `choice` value must be either `yes` or `no`. The `confidence` value must be an integer from 0 to 100. Use `blockers` for blockers or concerns about the debate topic, otherwise use null.
 """
     prompt_path.write_text(enriched, encoding="utf-8")
     return {"debate_id": debate_id, "debate_dir": str(debate_dir), "prompt_path": str(prompt_path), "prompt": enriched}
@@ -835,6 +866,7 @@ def render_tally_markdown(result: dict[str, Any]) -> str:
                 f"## {ballot['subagent']}",
                 "",
                 f"- Ballot file: `{ballot['file']}`",
+                f"- Goal activation: {ballot['goal_activation']}",
                 f"- Choice: {ballot['choice']}",
                 f"- Confidence: {ballot['confidence']}",
                 "",
@@ -871,7 +903,7 @@ def render_summary_markdown(result: dict[str, Any]) -> str:
         blockers = f" Blockers: {ballot['blockers']}" if ballot.get("blockers") else ""
         lines.extend(
             [
-                f"- {ballot['subagent']}: {ballot['choice']} ({ballot['confidence']}%).{blockers}",
+                f"- {ballot['subagent']}: {ballot['choice']} ({ballot['confidence']}%). Goal activation: {ballot['goal_activation']}.{blockers}",
                 f"  Evidence: {ballot['evidence']}",
                 f"  Reasoning: {ballot['reasoning']}",
             ]
@@ -911,6 +943,7 @@ def tool_debate_tally(args: dict[str, Any]) -> dict[str, Any]:
             {
                 "file": str(path),
                 "subagent": str(ballot.get("subagent") or path.stem.removeprefix("ballot-")),
+                "goal_activation": str(ballot.get("goal_activation") or "unknown"),
                 "choice": choice,
                 "confidence": confidence,
                 "reasoning": str(ballot.get("reasoning") or ""),

@@ -52,13 +52,28 @@ def enrich_prompt(prompt_file: Path, root: Path) -> None:
     debate_dir.mkdir(parents=True, exist_ok=False)
 
     prompt_path = debate_dir / "prompt.md"
-    enriched = f"""## Codex Goal Instructions
+    goal_objective = (
+        "Evaluate the single binary debate proposition from the supplied evidence and persist one well-supported "
+        f"ballot to {debate_dir}. Negative end outcome: if the proposition cannot be judged from the supplied or "
+        "directly referenced evidence within a bounded pass, stop broadening scope and persist a ballot with low "
+        "confidence, explicit blockers, and the side defined by the proposition as not-proven; when unclear, choose no."
+    )
+    goal_call = json.dumps({"objective": goal_objective})
+    enriched = f"""FIRST ACTION REQUIRED: activate a Codex goal before doing any debate work.
 
-Before doing any debate work, start the Codex goal mechanism using `/goal` in chat or `create_goal` when available. Use this goal prompt:
+If the `create_goal` tool is available, your first tool call must be:
 
-Positive objective: evaluate the single binary debate proposition from the supplied evidence and persist one well-supported ballot to `{debate_dir}`.
+```json
+{goal_call}
+```
 
-Negative end outcome: if the proposition cannot be judged from the supplied or directly referenced evidence within a bounded pass, stop broadening scope and persist a ballot with low confidence, explicit blockers, and the side defined by the proposition as not-proven; when unclear, choose `no`.
+If `create_goal` is unavailable but slash commands are available, send this before any other work:
+
+```text
+/goal {goal_objective}
+```
+
+Do not inspect files, run commands, reason through the proposition, or draft the ballot until goal activation has been attempted. Work inside that active goal. If goal activation is unavailable, continue only within the bounds below and record `"goal_activation": "unavailable"` in the ballot.
 
 Bounds: review only the debate prompt, supplied evidence, directly referenced files/artifacts, and immediately necessary context needed to cast the ballot. Do not launch new audits, fuzzing, PoV construction, or broad discovery. Do not complete the subagent run until the goal is either achieved or ended with the negative outcome above.
 
@@ -79,6 +94,7 @@ Persist your ballot before completing the subagent run. Choose a stable subagent
 {{
   "debate": "{debate_id}",
   "subagent": "<subagent-name>",
+  "goal_activation": "create_goal",
   "choice": "yes",
   "confidence": 85,
   "reasoning": "detailed reasoning for the choice",
@@ -87,7 +103,7 @@ Persist your ballot before completing the subagent run. Choose a stable subagent
 }}
 ```
 
-The `choice` value must be either `yes` or `no`. The `confidence` value must be an integer from 0 to 100. Use `blockers` for blockers or concerns about the debate topic, otherwise use null.
+The `goal_activation` value must be `create_goal`, `/goal`, or `unavailable`. The `choice` value must be either `yes` or `no`. The `confidence` value must be an integer from 0 to 100. Use `blockers` for blockers or concerns about the debate topic, otherwise use null.
 """
     prompt_path.write_text(enriched, encoding="utf-8")
     print(enriched, end="")
@@ -132,6 +148,7 @@ def compute_tally(debate_id: str, debate_dir: Path, ballots: list[tuple[Path, di
             {
                 "file": str(path),
                 "subagent": ballot_value(ballot, "subagent", path.stem.removeprefix("ballot-")),
+                "goal_activation": ballot_value(ballot, "goal_activation", "unknown"),
                 "choice": choice,
                 "confidence": confidence,
                 "reasoning": ballot_value(ballot, "reasoning"),
@@ -181,6 +198,7 @@ def render_tally_markdown(result: dict[str, Any]) -> str:
                 f"## {ballot['subagent']}",
                 "",
                 f"- Ballot file: `{ballot['file']}`",
+                f"- Goal activation: {ballot['goal_activation']}",
                 f"- Choice: {ballot['choice']}",
                 f"- Confidence: {ballot['confidence']}",
                 "",
@@ -217,7 +235,7 @@ def render_summary_markdown(result: dict[str, Any]) -> str:
         blockers = f" Blockers: {ballot['blockers']}" if ballot.get("blockers") else ""
         lines.extend(
             [
-                f"- {ballot['subagent']}: {ballot['choice']} ({ballot['confidence']}%).{blockers}",
+                f"- {ballot['subagent']}: {ballot['choice']} ({ballot['confidence']}%). Goal activation: {ballot['goal_activation']}.{blockers}",
                 f"  Evidence: {ballot['evidence']}",
                 f"  Reasoning: {ballot['reasoning']}",
             ]
