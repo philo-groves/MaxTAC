@@ -15,6 +15,7 @@ This plugin was created to resolve several issues that exist for general AI-base
 
 - **No Directory Structure**: By default, models will persist all files to the base directory of the workspace, turning a knowledge base into a scrambled mess. The solution is a directory hierarchy that transforms and grows with the research program.
 - **Incomplete Subagents**: By default, spawned subagents are not guaranteed to complete a specific task. The solution is to use Codex-native goals with positive and negative gates for each subagent.
+- **Few Bug Classes**: By default, models prefer a set of popular bug classes and not less frequent bug classes when necessary. The solution is a collection of 80+ prompt templates for specialist auditor subagents.
 - **Unverified Findings**: By default, models will consider bug candidates to be confirmed before verification. The solution is a debate mechanism with several isolated voters to prevent self-bias.
 - **Finding Confusion**: Even with a perfect research library, findings may become sparse, duplicated, and hard to find. The solution is a core ledger skill with a file-based tracker.
 - **Primitive Loss**: By default, models often de-escalate findings if not relevant to the chain-at-hand, invalidating future work with the primitive. The solution is separate tracking for primitives and chains.
