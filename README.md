@@ -11,46 +11,45 @@ This plugin was created to resolve several issues that exist for general AI-base
 - **Unverified Findings**: By default, models will consider bug candidates to be confirmed before verification. The solution is a debate mechanism with several isolated voters to prevent self-bias, plus a stateful finding ledger.
 
 ## Skills
-The `maxtac-core-*`, `maxtac-sast-*`, `maxtac-dast-*`, and `maxtac-re-*` skills must always be enabled for the plugin to work correctly.
+The `maxtac-core-*`, `maxtac-sast-*`, `maxtac-dast-*`, and `maxtac-re-*` skills should be enabled for general MaxTAC research. The Apple (`maxtac-asb-*`) and Microsoft (`maxtac-msrc-*`) skills are optional domain packs for platform-specific programs.
 
-The `maxtac-core-*` skills work together to create healthy research sessions(s) and a scalable knowledge base.
+### Core workflow
 
-- `maxtac-core-workflow`: Acts as an orchestrator for all research. Manages a set of research phases to work through, tracks those phases, and aides with continued research planning.
-- `maxtac-core-subagents`: Subagent flows for security auditing and verifier debate, including how to spawn subagents of each type and prompt templates to use.
-- `maxtac-core-ledger`: Centralized finding management to help with research history tracking and deduplication. Each finding has a state and a link to its research notes.
+- `maxtac-core-workflow`: Starts, organizes, and continues authorized vulnerability research sessions with standard directories, phases, subsystem notes, validation, proof, and reporting flow.
+- `maxtac-core-subagents`: Runs goal-bounded auditor and verifier-debate subagents for specialist review, mitigation review, and independent votes on vulnerability hypotheses.
+- `maxtac-core-ledger`: Tracks findings, deduplicates candidates, records state transitions, links evidence, and manages promotion, de-escalation, proof, and report status.
 
-The `maxtac-sast-*` skills are used to perform Static Application Security Testing (SAST).
+### Static analysis
 
 - `maxtac-sast-surface-triage`: Maps source-code and decompiled-code trust boundaries, danger areas, invariants, and auditor routing hints before targeted scans.
-- `maxtac-sast-control-flow-graph`: Builds focused reachability, guard dominance, path feasibility, callback, cleanup, lock, and state-transition evidence for SAST hypotheses.
-- `maxtac-sast-opengrep`: Provides instructions and references for writing and using OpenGrep rules, then packaging match evidence for CFG analysis or targeted auditors.
+- `maxtac-sast-control-flow-graph`: Builds focused static control-flow and call-graph evidence for reachability, guard dominance, path feasibility, callbacks, cleanup paths, lock order, state transitions, and source-to-sink paths.
+- `maxtac-sast-opengrep`: Guides OpenGrep rule authoring, taint and pattern matching, result interpretation, and packaging evidence for MaxTAC analysis.
 
-The `maxtac-dast-*` skills are used to perform Dynamic Application Security Testing (DAST).
+### Dynamic analysis
 
-- `maxtac-dast-debugger`: 
-- `maxtac-dast-fuzzer`: 
-- `maxtac-dast-virtualization`: 
+- `maxtac-dast-debugger`: Supports debugger, instrumentation, device, browser, and runtime tooling, including LLDB, GDB, x64dbg, WinDbg, Frida, ADB, xcrun, CDP, WebDriver BiDi, and WebKit debugging.
+- `maxtac-dast-fuzzer`: Plans fuzzing for parsers, binaries, kernels, protocols, APIs, web apps, browsers, mobile apps, managed runtimes, coverage-guided engines, grammar fuzzers, and harness selection.
+- `maxtac-dast-virtualization`: Sets up controlled dynamic testing and exploit-validation environments with snapshots, isolation, guest networking, hypervisors, containers, and repeatable lab workflows.
 
-The `maxtac-re-*` skills are used to perform reverse engineering (RE).
+### Reverse engineering
 
-- `maxtac-re-ghidra`: 
-- `maxtac-re-jadx`: 
-- `maxtac-re-radare2`: 
+- `maxtac-re-ghidra`: Uses Ghidra for headless analysis, decompilation, p-code inspection, scripting, binary search, data type recovery, version tracking, BSim similarity, debugging, and emulation.
+- `maxtac-re-jadx`: Uses JADX for Android APK, DEX, JAR, AAR, AAB, smali, resource decoding, deobfuscation, mappings, GUI search, smali debugging, API automation, and plugin workflows.
+- `maxtac-re-radare2`: Uses radare2 for binary triage, analysis, expression and string search, binary diffing, debugging, ESIL emulation, hex utilities, and automation.
 
-The `maxtac-asb-*` skills should only be enabled for macOS, iOS, and other Apple-related research.
+### Apple Security Bounty
 
-- `maxtac-asb-flag-proof`: Details for Apple target flags, which are vulnerability proof mechanisms built into every Apple OS.
-- `maxtac-asb-mitigations`: 
-- `maxtac-asb-workflow`: 
+- `maxtac-asb-flag-proof`: Proves Apple Security Bounty target flags for register control, arbitrary read/write, arbitrary code execution, and TCC modification across Apple platforms.
+- `maxtac-asb-ipsw`: Handles Apple firmware reverse engineering with `ipsw`, including IPSW/OTA download, extraction, kernelcache, dyld shared cache, DeviceTree, DMG, IMG4, iBoot, SEP, coprocessor, trust cache, filesystem, mount, diff, and ASB evidence workflows.
+- `maxtac-asb-mitigations`: Reasons about Apple software and hardware mitigations, bypass constraints, unexpected runtime behavior, and workaround paths.
 
-The `maxtac-msrc-*` skills should only be enabled for Windows, .NET, and other Microsoft-related research.
+### Microsoft Security Response Center
 
-- `maxtac-msrc-lpac-proof`: 
-- `maxtac-msrc-mitigations`: 
-- `maxtac-msrc-workflow`: 
+- `maxtac-msrc-lpac-proof`: Proves Windows Insider Preview local sandbox attack scenarios for MSRC submissions, especially LPAC sandbox escapes and private data access using Microsoft SandboxSecurityTools.
+- `maxtac-msrc-mitigations`: Reasons about Microsoft platform mitigations, bypass constraints, unexpected runtime behavior, and workaround paths.
 
 ## MCP Tools
-MaxTAC includes a small Python MCP server declared in `.mcp.json`. When enabled in Codex, it exposes deterministic tools for workspace setup, ledger operations, auditor/debater prompt persistence, debate tallying, SAST packet validation, and generic evidence packing. These tools are intended to replace “remember to run this script” moments with callable functions while preserving the same JSON and markdown artifacts used by the skills.
+MaxTAC includes a small Python MCP server declared in `.mcp.json`. When enabled in Codex, it exposes deterministic tools for workspace setup, ledger operations, auditor/debater prompt persistence, debate tallying, SAST packet validation, and generic evidence packing. These tools are intended to replace "remember to run this script" moments with callable functions while preserving the same JSON and markdown artifacts used by the skills.
 
 ## How to Install
 Just ask Codex to install the plugin for you. With how fast Codex plugins are moving, any list of installation steps given may be invalid next week.
