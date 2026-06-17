@@ -44,6 +44,7 @@ This plugin was created to resolve several issues that exist for general AI-base
 - **Finding Confusion**: Even with a perfect research library, findings may become sparse, duplicated, and hard to find. The solution is a core ledger skill with a file-based findings tracker.
 - **Primitive Loss**: By default, models often de-escalate findings if not relevant to the chain-at-hand, invalidating future work with the primitive. The solution is separate tracking for primitives and chains.
 - **Minimal Tool Knowledge**: By default, models will only have knowledge of tools within their training data. Advanced, uncommon, and newer features are limited. The solution is guidance for advanced tools (e.g. radare2, opengrep, AFL++).
+- **Debugger Neglect**: By default, models will prefer static analysis and fuzzing for vulnerability research. These are strong, but debuggers are often ignored. The solution is guidance for debuggers on every major platform, plus web.
 
 ## Skills
 The `maxtac-core-*`, `maxtac-sast-*`, `maxtac-dast-*`, and `maxtac-re-*` skills should be enabled for general MaxTAC research. The Apple `maxtac-asb-*` and Microsoft `maxtac-msrc-*` skills are optional domain packs for platform-specific programs.
