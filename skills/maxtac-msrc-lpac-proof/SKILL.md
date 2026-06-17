@@ -101,33 +101,11 @@ python3 <skill-dir>/scripts/lpac-proof.py lint <case-id> --strict
 python3 <skill-dir>/scripts/lpac-proof.py summary <case-id>
 ```
 
-## Build the Microsoft Tools
+## Microsoft Tool Setup
 
-Use the official repository:
+When `SandboxSecurityTools` is missing, or when `LaunchAppContainer` or `EdgeSandboxTestTool` needs to be built, ask first, then read `<skill-dir>/references/sandboxsecuritytools-build.md`.
 
-```powershell
-git clone https://github.com/microsoft/SandboxSecurityTools.git
-cd SandboxSecurityTools\LaunchAppContainer
-msbuild LaunchAppContainer.sln /p:Configuration=Release /p:Platform=x64
-```
-
-For Edge renderer sandbox testing:
-
-```powershell
-cd SandboxSecurityTools\EdgeSandboxTestTool
-mkdir build
-cd build
-cmake ..\src
-cmake --build . --config Release
-```
-
-`EdgeSandboxTestTool` produces `estt.exe` and `renderer.exe`. Edit `EdgeSandboxTestTool\src\child\renderer\renderer.cc`, put the exploit trigger in `custom()`, rebuild, then run:
-
-```powershell
-.\Release\estt.exe .\Release\renderer.exe
-```
-
-Do not use `estt.exe` to run arbitrary executables. The repository warns that the sandbox process must complete a specific initialization routine, and using ESTT to run something other than `renderer.exe` is not supported and may not match the Chromium renderer sandbox restrictions.
+Do not use `estt.exe` to run arbitrary executables. ESTT must start its paired `renderer.exe` so the sandbox process completes the expected Chromium renderer initialization.
 
 ## LaunchAppContainer MSRC Mode
 

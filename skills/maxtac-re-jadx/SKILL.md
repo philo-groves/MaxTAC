@@ -18,7 +18,7 @@ jadx-gui --help
 java -version
 ```
 
-On Windows, use the `.bat` launchers when the release `bin` directory is not on `PATH`. If JADX is not installed, ask before installing.
+On Windows, use the `.bat` launchers when the release `bin` directory is not on `PATH`. If JADX is not installed or a source build is needed, ask first, then read `<skill-dir>/references/jadx-install-build.md`.
 
 Use the generic RE readiness helper from the Ghidra skill to record Java/JADX availability and input hashes before report-grade Android RE work:
 

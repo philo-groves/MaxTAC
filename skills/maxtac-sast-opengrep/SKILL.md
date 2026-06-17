@@ -11,7 +11,7 @@ opengrep --version
 opengrep --help
 ```
 
-If OpenGrep is not installed, ask before installing.
+If OpenGrep is not installed, ask first, then read `<skill-dir>/references/opengrep-install.md`.
 
 ## Effective Rules
 Use `maxtac-sast-surface-triage` first when the target is not already narrowed. Let the triage packet provide entrypoints, controlled inputs, sinks, guards, invariants, and auditor filters.

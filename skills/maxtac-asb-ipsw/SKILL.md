@@ -69,14 +69,14 @@ ipsw kernel --help
 ipsw img4 --help
 ```
 
-On Windows, check the same commands in PowerShell after installing with Scoop:
+On Windows, check the same commands in PowerShell:
 
 ```powershell
 ipsw.exe version
 ipsw.exe extract --help
 ```
 
-If `ipsw` is missing, ask before installing. Prefer an official blacktop build when device interaction, Frida, or other extras are needed.
+If `ipsw` is missing or a source build is needed, ask first, then read `<skill-dir>/references/ipsw-install-build.md`.
 
 Use explicit output directories. IPSW/OTA artifacts are large, and `ipsw diff` uses persistent caches by default.
 

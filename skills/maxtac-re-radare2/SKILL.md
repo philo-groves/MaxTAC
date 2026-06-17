@@ -15,7 +15,7 @@ rabin2 -v
 rahash2 -v
 ```
 
-If radare2 is not installed, ask before installing.
+If radare2 is not installed or a source build is needed, ask first, then read `<skill-dir>/references/radare2-install-build.md`.
 
 Use the generic RE readiness helper from the Ghidra skill to record tool versions and target hashes before report-grade RE work:
 

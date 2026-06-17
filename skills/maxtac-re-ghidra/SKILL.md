@@ -15,7 +15,7 @@ java -version
 python -c "import pyghidra; print(pyghidra.__version__)"
 ```
 
-If Ghidra is not installed, ask before installing. Use official prebuilt release assets; do not treat GitHub-generated source archives as installable Ghidra releases.
+If Ghidra is not installed or a source/native build is needed, ask first, then read `<skill-dir>/references/ghidra-install-build.md`.
 
 Use the readiness helper when Ghidra evidence needs to be repeatable or compared with radare2/JADX evidence:
 
