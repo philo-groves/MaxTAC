@@ -6,6 +6,7 @@ This plugin is heavily inspired by [MDASH](https://www.microsoft.com/en-us/secur
 ## System Requirements
 
 - `python` must be on your path for MaxTAC tools to work correctly.
+- Subagents: Codex only spawns subagents when explicitly prompted by the user. Go into your Codex settings and add this instruction: "You are allowed to spawn subagents when necessary."
 - External research tools are target-specific, not all mandatory. See [TOOLING.md](TOOLING.md) for the primary tools MaxTAC routes to across SAST, DAST, reverse engineering, Apple firmware, and MSRC proof workflows.
 
 ## Architecture
