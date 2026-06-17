@@ -14,11 +14,13 @@ See the `maxtac-core-workflow` skill for related documentation.
 This plugin was created to resolve several issues that exist for general AI-based security research.
 
 - **No Directory Structure**: By default, models will persist all files to the base directory of the workspace, turning a knowledge base into a scrambled mess. The solution is a directory hierarchy that transforms and grows with the research program.
+- **Unverified Findings**: By default, models will consider bug candidates to be confirmed before verification. The solution is a debate mechanism with several isolated voters to prevent self-bias.
+- **Finding Confusion**: Even with a perfect research library, findings may become sparse, duplicated, and hard to find. The solution is a core ledger skill with a file-based tracker.
+- **Primitive Loss**: By default, models often de-escalate findings if not relevant to the chain-at-hand, invalidating future work with the primitive. The solution is separate tracking for primitives and chains.
 - **Minimal Tool Knowledge**: By default, models will only have knowledge of tools within their training data. Advanced, uncommon, and newer features are limited. The solution is guidance for advanced tools (e.g. radare2, opengrep).
-- **Unverified Findings**: By default, models will consider bug candidates to be confirmed before verification. The solution is a debate mechanism with several isolated voters to prevent self-bias, plus a stateful finding ledger.
 
 ## Skills
-The `maxtac-core-*`, `maxtac-sast-*`, `maxtac-dast-*`, and `maxtac-re-*` skills should be enabled for general MaxTAC research. The Apple (`maxtac-asb-*`) and Microsoft (`maxtac-msrc-*`) skills are optional domain packs for platform-specific programs.
+The `maxtac-core-*`, `maxtac-sast-*`, `maxtac-dast-*`, and `maxtac-re-*` skills should be enabled for general MaxTAC research. The Apple `maxtac-asb-*` and Microsoft `maxtac-msrc-*` skills are optional domain packs for platform-specific programs.
 
 ### Core Workflow
 
