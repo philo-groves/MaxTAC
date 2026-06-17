@@ -9,6 +9,8 @@ Use `ipsw` when an Apple firmware artifact is the source of truth: IPSW and OTA 
 
 Treat every output as build-specific. Preserve the device product type, model or board when relevant, product version, build number, firmware URL or local source path, original file hash, selected restore identity, architecture, `ipsw` version, command line, and whether facts came from archive metadata, extracted files, reconstructed Mach-O output, or later RE tooling.
 
+Keep build-specific firmware bundles, extracted binaries, hashes, command logs, and generated metadata as artifacts. When firmware work reveals reusable platform knowledge, rewrite it into the stable system research library, such as `research/<platform>/firmware/provenance.md`, `research/<platform>/kernel/<subsystem>.md`, or `research/<platform>/<component>/<subsystem>.md`. Do not let build IDs, dates, or `ipsw` case IDs become the main library hierarchy.
+
 ## Provenance Helper
 
 Use `python3 <skill-dir>/scripts/ipsw-provenance.py` to keep firmware-derived facts tied to one build, source hash, restore identity, architecture, tool version, command line, and fact source. The helper creates a bundle under `<workspace-root>/research/apple-firmware/<case-id>/` and lints whether the minimum provenance fields are present.

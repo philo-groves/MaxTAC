@@ -6,6 +6,8 @@ description: "Use this skill when MaxTAC vulnerability research needs finding st
 # MaxTAC Ledger
 Use this skill as the single-source-of-truth for findings and their states. The parent agent owns ledger writes; subagents return packets for the parent to merge. There are two types of findings: primitives and chains. A primitive is individual code or security flaw, while a chain combines one or more primitives into a reproducible attacker-reachable proof.
 
+The ledger tracks finding state; it is not a replacement for the research library. When a ledger milestone records durable subsystem knowledge, a confirmed negative result, or an architectural invariant, also rewrite that knowledge into the relevant `research/` markdown file and link the ledger entry to the supporting artifact.
+
 - Primitives path: `primitives.json`
 - Chains path: `chains.json`
 

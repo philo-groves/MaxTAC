@@ -1530,7 +1530,7 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": tool_workspace_phase,
     },
     "workspace_new_submodule": {
-        "description": "Create a research submodule under research/ with optional artifacts/ and subsystem markdown files.",
+        "description": "Create a durable system-focused research submodule under research/ with optional subsystem markdown and an artifacts/ directory for raw evidence.",
         "inputSchema": schema(
             {
                 "workspace_root": {"type": "string"},
@@ -1547,7 +1547,7 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": tool_workspace_new_submodule,
     },
     "workspace_split_large_markdown": {
-        "description": "Split an oversized research markdown file into a submodule and write a split manifest.",
+        "description": "Split an oversized book-like research markdown file into a subsystem submodule and write a split manifest.",
         "inputSchema": schema(
             {
                 "workspace_root": {"type": "string"},

@@ -70,6 +70,17 @@ LARGE_MARKDOWN_LINES = 300
 SPLIT_TARGET_LINES = 220
 PLACEHOLDER_RE = re.compile(r"\[[^\]\n]+\]")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*#*\s*$")
+TOOL_DIRECTORY_NAMES = {
+    "adb",
+    "frida",
+    "ghidra",
+    "ipsw",
+    "jadx",
+    "lldb",
+    "opengrep",
+    "r2",
+    "radare2",
+}
 
 
 def now() -> str:
@@ -237,6 +248,33 @@ def large_markdown_files(root: Path, limit: int = LARGE_MARKDOWN_LINES) -> list[
     return result
 
 
+def markdown_under_artifacts(root: Path) -> list[Path]:
+    research = root / "research"
+    if not research.exists():
+        return []
+    result: list[Path] = []
+    for path in sorted(research.rglob("*.md")):
+        if "artifacts" in path.relative_to(research).parts:
+            result.append(path)
+    return result
+
+
+def tool_named_research_dirs(root: Path) -> list[Path]:
+    research = root / "research"
+    if not research.exists():
+        return []
+    result: list[Path] = []
+    for path in sorted(research.rglob("*")):
+        if not path.is_dir():
+            continue
+        relative_parts = path.relative_to(research).parts
+        if "artifacts" in relative_parts:
+            continue
+        if path.name.lower() in TOOL_DIRECTORY_NAMES:
+            result.append(path)
+    return result
+
+
 def check_program_info(root: Path) -> tuple[bool, str]:
     path = root / "program-info.md"
     if not path.exists():
@@ -371,6 +409,10 @@ def cmd_status(args: argparse.Namespace) -> None:
             "directories": {},
             "ledgers": {},
             "large_markdown": [],
+            "research_hygiene": {
+                "markdown_under_artifacts": [],
+                "tool_named_research_dirs": [],
+            },
             "report_ready": report_readiness(root, args.chain),
         }
         for filename in WORKSPACE_FILES:
@@ -389,6 +431,12 @@ def cmd_status(args: argparse.Namespace) -> None:
         payload["large_markdown"] = [
             {"path": relative_to(path, root), "lines": lines}
             for path, lines in large_markdown_files(root, args.max_lines)
+        ]
+        payload["research_hygiene"]["markdown_under_artifacts"] = [
+            relative_to(path, root) for path in markdown_under_artifacts(root)
+        ]
+        payload["research_hygiene"]["tool_named_research_dirs"] = [
+            relative_to(path, root) for path in tool_named_research_dirs(root)
         ]
         print(json.dumps(payload, indent=2))
         return
@@ -429,6 +477,23 @@ def cmd_status(args: argparse.Namespace) -> None:
             print(f"- {relative_to(path, root)} ({lines} lines)")
     else:
         print(f"Large markdown files over {args.max_lines} lines: none")
+
+    artifact_markdown = markdown_under_artifacts(root)
+    tool_dirs = tool_named_research_dirs(root)
+    if artifact_markdown or tool_dirs:
+        print("Research hygiene warnings:")
+        for path in artifact_markdown:
+            print(
+                f"- review: {relative_to(path, root)} is markdown under artifacts/; "
+                "rewrite durable conclusions into a sibling research note if future sessions should read it"
+            )
+        for path in tool_dirs:
+            print(
+                f"- review: {relative_to(path, root)}/ is tool-named research; "
+                "move raw tool outputs under artifacts/ unless the tool itself is the modeled system"
+            )
+    else:
+        print("Research hygiene warnings: none")
 
     print_checks(report_readiness(root, args.chain))
 
@@ -522,6 +587,7 @@ def cmd_new_submodule(args: argparse.Namespace) -> None:
         artifacts = module_dir / "artifacts"
         artifacts.mkdir(exist_ok=True)
         print(f"- directory: {relative_to(artifacts, root)}")
+        print("- note: keep book-like markdown in the submodule; keep raw evidence and transcripts under artifacts/")
 
     for markdown in args.markdown or []:
         filename = markdown_name(markdown)
