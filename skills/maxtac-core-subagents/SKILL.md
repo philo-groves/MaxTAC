@@ -12,12 +12,15 @@ Use the active Python executable for helper scripts. If `python` is not on PATH 
 
 To determine whether to spawn subagents in parallel or sequentially, run:
 ```
-python <skill-dir>/scripts/readiness-check.py --subagents <count>
+python <skill-dir>/scripts/readiness-check.py --kind auditor --subagents <count>
+python <skill-dir>/scripts/readiness-check.py --kind debater --subagents <count>
 ```
 
-MaxTAC MCP convention: use `subagent_readiness` for readiness, `audit_prompt_create` / `debate_prompt_create` for persisted prompts, and `debate_tally` for ballot validation when available; the parent still owns final summaries.
+MaxTAC MCP convention: use `subagent_readiness` with `kind=auditor` for auditor groups and `kind=debater` for debater groups, `audit_prompt_create` / `debate_prompt_create` for persisted prompts, and `debate_tally` for ballot validation when available; the parent still owns final summaries.
 
-The script prints `parallel` or `sequential` after checking available system resources against the requested subagent count. If the result is `parallel`, spawn subagents using standard Codex subagent spawning mechanisms without waiting for each to finish. If the result is `sequential`, spawn one subagent at a time, waiting for it to finish before spawning the next.
+The script prints `parallel` or `sequential` after checking available system resources against the requested subagent count. It reserves 4 GiB of available memory per requested subagent plus 1 GiB of headroom. Auditor subagents have an additional safety gate: if total system RAM is unknown or below 17 GiB, auditor readiness returns `sequential` regardless of available memory. Debaters and generic subagents are unaffected by the 17 GiB total-RAM gate.
+
+If the result is `parallel`, spawn subagents using standard Codex subagent spawning mechanisms without waiting for each to finish. If the result is `sequential`, spawn one subagent at a time, waiting for it to finish before spawning the next.
 
 ## Goal-Bounded Subagent Runs
 Always spawn auditor and debater subagents with a Codex goal prompt, not only a task prompt. Do not spawn a MaxTAC subagent from a raw audit or debate prompt. First run `audit-helper.py --prompt-file`, `debate-helper.py --prompt-file`, `audit_prompt_create`, or `debate_prompt_create`, then pass the enriched prompt to the subagent unchanged.

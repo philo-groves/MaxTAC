@@ -1139,7 +1139,10 @@ def tool_subagent_readiness(args: dict[str, Any]) -> dict[str, Any]:
     count = int(args.get("subagents") or 1)
     if count < 1 or count > 6:
         raise ToolFailure("subagents must be between 1 and 6")
-    return run_helper_script("readiness", ["--subagents", str(count)], timeout=30)
+    kind = str(args.get("kind") or "generic")
+    if kind not in {"generic", "auditor", "debater"}:
+        raise ToolFailure("kind must be generic, auditor, or debater")
+    return run_helper_script("readiness", ["--subagents", str(count), "--kind", kind], timeout=30)
 
 
 def tool_debug_evidence(args: dict[str, Any]) -> dict[str, Any]:
@@ -1688,10 +1691,11 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": tool_debate_tally,
     },
     "subagent_readiness": {
-        "description": "Check whether the requested number of MaxTAC subagents should run in parallel or sequentially.",
+        "description": "Check whether the requested number of MaxTAC subagents should run in parallel or sequentially, with an auditor-only total-RAM gate.",
         "inputSchema": schema(
             {
                 "subagents": {"type": "integer", "minimum": 1, "maximum": 6},
+                "kind": {"type": "string", "enum": ["generic", "auditor", "debater"], "default": "generic"},
             },
             ["subagents"],
         ),
