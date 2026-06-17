@@ -27,6 +27,28 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def root_path(value: str | None) -> Path:
+    root = Path(value or ".").expanduser().resolve()
+    if not root.exists():
+        raise SystemExit(f"Workspace root does not exist: {root}")
+    if not root.is_dir():
+        raise SystemExit(f"Workspace root is not a directory: {root}")
+    return root
+
+
+def workspace_path(root: Path, value: Path, label: str) -> Path:
+    path = value.expanduser()
+    if not path.is_absolute():
+        path = root / path
+    resolved_root = root.resolve()
+    resolved_path = path.resolve()
+    try:
+        resolved_path.relative_to(resolved_root)
+    except ValueError as exc:
+        raise SystemExit(f"{label} escapes workspace root: {resolved_path}") from exc
+    return resolved_path
+
+
 def auditors_payload() -> Any:
     if not AUDITORS_FILE.exists():
         raise SystemExit(f"Auditor data file not found: {AUDITORS_FILE}")
@@ -167,10 +189,11 @@ def show_auditor(auditors: list[dict[str, Any]], auditor_id: str) -> None:
     raise SystemExit(f"Auditor not found: {auditor_id}")
 
 
-def enrich_prompt(prompt_file: Path) -> None:
-    raw_prompt = read_text(prompt_file).rstrip()
+def enrich_prompt(prompt_file: Path, root: Path) -> None:
+    prompt_path_input = workspace_path(root, prompt_file, "Prompt file")
+    raw_prompt = read_text(prompt_path_input).rstrip()
     audit_id = generated_id("audit")
-    audit_dir = Path.cwd() / "audits" / audit_id
+    audit_dir = root / "audits" / audit_id
     audit_dir.mkdir(parents=True, exist_ok=False)
 
     assessment_path = audit_dir / "assessment.md"
@@ -204,6 +227,7 @@ Persist the final audit assessment to `{assessment_path}` before completing the 
 
 def base_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="MaxTAC auditor helper")
+    parser.add_argument("--root", default=".", help="Workspace root; prompt files should be staged under tmp/")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--list", action="store_true", help="List condensed auditor information")
     group.add_argument("--filter", metavar="TEXT", help="Filter auditors by text")
@@ -217,7 +241,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.prompt_file:
-        enrich_prompt(args.prompt_file)
+        enrich_prompt(args.prompt_file, root_path(args.root))
         return
 
     auditors = load_auditors()

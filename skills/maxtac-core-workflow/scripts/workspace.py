@@ -30,6 +30,7 @@ WORKSPACE_DIRS = {
     "audits": "auditor subagent results",
     "proof": "proof-of-vulnerability development",
     "fuzz": "fuzzing inputs, scripts, and artifacts",
+    "tmp": "temporary files that can be deleted between sessions",
     "reporting": "submission-ready reports and evidence indexes",
 }
 LEDGER_FILES = {

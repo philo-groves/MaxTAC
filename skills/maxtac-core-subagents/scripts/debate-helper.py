@@ -22,10 +22,33 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def enrich_prompt(prompt_file: Path) -> None:
-    raw_prompt = read_text(prompt_file).rstrip()
+def root_path(value: str | None) -> Path:
+    root = Path(value or ".").expanduser().resolve()
+    if not root.exists():
+        raise SystemExit(f"Workspace root does not exist: {root}")
+    if not root.is_dir():
+        raise SystemExit(f"Workspace root is not a directory: {root}")
+    return root
+
+
+def workspace_path(root: Path, value: Path, label: str) -> Path:
+    path = value.expanduser()
+    if not path.is_absolute():
+        path = root / path
+    resolved_root = root.resolve()
+    resolved_path = path.resolve()
+    try:
+        resolved_path.relative_to(resolved_root)
+    except ValueError as exc:
+        raise SystemExit(f"{label} escapes workspace root: {resolved_path}") from exc
+    return resolved_path
+
+
+def enrich_prompt(prompt_file: Path, root: Path) -> None:
+    prompt_path_input = workspace_path(root, prompt_file, "Prompt file")
+    raw_prompt = read_text(prompt_path_input).rstrip()
     debate_id = generated_id("debate")
-    debate_dir = Path.cwd() / "debates" / debate_id
+    debate_dir = root / "debates" / debate_id
     debate_dir.mkdir(parents=True, exist_ok=False)
 
     prompt_path = debate_dir / "prompt.md"
@@ -87,8 +110,8 @@ def ballot_value(ballot: dict[str, Any], key: str, default: str = "") -> str:
     return str(value)
 
 
-def tally(debate_id: str) -> None:
-    debate_dir = Path.cwd() / "debates" / debate_id
+def tally(debate_id: str, root: Path) -> None:
+    debate_dir = root / "debates" / debate_id
     if not debate_dir.exists():
         raise SystemExit(f"Debate not found: {debate_id}")
 
@@ -141,6 +164,7 @@ def tally(debate_id: str) -> None:
 
 def base_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="MaxTAC debate helper")
+    parser.add_argument("--root", default=".", help="Workspace root; prompt files should be staged under tmp/")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--prompt-file", type=Path, help="Enrich a persisted debate prompt")
     group.add_argument("--debate", help="Debate ID to review")
@@ -155,13 +179,13 @@ def main() -> None:
     if args.prompt_file:
         if args.tally:
             raise SystemExit("--tally can only be used with --debate")
-        enrich_prompt(args.prompt_file)
+        enrich_prompt(args.prompt_file, root_path(args.root))
         return
 
     if args.debate:
         if not args.tally:
             raise SystemExit("--debate requires --tally")
-        tally(args.debate)
+        tally(args.debate, root_path(args.root))
 
 
 if __name__ == "__main__":

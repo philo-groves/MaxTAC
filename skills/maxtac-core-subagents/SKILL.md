@@ -42,10 +42,10 @@ Each of the above scripts result in one or more auditors. The `--list` and `--fi
 
 Prefer focused auditors over broad review. For example, use a specific `logic-*` auditor for authentication state, entitlement, replay, approval, tenant relationship, destructive action, AI-agent authority, or specification drift instead of asking for generic logic analysis. Use generic business logic only when the target is truly workflow-centered and no narrower logic auditor fits.
 
-2. **Write the audit prompt**: after reading the specialist usage and related markdown, write a prompt for its subject matter and the current target. Do not use the specialist markdown directly as a prompt; instead, adapt its guidance for the current context. Persist the prompt to a file in a temporary directory (%temp% on Windows, /tmp on Unix), then run:
+2. **Write the audit prompt**: after reading the specialist usage and related markdown, write a prompt for its subject matter and the current target. Do not use the specialist markdown directly as a prompt; instead, adapt its guidance for the current context. Persist the prompt draft to `<workspace-root>/tmp/`, then run:
 
 ```
-python <skill-dir>/scripts/audit-helper.py --prompt-file <file path>
+python <skill-dir>/scripts/audit-helper.py --root <workspace-root> --prompt-file tmp/<prompt-name>.md
 ```
 
 The above script prints an enriched prompt; enrichment prepends Codex goal instructions and appends instructions to persist audit assessment files to `<workspace-root>/audits/<audit-id>/`. The script also creates the `<workspace-root>/audits/<audit-id>/` directory, then persists the subagent prompt there.
@@ -64,10 +64,10 @@ A debater subagent reviews a debate topic, then votes on a ballot and explains i
 ### Debater Flow
 Every debate follows the same 5-step flow.
 
-1. **Write the debate prompt**: write a prompt for the debate topic. Since each debater must rate yes or no, the prompt requires a precise binary proposition: "yes means X, no means Y." Persist the prompt to a file in a temporary directory (%temp% on Windows, /tmp on Unix), then run:
+1. **Write the debate prompt**: write a prompt for the debate topic. Since each debater must rate yes or no, the prompt requires a precise binary proposition: "yes means X, no means Y." Persist the prompt draft to `<workspace-root>/tmp/`, then run:
 
 ```
-python <skill-dir>/scripts/debate-helper.py --prompt-file <file path>
+python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --prompt-file tmp/<prompt-name>.md
 ```
 
 The above script prints an enriched prompt; enrichment prepends Codex goal instructions and appends instructions to persist debate ballot files to `<workspace-root>/debates/<debate-id>/`. The script also creates the `<workspace-root>/debates/<debate-id>/` directory, then persists the subagent prompt there.

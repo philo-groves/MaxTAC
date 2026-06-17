@@ -26,6 +26,7 @@ WORKSPACE_DIRS = {
     "audits": "auditor subagent results",
     "proof": "proof-of-vulnerability development",
     "fuzz": "fuzzing inputs, scripts, and artifacts",
+    "tmp": "temporary files that can be deleted between sessions",
     "reporting": "submission-ready reports and evidence indexes",
 }
 LEDGER_FILES = {
@@ -1522,7 +1523,7 @@ TOOLS: dict[str, dict[str, Any]] = {
             {
                 "workspace_root": {"type": "string"},
                 "prompt_text": {"type": "string"},
-                "prompt_file": {"type": "string"},
+                "prompt_file": {"type": "string", "description": "Prompt draft path inside the workspace; normally under tmp/."},
                 "focus": {"type": "string"},
                 "auditor": {"type": "string"},
                 "auditor_filters": {"type": "array", "items": {"type": "string"}},
@@ -1539,7 +1540,7 @@ TOOLS: dict[str, dict[str, Any]] = {
             {
                 "workspace_root": {"type": "string"},
                 "prompt_text": {"type": "string"},
-                "prompt_file": {"type": "string"},
+                "prompt_file": {"type": "string", "description": "Prompt draft path inside the workspace; normally under tmp/."},
                 "proposition": {"type": "string"},
                 "yes_means": {"type": "string"},
                 "no_means": {"type": "string"},
