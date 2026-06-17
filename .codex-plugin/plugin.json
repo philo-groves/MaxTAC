@@ -1,10 +1,11 @@
 {
   "name": "maxtac",
-  "version": "0.1.0+codex.20260616234003",
+  "version": "0.1.0+codex.20260617122030",
   "description": "Multi-agent systems vulnerability research workflows for authorized kernel, binary, and open-source targets.",
   "author": {
     "name": "Philo Groves"
   },
+  "repository": "https://github.com/philo-groves/MaxTAC",
   "license": "MIT",
   "keywords": [
     "codex",
@@ -28,7 +29,9 @@
     "longDescription": "MaxTAC coordinates authorized vulnerability research campaigns across XNU, focused Apple platform bypass research, Windows kernel-adjacent artifacts, native binaries, and open-source systems code. It prepares target profiles, performs SAST surface triage, routes specialized Auditor subagents, tracks findings, keeps Apple domain research notes, debates reachability and exploitability, proofs issues in lab environments, and packages concise reports.",
     "developerName": "Philo Groves",
     "category": "Security",
-    "website": "https://github.com/philo-groves/MaxTAC",
+    "websiteURL": "https://github.com/philo-groves/MaxTAC",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
     "capabilities": [
       "Interactive",
       "Read",
