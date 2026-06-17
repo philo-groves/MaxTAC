@@ -803,7 +803,7 @@ def tool_debate_prompt_create(args: dict[str, Any]) -> dict[str, Any]:
     return persist_debate_prompt(root, raw)
 
 
-def load_ballot(path: Path) -> dict[str, Any]:
+def load_ballot(path: Path, expected_debate: str) -> dict[str, Any]:
     payload = read_json(path)
     choice = str(payload.get("choice", "")).lower()
     if choice not in {"yes", "no"}:
@@ -811,42 +811,79 @@ def load_ballot(path: Path) -> dict[str, Any]:
     confidence = payload.get("confidence")
     if not isinstance(confidence, int) or confidence < 0 or confidence > 100:
         raise ToolFailure(f"{path} ballot confidence must be an integer from 0 to 100")
+    if str(payload.get("debate") or "") != expected_debate:
+        raise ToolFailure(f"{path} ballot debate must be {expected_debate}")
     return payload
 
 
-def render_tally_markdown(debate_id: str, debate_dir: Path, ballots: list[tuple[Path, dict[str, Any]]], result: dict[str, Any]) -> str:
+def render_tally_markdown(result: dict[str, Any]) -> str:
     lines = [
-        f"# Debate Tally: {debate_id}",
+        f"# Debate Tally: {result['debate_id']}",
         "",
-        f"- Debate directory: `{debate_dir}`",
-        f"- Ballots: {len(ballots)}",
+        f"- Debate directory: `{result['debate_dir']}`",
+        f"- Ballots: {result['ballots']}",
         f"- Winner: {result['winner']}",
         f"- Yes: {result['counts'].get('yes', 0)}",
         f"- No: {result['counts'].get('no', 0)}",
+        f"- Average yes confidence: {result['average_confidence'].get('yes', 0):.1f}",
+        f"- Average no confidence: {result['average_confidence'].get('no', 0):.1f}",
         "",
     ]
-    for path, ballot in ballots:
-        subagent = str(ballot.get("subagent") or path.stem.removeprefix("ballot-"))
+    for ballot in result["ballot_details"]:
         lines.extend(
             [
-                f"## {subagent}",
+                f"## {ballot['subagent']}",
                 "",
-                f"- Ballot file: `{path}`",
-                f"- Choice: {ballot.get('choice')}",
-                f"- Confidence: {ballot.get('confidence')}",
+                f"- Ballot file: `{ballot['file']}`",
+                f"- Choice: {ballot['choice']}",
+                f"- Confidence: {ballot['confidence']}",
                 "",
                 "### Reasoning",
                 "",
-                str(ballot.get("reasoning") or ""),
+                ballot["reasoning"],
                 "",
                 "### Evidence",
                 "",
-                str(ballot.get("evidence") or ""),
+                ballot["evidence"],
                 "",
             ]
         )
         if ballot.get("blockers"):
             lines.extend(["### Blockers", "", str(ballot["blockers"]), ""])
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_summary_markdown(result: dict[str, Any]) -> str:
+    lines = [
+        f"# Debate Summary: {result['debate_id']}",
+        "",
+        f"- Winner: {result['winner']}",
+        f"- Ballots: {result['ballots']}",
+        f"- Yes votes: {result['counts'].get('yes', 0)}",
+        f"- No votes: {result['counts'].get('no', 0)}",
+        f"- Average yes confidence: {result['average_confidence'].get('yes', 0):.1f}",
+        f"- Average no confidence: {result['average_confidence'].get('no', 0):.1f}",
+        "",
+        "## Ballot Basis",
+        "",
+    ]
+    for ballot in result["ballot_details"]:
+        blockers = f" Blockers: {ballot['blockers']}" if ballot.get("blockers") else ""
+        lines.extend(
+            [
+                f"- {ballot['subagent']}: {ballot['choice']} ({ballot['confidence']}%).{blockers}",
+                f"  Evidence: {ballot['evidence']}",
+                f"  Reasoning: {ballot['reasoning']}",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "## Parent Review",
+            "",
+            "Review this generated summary against the ballot details in `tally.md` before using the result for a ledger state transition.",
+        ]
+    )
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -861,13 +898,26 @@ def tool_debate_tally(args: dict[str, Any]) -> dict[str, Any]:
     ballot_paths = sorted(debate_dir.glob("ballot-*.json"))
     if not ballot_paths:
         raise ToolFailure(f"No ballots found for debate: {debate_id}")
-    ballots = [(path, load_ballot(path)) for path in ballot_paths]
+    ballots = [(path, load_ballot(path, debate_id)) for path in ballot_paths]
     counts: dict[str, int] = {"yes": 0, "no": 0}
     confidence_totals: dict[str, int] = {"yes": 0, "no": 0}
-    for _, ballot in ballots:
+    ballot_details: list[dict[str, Any]] = []
+    for path, ballot in ballots:
         choice = str(ballot["choice"]).lower()
+        confidence = int(ballot["confidence"])
         counts[choice] += 1
-        confidence_totals[choice] += int(ballot["confidence"])
+        confidence_totals[choice] += confidence
+        ballot_details.append(
+            {
+                "file": str(path),
+                "subagent": str(ballot.get("subagent") or path.stem.removeprefix("ballot-")),
+                "choice": choice,
+                "confidence": confidence,
+                "reasoning": str(ballot.get("reasoning") or ""),
+                "evidence": str(ballot.get("evidence") or ""),
+                "blockers": ballot.get("blockers"),
+            }
+        )
     if counts["yes"] > counts["no"]:
         winner = "yes"
     elif counts["no"] > counts["yes"]:
@@ -885,12 +935,21 @@ def tool_debate_tally(args: dict[str, Any]) -> dict[str, Any]:
         "counts": counts,
         "average_confidence": average_confidence,
         "winner": winner,
+        "ballot_files": [str(path) for path, _ in ballots],
+        "ballot_details": ballot_details,
     }
     if args.get("write_tally", True):
         tally_path = debate_dir / "tally.md"
-        tally_path.write_text(render_tally_markdown(debate_id, debate_dir, ballots, result), encoding="utf-8")
+        tally_path.write_text(render_tally_markdown(result), encoding="utf-8")
         result["tally_path"] = str(tally_path)
-    result["ballot_files"] = [str(path) for path, _ in ballots]
+    if args.get("write_summary", True):
+        summary_path = debate_dir / "summary.md"
+        summary_path.write_text(render_summary_markdown(result), encoding="utf-8")
+        result["summary_path"] = str(summary_path)
+    if args.get("write_json", True):
+        tally_json_path = debate_dir / "tally.json"
+        write_json(tally_json_path, result)
+        result["tally_json_path"] = str(tally_json_path)
     return result
 
 
@@ -1550,12 +1609,14 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": tool_debate_prompt_create,
     },
     "debate_tally": {
-        "description": "Validate debate ballots, tally yes/no votes, and write debates/<debate-id>/tally.md.",
+        "description": "Validate debate ballots, tally yes/no votes, and write debates/<debate-id>/tally.json, tally.md, and summary.md.",
         "inputSchema": schema(
             {
                 "workspace_root": {"type": "string"},
                 "debate_id": {"type": "string"},
                 "write_tally": {"type": "boolean", "default": True},
+                "write_summary": {"type": "boolean", "default": True},
+                "write_json": {"type": "boolean", "default": True},
             },
             ["debate_id"],
         ),

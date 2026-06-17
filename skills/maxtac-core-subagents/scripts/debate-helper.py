@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enrich MaxTAC debate prompts and combine debate ballots."""
+"""Enrich MaxTAC debate prompts and write debate tally outputs."""
 
 from __future__ import annotations
 
@@ -93,13 +93,22 @@ The `choice` value must be either `yes` or `no`. The `confidence` value must be 
     print(enriched, end="")
 
 
-def load_ballot(path: Path) -> dict[str, Any]:
+def load_ballot(path: Path, expected_debate: str) -> dict[str, Any]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise SystemExit(f"{path} is not valid JSON: {exc}") from exc
     if not isinstance(payload, dict):
         raise SystemExit(f"{path} must contain a JSON object")
+    choice = ballot_value(payload, "choice").lower()
+    if choice not in {"yes", "no"}:
+        raise SystemExit(f"{path} ballot choice must be yes or no")
+    confidence = payload.get("confidence")
+    if not isinstance(confidence, int) or confidence < 0 or confidence > 100:
+        raise SystemExit(f"{path} ballot confidence must be an integer from 0 to 100")
+    debate = ballot_value(payload, "debate")
+    if debate != expected_debate:
+        raise SystemExit(f"{path} ballot debate must be {expected_debate}")
     return payload
 
 
@@ -110,56 +119,143 @@ def ballot_value(ballot: dict[str, Any], key: str, default: str = "") -> str:
     return str(value)
 
 
+def compute_tally(debate_id: str, debate_dir: Path, ballots: list[tuple[Path, dict[str, Any]]]) -> dict[str, Any]:
+    counts: dict[str, int] = {"yes": 0, "no": 0}
+    confidence_totals: dict[str, int] = {"yes": 0, "no": 0}
+    normalized_ballots: list[dict[str, Any]] = []
+    for path, ballot in ballots:
+        choice = ballot_value(ballot, "choice").lower()
+        confidence = int(ballot["confidence"])
+        counts[choice] += 1
+        confidence_totals[choice] += confidence
+        normalized_ballots.append(
+            {
+                "file": str(path),
+                "subagent": ballot_value(ballot, "subagent", path.stem.removeprefix("ballot-")),
+                "choice": choice,
+                "confidence": confidence,
+                "reasoning": ballot_value(ballot, "reasoning"),
+                "evidence": ballot_value(ballot, "evidence"),
+                "blockers": ballot.get("blockers"),
+            }
+        )
+
+    if counts["yes"] > counts["no"]:
+        winner = "yes"
+    elif counts["no"] > counts["yes"]:
+        winner = "no"
+    else:
+        winner = "tie"
+
+    return {
+        "debate_id": debate_id,
+        "debate_dir": str(debate_dir),
+        "ballots": len(ballots),
+        "counts": counts,
+        "average_confidence": {
+            choice: (confidence_totals[choice] / counts[choice] if counts[choice] else 0)
+            for choice in ("yes", "no")
+        },
+        "winner": winner,
+        "ballot_files": [str(path) for path, _ in ballots],
+        "ballot_details": normalized_ballots,
+    }
+
+
+def render_tally_markdown(result: dict[str, Any]) -> str:
+    lines = [
+        f"# Debate Tally: {result['debate_id']}",
+        "",
+        f"- Debate directory: `{result['debate_dir']}`",
+        f"- Ballots: {result['ballots']}",
+        f"- Winner: {result['winner']}",
+        f"- Yes: {result['counts'].get('yes', 0)}",
+        f"- No: {result['counts'].get('no', 0)}",
+        f"- Average yes confidence: {result['average_confidence'].get('yes', 0):.1f}",
+        f"- Average no confidence: {result['average_confidence'].get('no', 0):.1f}",
+        "",
+    ]
+    for ballot in result["ballot_details"]:
+        lines.extend(
+            [
+                f"## {ballot['subagent']}",
+                "",
+                f"- Ballot file: `{ballot['file']}`",
+                f"- Choice: {ballot['choice']}",
+                f"- Confidence: {ballot['confidence']}",
+                "",
+                "### Reasoning",
+                "",
+                ballot["reasoning"],
+                "",
+                "### Evidence",
+                "",
+                ballot["evidence"],
+                "",
+            ]
+        )
+        if ballot.get("blockers"):
+            lines.extend(["### Blockers", "", str(ballot["blockers"]), ""])
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_summary_markdown(result: dict[str, Any]) -> str:
+    lines = [
+        f"# Debate Summary: {result['debate_id']}",
+        "",
+        f"- Winner: {result['winner']}",
+        f"- Ballots: {result['ballots']}",
+        f"- Yes votes: {result['counts'].get('yes', 0)}",
+        f"- No votes: {result['counts'].get('no', 0)}",
+        f"- Average yes confidence: {result['average_confidence'].get('yes', 0):.1f}",
+        f"- Average no confidence: {result['average_confidence'].get('no', 0):.1f}",
+        "",
+        "## Ballot Basis",
+        "",
+    ]
+    for ballot in result["ballot_details"]:
+        blockers = f" Blockers: {ballot['blockers']}" if ballot.get("blockers") else ""
+        lines.extend(
+            [
+                f"- {ballot['subagent']}: {ballot['choice']} ({ballot['confidence']}%).{blockers}",
+                f"  Evidence: {ballot['evidence']}",
+                f"  Reasoning: {ballot['reasoning']}",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "## Parent Review",
+            "",
+            "Review this generated summary against the ballot details in `tally.md` before using the result for a ledger state transition.",
+        ]
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
 def tally(debate_id: str, root: Path) -> None:
     debate_dir = root / "debates" / debate_id
     if not debate_dir.exists():
         raise SystemExit(f"Debate not found: {debate_id}")
 
-    ballots = sorted(debate_dir.glob("ballot-*.json"))
-    if not ballots:
+    ballot_paths = sorted(debate_dir.glob("ballot-*.json"))
+    if not ballot_paths:
         raise SystemExit(f"No ballots found for debate: {debate_id}")
 
-    print(f"# Debate Tally Review: {debate_id}")
+    ballots = [(path, load_ballot(path, debate_id)) for path in ballot_paths]
+    result = compute_tally(debate_id, debate_dir, ballots)
+    tally_json_path = debate_dir / "tally.json"
+    tally_path = debate_dir / "tally.md"
+    summary_path = debate_dir / "summary.md"
+    tally_json_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    tally_path.write_text(render_tally_markdown(result), encoding="utf-8")
+    summary_path.write_text(render_summary_markdown(result), encoding="utf-8")
+
+    print(render_summary_markdown(result), end="")
     print()
-    print(f"- Debate directory: `{debate_dir}`")
-    print(f"- Ballots: {len(ballots)}")
-
-    counts: dict[str, int] = {}
-    loaded: list[tuple[Path, dict[str, Any]]] = []
-    for path in ballots:
-        ballot = load_ballot(path)
-        choice = ballot_value(ballot, "choice", "unknown").lower()
-        counts[choice] = counts.get(choice, 0) + 1
-        loaded.append((path, ballot))
-
-    for choice in sorted(counts):
-        print(f"- {choice}: {counts[choice]}")
-    print()
-
-    for path, ballot in loaded:
-        subagent = ballot_value(ballot, "subagent", path.stem.removeprefix("ballot-"))
-        choice = ballot_value(ballot, "choice", "unknown")
-        confidence = ballot_value(ballot, "confidence", "unknown")
-        print(f"## {subagent}")
-        print()
-        print(f"- Ballot file: `{path}`")
-        print(f"- Choice: {choice}")
-        print(f"- Confidence: {confidence}")
-        print()
-        print("### Reasoning")
-        print()
-        print(ballot_value(ballot, "reasoning", ""))
-        print()
-        print("### Evidence")
-        print()
-        print(ballot_value(ballot, "evidence", ""))
-        blockers = ballot.get("blockers")
-        if blockers:
-            print()
-            print("### Blockers")
-            print()
-            print(str(blockers))
-        print()
+    print(f"Wrote tally JSON: {tally_json_path}")
+    print(f"Wrote tally review: {tally_path}")
+    print(f"Wrote debate summary: {summary_path}")
 
 
 def base_parser() -> argparse.ArgumentParser:
@@ -168,7 +264,7 @@ def base_parser() -> argparse.ArgumentParser:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--prompt-file", type=Path, help="Enrich a persisted debate prompt")
     group.add_argument("--debate", help="Debate ID to review")
-    parser.add_argument("--tally", action="store_true", help="Combine ballots for review")
+    parser.add_argument("--tally", action="store_true", help="Validate ballots and write tally.json, tally.md, and summary.md")
     return parser
 
 

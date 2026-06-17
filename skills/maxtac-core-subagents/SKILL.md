@@ -90,10 +90,10 @@ The above script prints an enriched prompt; enrichment prepends Codex goal instr
 
 4. **Complete the debate**: after the debater subagents finish their work, verify `<workspace-root>/debates/<debate-id>/ballot-<subagent-name>.json` was persisted by each subagent. If not, quickly remediate by reviewing the subagent session(s) and persisting appropriate ballot(s).
 
-5. **Tally the debate**: after all ballots are persisted, tally the debate by reviewing each ballot and writing a summary of the results, including which side won and why, supported by evidence from the ballots. Persist the summary to `<workspace-root>/debates/<debate-id>/summary.md`. To review all ballots for a debate, run:
+5. **Tally the debate**: after all ballots are persisted, tally the debate by reviewing each ballot and writing a summary of the results, including which side won and why, supported by evidence from the ballots. Persist the machine totals to `<workspace-root>/debates/<debate-id>/tally.json`, the ballot-by-ballot review to `<workspace-root>/debates/<debate-id>/tally.md`, and the parent-facing summary to `<workspace-root>/debates/<debate-id>/summary.md`. To generate these outputs, run:
 
 ```
-python <skill-dir>/scripts/debate-helper.py --debate <debate-id> --tally
+python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --debate <debate-id> --tally
 ```
 
-The above script combines the debate ballots into a single markdown file for easier review during tallying, but the tallying and `<workspace-root>/debates/<debate-id>/summary.md` persistence is a manual process for the main agent.
+The parent agent owns the final decision. Review `summary.md` against `tally.md` and the source ballots before using the result for a ledger state transition.
