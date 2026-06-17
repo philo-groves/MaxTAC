@@ -4,37 +4,18 @@ description: "Use this skill when binary reverse engineering needs radare2 for b
 ---
 
 # MaxTAC RE Radare2
-r2 (Radare2) provides a set of libraries, tools and plugins to ease reverse engineering (RE) tasks. r2 can edit files on local hard drives, view kernel memory, and debug programs locally or via a remote gdb/windbg servers. r2's wide architecture support allows you to analyze, emulate, debug, modify, and disassemble any binary.
+Use radare2 when binary triage, search, diffing, ESIL, quick disassembly, or terminal-first automation is more useful than a persistent GUI project.
 
 ## Readiness Check
-Before using this skill, ensure Radare2 is installed and properly configured on the system. Check if Radare2 is accessible by running:
+Check the installed tool surface:
+
 ```
 r2 -v
+rabin2 -v
+rahash2 -v
 ```
 
-If there is no output or an error occurs, Radare2 may not be installed. Follow the installation instructions:
-
-1. Ask the user for permission to install Radare2 if it is not already installed.
-2. If permission is granted, install Radare2 using the per-system instructions below.
-
-### Linux / macOS Install
-Supports meson/ninja (muon/samu also works) and make builds.
-
-```
-git clone https://github.com/radareorg/radare2
-radare2/sys/install.sh
-```
-
-### Windows Install (Powershell)
-Requires meson and msvc or mingw as compilers.
-
-```
-git clone https://github.com/radareorg/radare2
-preconfigure.bat       REM setup python, meson, ninja
-configure.bat          REM run meson b + vs project
-make.bat               REM run ninja -C b
-prefix\bin\radare2.exe
-```
+If radare2 is not installed, ask before installing.
 
 Use the generic RE readiness helper from the Ghidra skill to record tool versions and target hashes before report-grade RE work:
 

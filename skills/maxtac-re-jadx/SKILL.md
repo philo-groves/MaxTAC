@@ -4,35 +4,21 @@ description: "Use this skill when Android reverse engineering needs JADX for APK
 ---
 
 # MaxTAC RE JADX
-JADX is a Dex to Java decompiler with CLI and GUI entrypoints for Android APK, DEX, AAR, AAB, XAPK/APKM, Java bytecode, smali, resource, and archive inputs. Use it when readable Java/Kotlin-adjacent output, decoded Android resources, manifest triage, deobfuscation mappings, GUI navigation, or repeatable JSON/API extraction is more useful than raw Dalvik disassembly alone.
+Use JADX when readable Java/Kotlin-adjacent output, decoded Android resources, manifest triage, deobfuscation mappings, GUI navigation, or repeatable JSON/API extraction is more useful than raw Dalvik disassembly alone.
 
 Treat JADX output as a decompiler hypothesis. Preserve the original APK/DEX, record tool version and options, and verify security-sensitive claims against smali, dex offsets, resource tables, runtime behavior, or independent tooling when the decompiled Java is ambiguous.
 
 ## Readiness Check
-Before using this skill, identify the installed CLI and GUI entrypoints:
+Identify the installed CLI/GUI entrypoints and Java state:
 
 ```bash
 jadx --version
 jadx --help
 jadx-gui --help
+java -version
 ```
 
-On Windows release installs usually expose batch launchers under `bin`:
-
-```powershell
-jadx.bat --version
-jadx-gui.bat --help
-```
-
-Release builds require a 64-bit Java 11 or later runtime. Building JADX from source requires JDK 17 or later:
-
-```bash
-git clone https://github.com/skylot/jadx.git
-cd jadx
-./gradlew dist
-```
-
-On Windows, use `gradlew.bat dist`. If JADX is not installed, ask before installing.
+On Windows, use the `.bat` launchers when the release `bin` directory is not on `PATH`. If JADX is not installed, ask before installing.
 
 Use the generic RE readiness helper from the Ghidra skill to record Java/JADX availability and input hashes before report-grade Android RE work:
 

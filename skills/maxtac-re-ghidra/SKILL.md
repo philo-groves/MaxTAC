@@ -4,28 +4,10 @@ description: "Use this skill when binary reverse engineering needs Ghidra for he
 ---
 
 # MaxTAC RE Ghidra
-Ghidra is an NSA-maintained software reverse engineering framework with GUI and automated modes. It provides disassembly, decompilation, graphing, scripting, debugging, p-code emulation, program diffing, version tracking, BSim function similarity, and extension APIs across many executable formats and processor languages.
-
 Use Ghidra when decompiler output, rich program databases, data type recovery, repeatable headless analysis, or cross-version markup transfer matters more than single-command terminal speed. Treat Ghidra output as an analysis database: record import settings, analysis options, manual repairs, script versions, and whether facts came from loader metadata, analyzers, decompiler output, or runtime traces.
 
 ## Readiness Check
-Before using this skill, identify the Ghidra installation and the automation entrypoint. A release install normally exposes these launchers:
-
-```bash
-ghidraRun
-support/analyzeHeadless
-support/pyghidraRun
-```
-
-On Windows:
-
-```powershell
-ghidraRun.bat
-support\analyzeHeadless.bat
-support\pyghidraRun.bat
-```
-
-Check Java and Ghidra paths:
+Identify the installation, automation entrypoint, and Java/PyGhidra state before report-grade work:
 
 ```bash
 java -version
@@ -33,7 +15,7 @@ java -version
 python -c "import pyghidra; print(pyghidra.__version__)"
 ```
 
-If Ghidra is not installed, ask before installing. Official prebuilt releases require a 64-bit JDK 21, and the correct release asset is the `ghidra_<version>_<release>_<date>.zip` archive, not GitHub's generated source archives.
+If Ghidra is not installed, ask before installing. Use official prebuilt release assets; do not treat GitHub-generated source archives as installable Ghidra releases.
 
 Use the readiness helper when Ghidra evidence needs to be repeatable or compared with radare2/JADX evidence:
 

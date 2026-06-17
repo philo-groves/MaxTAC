@@ -5,7 +5,7 @@ description: "Use this skill when Apple firmware reverse engineering requires ip
 
 # MaxTAC ASB IPSW
 
-`ipsw` is blacktop's Apple firmware research CLI. Use it when an Apple firmware artifact is the source of truth: IPSW and OTA acquisition, partial remote extraction, dyld shared cache triage, kernelcache and KEXT preparation, IMG4 payload work, restore image mounting, entitlement/database searches, and patched-vs-vulnerable firmware diffing.
+Use `ipsw` when an Apple firmware artifact is the source of truth: IPSW and OTA acquisition, partial remote extraction, dyld shared cache triage, kernelcache and KEXT preparation, IMG4 payload work, restore image mounting, entitlement/database searches, and patched-vs-vulnerable firmware diffing.
 
 Treat every output as build-specific. Preserve the device product type, model or board when relevant, product version, build number, firmware URL or local source path, original file hash, selected restore identity, architecture, `ipsw` version, command line, and whether facts came from archive metadata, extracted files, reconstructed Mach-O output, or later RE tooling.
 
@@ -76,7 +76,7 @@ ipsw.exe version
 ipsw.exe extract --help
 ```
 
-If `ipsw` is missing, ask before installing. Official installation paths include Homebrew/MacPorts/binary releases on macOS, Snap/Docker on Linux, and Scoop on Windows. Prefer the official `blacktop/tap/ipsw` build when device interaction, Frida, or other extras are needed.
+If `ipsw` is missing, ask before installing. Prefer an official blacktop build when device interaction, Frida, or other extras are needed.
 
 Use explicit output directories. IPSW/OTA artifacts are large, and `ipsw diff` uses persistent caches by default.
 
