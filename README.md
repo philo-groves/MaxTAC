@@ -104,7 +104,9 @@ MaxTAC includes a small Python MCP server declared in `.mcp.json`. When enabled 
 - **Reverse engineering exports**: `re_readiness_check`, `ghidra_export`, `jadx_export`, and `r2_triage` check RE tool readiness and produce repeatable Ghidra, JADX, and radare2 evidence manifests.
 
 ## How to Install
-Just ask Codex to install the plugin for you. With how fast Codex plugins are moving, any list of installation steps given may be invalid next week.
+Just ask Codex to install the plugin for you.
+
+> Please clone https://github.com/philo-groves/MaxTAC and integrate it as a Codex plugin.
 
 ## License
 
