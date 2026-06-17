@@ -5,7 +5,8 @@ This plugin is heavily inspired by [MDASH](https://www.microsoft.com/en-us/secur
 
 ## System Requirements
 
-- `python` must be on your path for MaxTAC tools to work correctly
+- `python` must be on your path for MaxTAC tools to work correctly.
+- External research tools are target-specific, not all mandatory. See [TOOLING.md](TOOLING.md) for the primary tools MaxTAC routes to across SAST, DAST, reverse engineering, Apple firmware, and MSRC proof workflows.
 
 ## Architecture
 ![MaxTAC Architecture Diagram](https://i.imgur.com/6RnsUeO.png)
