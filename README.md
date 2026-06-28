@@ -4,7 +4,7 @@
   <img src="assets/icon.png" alt="MaxTAC logo" width="150">
 </p>
 
-MaxTAC is now split into focused Codex plugins for authorized vulnerability research. Install **MaxTAC Core** plus only the domain packs that match the current target.
+MaxTAC is split into focused Codex plugins for authorized vulnerability research. Install **MaxTAC Core** plus only the domain packs that match the current target.
 
 Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber policy limitations. Use these plugins only for authorized research inside applicable program scope.
 
