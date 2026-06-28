@@ -1,4 +1,0 @@
-interface:
-  display_name: "MaxTAC DAST Virtualization"
-  short_description: "Virtualized test lab guidance"
-  default_prompt: "Use $maxtac-dast-virtualization to prepare isolated virtualized test environments."
