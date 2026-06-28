@@ -1,0 +1,43 @@
+{
+  "name": "maxtac-android",
+  "version": "0.2.0",
+  "description": "Android application and platform research workflows for MaxTAC.",
+  "author": {
+    "name": "Philo Groves"
+  },
+  "repository": "https://github.com/philo-groves/MaxTAC",
+  "license": "MIT",
+  "skills": "./skills/",
+  "keywords": [
+    "codex",
+    "maxtac",
+    "security",
+    "android",
+    "apk",
+    "jadx",
+    "adb",
+    "frida"
+  ],
+  "interface": {
+    "displayName": "MaxTAC for Android",
+    "shortDescription": "Android APK, device, and runtime research.",
+    "longDescription": "MaxTAC for Android adds APK and DEX reverse engineering with JADX, Android surface triage, ADB/logcat/JDWP/Frida runtime evidence workflows, and Android-focused auditor routing.",
+    "defaultPrompt": [
+      "Use MaxTAC for Android to triage this authorized Android target.",
+      "Use MaxTAC for Android to inspect this APK and choose auditors."
+    ],
+    "developerName": "Philo Groves",
+    "category": "Security",
+    "websiteURL": "https://github.com/philo-groves/MaxTAC",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  },
+  "mcpServers": "./.mcp.json"
+}

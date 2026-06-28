@@ -17,10 +17,11 @@ Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber p
 | MaxTAC for Binary | `plugins/maxtac-binary` | You need native binary RE, Ghidra, radare2, debugger evidence, crash replay, instrumentation, or systems fuzzing. |
 | MaxTAC for Web | `plugins/maxtac-web` | You need web/API/session/tenant triage, browser debugging, or stateful API fuzzing. |
 | MaxTAC for Supply Chains | `plugins/maxtac-supply-chains` | You need dependency, package, CI/CD, provenance, signing, registry, container, or release-pipeline triage. |
+| MaxTAC for Android | `plugins/maxtac-android` | You need APK/DEX/resource RE, Android component triage, ADB/logcat/JDWP/Frida runtime evidence, or Android-specific auditors. |
 | MaxTAC for Apple Systems | `plugins/maxtac-apple-systems` | You need Apple Security Bounty target-flag proofing, IPSW workflows, Apple mitigations, or Apple-specific auditors. |
 | MaxTAC for Microsoft Systems | `plugins/maxtac-microsoft-systems` | You need MSRC LPAC proofing, Windows mitigation reasoning, or Microsoft/Windows-specific auditors. |
 
-Android/JADX guidance is parked under `archive/future-skills/`. The old virtualization guidance is parked under `archive/excluded-guidance/` and is not loaded by any active pack.
+The old virtualization guidance is parked under `archive/excluded-guidance/` and is not loaded by any active pack.
 
 ## Recommended Combinations
 
@@ -28,6 +29,7 @@ Android/JADX guidance is parked under `archive/future-skills/`. The old virtuali
 - Web or SaaS target: Core + Web, optionally Source when code is available.
 - Native/binary target: Core + Binary, optionally Source for decompiled-code packet work.
 - Supply-chain target: Core + Supply Chains, optionally Source or Web depending on the affected path.
+- Android target: Core + Android, optionally Source when code is available or Binary when native libraries dominate the evidence path.
 - Apple systems target: Core + Apple Systems, plus Binary or Source when the evidence path needs RE or code analysis.
 - Microsoft systems target: Core + Microsoft Systems, plus Binary or Source when the evidence path needs RE or code analysis.
 
@@ -55,6 +57,7 @@ Core keeps only a tiny fallback auditor catalog. Domain packs expose their own a
 - Web: `web_auditor_list`, `web_auditor_filter`, `web_auditor_show`
 - Binary: `binary_auditor_list`, `binary_auditor_filter`, `binary_auditor_show`
 - Supply Chains: `supply_chain_auditor_list`, `supply_chain_auditor_filter`, `supply_chain_auditor_show`
+- Android: `android_auditor_list`, `android_auditor_filter`, `android_auditor_show`
 - Apple: `apple_auditor_list`, `apple_auditor_filter`, `apple_auditor_show`
 - Microsoft: `microsoft_auditor_list`, `microsoft_auditor_filter`, `microsoft_auditor_show`
 

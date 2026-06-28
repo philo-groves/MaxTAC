@@ -54,6 +54,16 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | Signing and attestation tools | Release integrity, signature, provenance, and policy evidence. | Supply Chains |
 | Container and registry tools | Image digest, layer, build context, base image, and registry metadata evidence. | Supply Chains |
 
+## Android
+
+| Tool | Used for | Pack |
+| --- | --- | --- |
+| JADX, `jadx-gui`, Java | APK/DEX/JAR/AAR/AAB decompilation, Android resources, mappings, GUI search, smali debugging, JSON/API export. | Android |
+| Android Debug Bridge (`adb`) | Device discovery, package metadata, component launch, content-provider probes, logcat, screenshots, recordings, and bugreports. | Android |
+| JDWP tools such as `jdb` | Debuggable-app inspection and authorized Java runtime debugging. | Android |
+| Frida and frida-tools | Android Java/native hooks, runtime observation, API tracing, and script-backed evidence. | Android |
+| Android SDK command-line tools such as `apksigner` and `apkanalyzer` | Signing, certificate, manifest, APK, resource, and package metadata support when available. | Android |
+
 ## Program Packs
 
 | Tool | Used for | Pack |
@@ -67,5 +77,5 @@ Install only the tools needed by the active plugin packs and current target. Cor
 
 1. Install Core first.
 2. Add Source for source-heavy targets.
-3. Add exactly one primary domain pack: Web, Binary, or Supply Chains.
+3. Add exactly one primary domain pack: Web, Binary, Supply Chains, or Android.
 4. Add Apple Systems or Microsoft Systems only when the program requires those proof or mitigation workflows.

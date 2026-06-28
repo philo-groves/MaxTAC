@@ -20,14 +20,6 @@ java -version
 
 On Windows, use the `.bat` launchers when the release `bin` directory is not on `PATH`. If JADX is not installed or a source build is needed, ask first, then read `<skill-dir>/references/jadx-install-build.md`.
 
-Use the generic RE readiness helper from the Ghidra skill to record Java/JADX availability and input hashes before report-grade Android RE work:
-
-```
-python3 <plugin-root>/skills/maxtac-re-ghidra/scripts/re-readiness.py --tool jadx --target ./target.apk --output re-readiness.md
-```
-
-MaxTAC MCP convention: use `re_readiness_check` for readiness and `jadx_export` for export when available; otherwise use `re-readiness.py` and `scripts/jadx-export.py`.
-
 Use `python3 <skill-dir>/scripts/jadx-export.py` to preserve input hashes, JADX version, export mode, deobfuscation flags, plugin options, CFG settings, and the exact command line. It plans by default and only executes with `--run`:
 
 ```

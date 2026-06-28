@@ -92,7 +92,7 @@ Submodule examples: `apple-intelligence` with a `apple-foundation-models` submod
 
 Markdown examples: `amf-3-core-model.md`, `amf-3-core-advanced-model.md`, `pcc-server-model.md` in an `apple-foundation-models` submodule; `browser-process.md`, `renderer-process.md`, `extension-system.md` in an `edge-app-container` submodule.
 
-Tool names such as `opengrep`, `r2`, `ghidra`, `ipsw`, or `frida` usually belong below `artifacts/` because they describe how evidence was produced, not what system is being modeled. Create a tool-named research submodule only when the tool itself is the research target, and include real subsystem markdown in it.
+Tool names such as `opengrep`, `r2`, `ghidra`, `jadx`, `adb`, `ipsw`, or `frida` usually belong below `artifacts/` because they describe how evidence was produced, not what system is being modeled. Create a tool-named research submodule only when the tool itself is the research target, and include real subsystem markdown in it.
 
 ### Large Markdown
 A large markdown file is a sign that a single document should be broken into a submodule. If a large markdown file (> 300 lines) is found, create the new submodule and rewrite the large markdown core information under several research files. Also copy any relevant artifacts into the new submodule. Only after verifying the key information was transcribed, delete the old markdown file and old artifacts.
@@ -153,6 +153,7 @@ Next, identify which installed domain pack owns the target method:
 - Binary: native binaries, firmware payloads, reverse engineering, crash replay, native instrumentation, and systems fuzzing.
 - Web: web applications, APIs, sessions, browser state, tenants, and SaaS workflows.
 - Supply Chains: dependency graphs, package managers, CI/CD, artifact provenance, signing, containers, and release pipelines.
+- Android: APK/DEX/resource reverse engineering, Android components, ADB/logcat/JDWP/Frida evidence, IPC, WebView, storage, and permissions.
 - Apple Systems or Microsoft Systems: program-specific proof and mitigation rules.
 
 Core creates the workspace and records durable knowledge; the active domain pack chooses the concrete tools, triage packet, and auditor catalog.
@@ -163,7 +164,7 @@ Go to this phase after the Prepare phase or when additional vulnerability discov
 #### Surface Triage
 Use the installed domain pack that matches the target. Produce a compact triage packet or evidence note that names the target slice, actor, trust boundary, controlled inputs, security invariant, suspect guard or sink, evidence already collected, and suggested auditor filters.
 
-When source code is available, the Source pack can produce SAST, control-flow, and OpenGrep packets. When the target is web, supply-chain, binary, Apple, or Microsoft-specific, use that pack's triage guidance before spawning auditors.
+When source code is available, the Source pack can produce SAST, control-flow, and OpenGrep packets. When the target is web, supply-chain, binary, Android, Apple, or Microsoft-specific, use that pack's triage guidance before spawning auditors.
 
 #### Hypothesize
 Analyze previously conducted recon, threat modeling, research, and surface triage to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.

@@ -73,9 +73,11 @@ SPLIT_TARGET_LINES = 220
 PLACEHOLDER_RE = re.compile(r"\[[^\]\n]+\]")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*#*\s*$")
 TOOL_DIRECTORY_NAMES = {
+    "adb",
     "frida",
     "ghidra",
     "ipsw",
+    "jadx",
     "lldb",
     "opengrep",
     "r2",
