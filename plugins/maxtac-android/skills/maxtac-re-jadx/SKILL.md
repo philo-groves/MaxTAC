@@ -67,6 +67,6 @@ Includes `.jadx` project files, code/comment/rename persistence, GUI cache behav
 See: `<skill-dir>/references/jadx-gui-debugging-evidence.md`
 
 ### Security and Failure Modes
-Includes default XML/ZIP protections, path traversal and zip bomb checks, environment-variable overrides, hostile archive handling, no-class/resource-only runs, analysis errors, plugin risk, and lab-only safety controls.
+Includes default XML/ZIP protections, path traversal and zip bomb checks, environment-variable overrides, hostile archive handling, no-class/resource-only runs, analysis errors, plugin risk, and case-isolation safety controls.
 
 See: `<skill-dir>/references/jadx-security-failure-modes.md`

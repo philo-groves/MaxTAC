@@ -634,7 +634,7 @@ Remote evidence must record the local LLDB version, remote `lldb-server` or
 address, working directory, uploaded files, and whether the executable or
 libraries were copied automatically.
 
-Bind remote debug servers only on the intended lab interface. Prefer loopback
+Bind remote debug servers only on the intended test interface. Prefer loopback
 or a controlled network segment for repeatable work.
 
 ## Automation and Scripting

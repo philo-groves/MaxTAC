@@ -6,7 +6,7 @@ description: "Use this skill when binary or systems dynamic testing needs fuzzin
 # MaxTAC DAST Fuzzer
 Use fuzzing to discover vulnerability primitives; prove results through minimized replay and security-boundary evidence.
 
-Only fuzz targets that are inside the authorized program scope. Prefer local, isolated, virtualized, or device-lab targets before any shared service. Do not run high-rate fuzzing against production or third-party infrastructure without explicit permission, rate limits, and cleanup rules.
+Only fuzz targets that are inside the authorized program scope. Prefer local, isolated, or disposable test targets before any shared service. Do not run high-rate fuzzing against production or third-party infrastructure without explicit permission, rate limits, and cleanup rules.
 
 ## Fuzzing Persistence
 All fuzzing inputs, scripts, and artifacts should be saved in the `fuzz/` directory of the research workspace for easy pruning, evidence collection, and handoff. This includes harnesses, generated grammars, seed corpus, dictionaries, command lines, environment variables, build flags, sanitizer flags, target versions, crash inputs, minimized reproducers, replay commands, debugger output, sanitizer reports, stack traces, logs, core dumps, and screenshots or recordings when UI state matters.
@@ -21,8 +21,8 @@ python3 <skill-dir>/scripts/fuzz-campaign.py init \
   --target-version "1.2.3 build 456" \
   --tool AFL++ \
   --version-command "afl-fuzz -V" \
-  --scope "authorized local lab target" \
-  --environment "Windows VM snapshot abc123" \
+  --scope "authorized local test target" \
+  --environment "local Windows test host" \
   --rate-limits "local only" \
   --instrumentation "ASan + coverage" \
   --command "afl-fuzz -i seeds -o out -- ./harness @@" \

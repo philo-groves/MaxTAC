@@ -1,6 +1,6 @@
 ---
 name: maxtac-sast-surface-triage
-description: "Use this skill when starting static surface triage for source or decompiled code to map trust boundaries, dangerous code areas, entrypoints, sinks, invariants, and route hypotheses to auditors, OpenGrep, or control-flow graph analysis."
+description: "Use this skill when starting static surface triage for source code or existing decompiler output to map trust boundaries, dangerous code areas, entrypoints, sinks, invariants, and route hypotheses to auditors, OpenGrep, or control-flow graph analysis."
 ---
 
 # MaxTAC SAST Surface Triage
@@ -21,7 +21,7 @@ Use this skill as the first static-analysis pass for a target slice. The goal is
 ## Triage Workflow
 
 1. Define the target slice.
-   - Name the component, version, language, and relevant files or decompiled output.
+   - Name the component, version, language, and relevant source files or existing decompiler output.
    - Identify the expected attacker actor and any required starting privileges.
    - State the protected asset or boundary, such as kernel memory, tenant data, code execution, payment state, privacy data, or sandbox policy.
 
@@ -164,7 +164,7 @@ Produce this compact packet before spawning auditors or writing rules:
 
 - Use `maxtac-sast-opengrep` when a hypothesis needs repeatable searches across many files, taint-like source-to-sink checks, constant or symbolic propagation, or rule tests.
 - Use `maxtac-sast-control-flow-graph` when a hypothesis depends on path feasibility, guard dominance, call chains, callbacks, lock order, cleanup paths, or multi-function state transitions.
-- Use Binary pack RE skills such as Ghidra or Radare2 when source is unavailable, decompiled output is required, or binary-level xrefs and call graphs are the best evidence.
+- Use Android JADX for APK/DEX/resource decompiler output, or Binary RE skills such as Ghidra and Radare2 for native binaries, firmware payloads, binary-level xrefs, and call graphs.
 - Use DAST skills when the triage path needs runtime confirmation, fuzzing, debugging, or a controlled proof environment.
 - Use `maxtac-core-subagents` when linted packets are clear enough for a targeted, goal-bounded auditor to assess a bug class or mitigation boundary. Prefer an auditor prompt produced by `packet.py prompt` so surface, CFG, and OpenGrep evidence stay structured, then wrap it with the subagent helper before spawning.
 

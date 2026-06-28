@@ -59,7 +59,7 @@ Before fuzzing an API, identify:
 - Resource creation operations and their returned identifiers.
 - Resource cleanup operations and quota limits.
 - Idempotent operations that can be safely fuzzed for longer.
-- Dangerous operations that need a local lab, mock tenant, or explicit
+- Dangerous operations that need a local test target, mock tenant, or explicit
   permission.
 - Rate limits, replay protections, anti-CSRF rules, and request signing.
 

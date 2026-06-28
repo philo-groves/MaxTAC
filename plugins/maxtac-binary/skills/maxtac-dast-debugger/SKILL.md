@@ -18,8 +18,8 @@ python3 <skill-dir>/scripts/debug-evidence.py init \
   --target "local parser harness" \
   --target-version "1.2.3 build 456" \
   --target-file ./harness \
-  --scope "authorized local lab target" \
-  --environment "macOS VM snapshot abc123" \
+  --scope "authorized local test target" \
+  --environment "local macOS test host" \
   --command-line "lldb -- ./harness crash.min"
 ```
 

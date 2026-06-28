@@ -86,7 +86,7 @@ Frida documents three core modes:
   to run autonomously.
 
 Injected mode is the normal first choice for desktop or server processes you
-own and authorized lab targets where injection is allowed.
+own and authorized test targets where injection is allowed.
 
 Embedded or preloaded mode is useful when the program must carry Gadget itself,
 when early instrumentation must happen before normal attach is possible, or when

@@ -36,7 +36,7 @@ Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations 
 
 The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script.
 
-Use `scripts/workspace.py` as the canonical Core workspace helper. Program packs may expose MCP wrappers for their own domain workflows, but Core does not require them.
+Use `scripts/workspace.py` as the canonical Core workspace helper. Domain or program-specific packs may expose MCP wrappers for their own workflows, but Core does not require them.
 
 ## Research Workspace
 MaxTAC is designed as a modular research workspace meant to scale for scopes of any size, continuously building a knowledge base that provides better context than most security researchers traditionally have access to. Models often persist every research file to the base directory, or fail to persist important knowledge at all; this guidance prevents that behavior.
@@ -142,14 +142,14 @@ Go to this phase at the start of the workflow or when additional threat modeling
 #### First Run Setup
 Assume the first run is active if `<workspace-root>/program-info.md` does not exist. Ingest the program information to `<workspace-root>/program-info.md` as a preliminary step. Some programs have streamlined information via skills, others are more generic.
 
-Use `<skill-dir>/references/program-info.template.md` relative to this skill as a template and fill in the missing sections. Key information should come from the user, the installed program pack, or the current official program source.
+Use `<skill-dir>/references/program-info.template.md` relative to this skill as a template and fill in the missing sections. Key information should come from the user, the installed domain/program pack, or the current official program source.
 
 #### Target Setup
 Determine if a stable subsystem submodule relevant to this session activity already exists, and if not, create one. Use the associated submodule for durable security research: documenting architecture, trust boundaries, invariants, and cross-session knowledge as markdown, while placing raw supporting files in `artifacts/`. Avoid recreating similar submodules as it may cause duplicate work, but create child submodules when the research moves to a distinct subsystem.
 
 Next, identify which installed domain pack owns the target method:
 
-- Source/SAST: source repositories, decompiled code, static reachability, guard dominance, and OpenGrep evidence.
+- Source/SAST: source repositories, existing decompiler output, static reachability, guard dominance, and OpenGrep evidence.
 - Binary: native binaries, firmware payloads, reverse engineering, crash replay, native instrumentation, and systems fuzzing.
 - Web: web applications, APIs, sessions, browser state, tenants, and SaaS workflows.
 - Supply Chains: dependency graphs, package managers, CI/CD, artifact provenance, signing, containers, and release pipelines.
@@ -164,7 +164,7 @@ Go to this phase after the Prepare phase or when additional vulnerability discov
 #### Surface Triage
 Use the installed domain pack that matches the target. Produce a compact triage packet or evidence note that names the target slice, actor, trust boundary, controlled inputs, security invariant, suspect guard or sink, evidence already collected, and suggested auditor filters.
 
-When source code is available, the Source pack can produce SAST, control-flow, and OpenGrep packets. When the target is web, supply-chain, binary, Android, Apple, or Microsoft-specific, use that pack's triage guidance before spawning auditors.
+When source code or existing decompiler output is available, the Source pack can produce SAST, control-flow, and OpenGrep packets. When the target is web, supply-chain, binary, Android, Apple, or Microsoft-specific, use that pack's triage guidance before spawning auditors.
 
 #### Hypothesize
 Analyze previously conducted recon, threat modeling, research, and surface triage to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.

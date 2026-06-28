@@ -9,7 +9,7 @@ execution, or structured languages.
 Use syzkaller for syscall, kernel, driver, and OS service fuzzing. It is most
 useful when:
 
-- The target OS can run in disposable VMs or lab devices.
+- The target OS can run on disposable test hosts or authorized devices.
 - Coverage feedback and kernel sanitizers are available.
 - The syscall or IOCTL surface can be described, extended, or scoped.
 - Crash reproduction and minimization are more valuable than raw request volume.
@@ -17,12 +17,12 @@ useful when:
 Good syzkaller campaigns require:
 
 - A kernel build with the right coverage and sanitizer options.
-- VM/device reset automation.
+- Target reset automation.
 - Scoped syscall descriptions or subsystem focus.
 - Reproducer preservation in both syz and C forms when available.
 - A triage path through kernel logs, crash dumps, and source or symbols.
 
-Watch for false signals from unsupported hardware, flaky VMs, debug asserts,
+Watch for false signals from unsupported hardware, flaky test hosts, debug asserts,
 known upstream bugs, and crashes caused by impossible privilege context.
 
 ## boofuzz

@@ -50,7 +50,7 @@ or target attachment.
 
 ## Quick Commands
 
-Start Chrome with a lab profile and a local CDP endpoint:
+Start Chrome with a fresh test profile and a local CDP endpoint:
 
 ```text
 chrome \
@@ -128,9 +128,9 @@ CDP is exposed through a WebSocket endpoint. A browser launched with
 
 Use an isolated profile. Chrome documentation states that newer Chrome builds
 only honor remote debugging switches when a non-default `--user-data-dir` is
-used. For lab work, always launch a fresh profile path and record it.
+used. For repeatable evidence, always launch a fresh profile path and record it.
 
-Use loopback unless the lab explicitly requires remote access:
+Use loopback unless the authorized test explicitly requires remote access:
 
 ```text
 --remote-debugging-address=127.0.0.1

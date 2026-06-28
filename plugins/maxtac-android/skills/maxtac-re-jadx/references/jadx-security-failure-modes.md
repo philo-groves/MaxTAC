@@ -2,7 +2,7 @@
 
 Use this reference when handling hostile APKs, malformed ZIPs, resource bombs,
 broken XML, third-party plugins, partial decompilation, or unexpected output.
-The defaults include safety checks. Disable them only for isolated lab
+The defaults include safety checks. Disable them only for an isolated disposable
 reproduction and document that choice.
 
 ## Contents
@@ -71,7 +71,7 @@ Important source behavior:
 - `JADX_TMP_DIR` is used as a parent directory for a per-instance temp directory.
 - `JADX_CONFIG_DIR` and `JADX_CACHE_DIR` override system app directories.
 
-Use overrides only in a controlled lab:
+Use overrides only in a controlled disposable workspace:
 
 ```bash
 export JADX_CONFIG_DIR="$PWD/.jadx-config"

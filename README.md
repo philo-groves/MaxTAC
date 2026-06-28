@@ -13,7 +13,7 @@ Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber p
 | Pack | Path | Use when |
 | --- | --- | --- |
 | MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, ledgers, reporting flow, and goal-bounded auditor/debater orchestration. |
-| MaxTAC for Source | `plugins/maxtac-source` | You need source or decompiled-code static triage, control-flow evidence, or OpenGrep searches. |
+| MaxTAC for Source | `plugins/maxtac-source` | You need static triage, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
 | MaxTAC for Binary | `plugins/maxtac-binary` | You need native binary RE, Ghidra, radare2, debugger evidence, crash replay, instrumentation, or systems fuzzing. |
 | MaxTAC for Web | `plugins/maxtac-web` | You need web/API/session/tenant triage, browser debugging, or stateful API fuzzing. |
 | MaxTAC for Supply Chains | `plugins/maxtac-supply-chains` | You need dependency, package, CI/CD, provenance, signing, registry, container, or release-pipeline triage. |
@@ -21,13 +21,13 @@ Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber p
 | MaxTAC for Apple Systems | `plugins/maxtac-apple-systems` | You need Apple Security Bounty target-flag proofing, IPSW workflows, Apple mitigations, or Apple-specific auditors. |
 | MaxTAC for Microsoft Systems | `plugins/maxtac-microsoft-systems` | You need MSRC LPAC proofing, Windows mitigation reasoning, or Microsoft/Windows-specific auditors. |
 
-The old virtualization guidance is parked under `archive/excluded-guidance/` and is not loaded by any active pack.
+Virtualization and general environment-management guidance is intentionally excluded from active packs.
 
 ## Recommended Combinations
 
 - Source repository: Core + Source + the relevant domain pack.
 - Web or SaaS target: Core + Web, optionally Source when code is available.
-- Native/binary target: Core + Binary, optionally Source for decompiled-code packet work.
+- Native/binary target: Core + Binary, optionally Source after decompiler output exists and needs static packet work.
 - Supply-chain target: Core + Supply Chains, optionally Source or Web depending on the affected path.
 - Android target: Core + Android, optionally Source when code is available or Binary when native libraries dominate the evidence path.
 - Apple systems target: Core + Apple Systems, plus Binary or Source when the evidence path needs RE or code analysis.

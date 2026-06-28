@@ -4,7 +4,7 @@ description: "Use this skill when an Apple Security Bounty chain needs target-fl
 ---
 
 # MaxTAC ASB Flag Proof
-Use this skill when an Apple chain requires objective proof of a vulnerability that results in register control, arbitrary read/write, arbitrary code execution, or TCC modification. Do not use this skill for primitive findings; it is only be used with chains. Apple provides and requires target flags to prove these scenarios on iOS, iPadOS, macOS, tvOS, visionOS, and watchOS.
+Use this skill when an Apple chain requires objective proof of a vulnerability that results in register control, arbitrary read/write, arbitrary code execution, or TCC modification. Do not use this skill for primitive findings; use it only with chains. Apple provides and requires target flags to prove these scenarios on iOS, iPadOS, macOS, tvOS, visionOS, and watchOS.
 
 ## Types of Target Flags
 - Commpage Target Flag: provides precise addresses and values to use in the proof of vulnerability (PoV), resulting in predictable crash logs that clearly demonstrate achieving exploit primitives in userspace and kernel.

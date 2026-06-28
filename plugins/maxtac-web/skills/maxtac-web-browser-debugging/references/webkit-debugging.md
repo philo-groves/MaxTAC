@@ -745,7 +745,7 @@ Target URL
 Network path between client and target
 ```
 
-Bind remote inspector servers to loopback unless the lab explicitly requires a
+Bind remote inspector servers to loopback unless the authorized test explicitly requires a
 remote interface. If a remote interface is required, record the network
 boundary and firewall state.
 

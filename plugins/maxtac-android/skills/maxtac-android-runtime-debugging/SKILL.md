@@ -5,7 +5,7 @@ description: "Use this skill when Android research needs authorized ADB, logcat,
 
 # MaxTAC Android Runtime Debugging
 
-Use this skill for authorized Android runtime observation and proof collection. Prefer the simplest device workflow that reproduces the behavior. Do not add virtualization or emulator setup guidance here; if a future lab pack is needed, keep it separate.
+Use this skill for authorized Android runtime observation and proof collection. Prefer the simplest device workflow that reproduces the behavior. Do not add virtualization or emulator setup guidance here; keep any future environment-management pack separate.
 
 ## Readiness
 

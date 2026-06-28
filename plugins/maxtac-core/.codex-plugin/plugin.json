@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "MaxTAC Core",
     "shortDescription": "Core MaxTAC research workflow and ledgers.",
-    "longDescription": "MaxTAC Core coordinates authorized vulnerability research without loading domain-specific binary, web, supply-chain, Apple, or Microsoft guidance. It manages the research workspace, durable research library, primitive and chain ledgers, goal-bounded auditor/debater prompts, validation, proof, and reporting flow.",
+    "longDescription": "MaxTAC Core coordinates authorized vulnerability research without loading domain-specific source, binary, web, supply-chain, Android, Apple, or Microsoft guidance. It manages the research workspace, durable research library, primitive and chain ledgers, goal-bounded auditor/debater prompts, validation, proof, and reporting flow.",
     "defaultPrompt": [
       "Use MaxTAC Core to initialize this authorized research workspace.",
       "Use MaxTAC Core to update findings and plan the next validation step."

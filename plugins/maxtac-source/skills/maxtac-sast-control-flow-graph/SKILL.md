@@ -1,6 +1,6 @@
 ---
 name: maxtac-sast-control-flow-graph
-description: "Use this skill when SAST needs static control-flow or call-graph evidence for reachability, guard dominance, path feasibility, callbacks, lock order, cleanup paths, state transitions, or source-to-sink paths in source or decompiled code."
+description: "Use this skill when SAST needs static control-flow or call-graph evidence for reachability, guard dominance, path feasibility, callbacks, lock order, cleanup paths, state transitions, or source-to-sink paths in source code or existing decompiler output."
 ---
 
 # MaxTAC SAST Control-Flow Graph
@@ -13,7 +13,7 @@ Use this skill when a security hypothesis cannot be answered by reading one func
 - Include only nodes needed to reason about entrypoints, guards, state changes, calls, sinks, error paths, callbacks, locks, and cleanup.
 - Prefer real compiler, language-server, decompiler, or analysis-tool facts over hand-drawn guesses.
 - Preserve the commands, scripts, or manual steps used to derive graph facts when the graph supports a finding.
-- Treat generated graphs as evidence aids. Still verify important edges by reading code or decompiled output.
+- Treat generated graphs as evidence aids. Still verify important edges by reading source code, generated code, or decompiler output.
 
 ## Use Cases
 
@@ -41,7 +41,7 @@ Use this skill when a security hypothesis cannot be answered by reading one func
 3. Collect facts.
    - Start with `rg` to find entrypoints, sinks, guard functions, state fields, callbacks, and tests.
    - Use language-aware tools when available: compiler AST dumps, language servers, static analyzers, OpenGrep, code indexes, or framework route maps.
-   - For binaries or apps without source, use MaxTAC RE skills to obtain xrefs, call graphs, decompiled functions, switch tables, and data references.
+   - For binaries or apps without source, use the owning domain pack first: Android for JADX APK/DEX/resource output, or Binary for Ghidra/Radare2 xrefs, call graphs, decompiled functions, switch tables, and data references.
    - For native binaries, use Ghidra or Radare2 for xrefs, basic blocks, decompiler output, and callgraph exports.
 
 4. Reduce the graph.

@@ -22,7 +22,7 @@
   "interface": {
     "displayName": "MaxTAC for Binary",
     "shortDescription": "Binary RE, debugging, and systems fuzzing.",
-    "longDescription": "MaxTAC for Binary adds Ghidra, radare2, native debugger, instrumentation, crash replay, and systems fuzzing guidance without loading web application or supply-chain workflows.",
+    "longDescription": "MaxTAC for Binary adds Ghidra, radare2, native debugger, instrumentation, crash replay, and systems fuzzing guidance without loading web, supply-chain, Android, Apple, or Microsoft workflows.",
     "defaultPrompt": [
       "Use MaxTAC for Binary to triage this authorized binary target.",
       "Use MaxTAC for Binary to capture repeatable crash or RE evidence."

@@ -1,6 +1,6 @@
 ## MaxTAC Tooling Inventory
 
-Install only the tools needed by the active plugin packs and current target. Core needs Python for helper scripts; the domain packs route to target-specific tools.
+Install only the tools needed by the active plugin packs and current target. Core needs Python for helper scripts; domain packs route to target-specific tools.
 
 ## Core
 

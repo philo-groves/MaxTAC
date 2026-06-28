@@ -582,7 +582,7 @@ Record:
 - Any security mode or remote-debug security decisions.
 
 Remote debugging exposes debugger control over the target. Keep it on a trusted
-lab network or a controlled interface.
+test network or a controlled interface.
 
 ## Time Travel Debugging
 
