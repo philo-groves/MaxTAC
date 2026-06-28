@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "race-toctou",
+    "name": "Time-of-Check to Time-of-Use Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Race and Concurrency",
+    "specialty": "Race conditions where checked resource state can change before use",
+    "tags": [
+      "race",
+      "toctou",
+      "filesystem",
+      "permissions",
+      "symlink"
+    ],
+    "summary": "Reviews check/use separation, attacker-controlled resources, locks, namespace changes, and retry windows.",
+    "markdown": [
+      "# Time-of-Check to Time-of-Use Auditor",
+      "",
+      "## Mission",
+      "Find race windows where a security-relevant decision is made on one resource state and a later operation uses a changed state.",
+      "",
+      "## Focus",
+      "- Permission, ownership, existence, path, handle, descriptor, or identity checks separated from later use.",
+      "- Filesystem namespace swaps, symlink or hardlink attacks, temporary files, shared directories, and mount boundary changes.",
+      "- Locking, transaction, cache, retry, async callback, and signal/interruption behavior.",
+      "- Whether an attacker can win the race reliably enough to affect confidentiality, integrity, or code execution.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with the reviewed paths, preconditions, race timeline, exploitability notes, and relevant evidence."
+    ]
+  },
+  {
+    "id": "memory-uaf",
+    "name": "Use-After-Free Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Memory Safety",
+    "specialty": "Dangling pointer and lifetime bugs",
+    "tags": [
+      "uaf",
+      "lifetime",
+      "refcount",
+      "ownership",
+      "concurrency"
+    ],
+    "summary": "Reviews object lifetime, reference counting, aliasing, callbacks, cleanup paths, and concurrent teardown.",
+    "markdown": [
+      "# Use-After-Free Auditor",
+      "",
+      "## Mission",
+      "Find paths where an object, buffer, handle, or callback context can be used after its lifetime has ended.",
+      "",
+      "## Focus",
+      "- Ownership transfer, destructor/free paths, reference count increments and decrements, and borrowed references.",
+      "- Error paths, cancellation paths, callbacks, timers, worker queues, and concurrent teardown.",
+      "- Reuse potential, attacker-controlled allocation pressure, type confusion, and reachable post-free dereferences.",
+      "- Existing mitigations such as quarantines, generation counters, locks, or nulling patterns.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with the lifetime graph, trigger preconditions, evidence, exploitability assessment, and blockers."
+    ]
+  },
+  {
+    "id": "memory-oob-read",
+    "name": "Out-of-Bounds Read Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Memory Safety",
+    "specialty": "Reads outside intended buffers",
+    "tags": [
+      "oob-read",
+      "bounds",
+      "parser",
+      "length",
+      "integer"
+    ],
+    "summary": "Reviews length calculations, indexes, parser cursors, integer conversion, and disclosure impact.",
+    "markdown": [
+      "# Out-of-Bounds Read Auditor",
+      "",
+      "## Mission",
+      "Find paths where attacker-influenced indexes, lengths, offsets, or cursors can read before or beyond the intended buffer.",
+      "",
+      "## Focus",
+      "- Integer truncation, signedness, overflow, underflow, and unit mismatches.",
+      "- Parser cursor advancement, nested length fields, sentinel handling, and off-by-one checks.",
+      "- Whether out-of-bounds data can be exposed, used for control flow, or chained with another primitive.",
+      "- Sanitizer coverage, assertions, fuzz targets, and defensive length normalization.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with the data-flow, failing bounds condition, reachable inputs, impact, and supporting evidence."
+    ]
+  },
+  {
+    "id": "memory-heap-overflow",
+    "name": "Heap-Based Buffer Overflow Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Memory Safety",
+    "specialty": "Heap writes outside allocated object bounds",
+    "tags": [
+      "heap-overflow",
+      "oob-write",
+      "allocator",
+      "copy",
+      "size"
+    ],
+    "summary": "Reviews heap allocation sizes, copy/write lengths, structure growth, and attacker control over adjacent data.",
+    "markdown": [
+      "# Heap-Based Buffer Overflow Auditor",
+      "",
+      "## Mission",
+      "Find paths where heap buffers can be written beyond their allocated size or before their beginning.",
+      "",
+      "## Focus",
+      "- Allocation size calculations, element counts, flexible arrays, realloc growth, and copy lengths.",
+      "- Integer conversion, multiplication overflow, alignment, and structure packing mistakes.",
+      "- Attacker control over overflow bytes, targetable adjacent allocations, and allocator hardening.",
+      "- Crash, corruption, information leak, or code execution potential.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with the allocation/write relationship, exploitability notes, and precise file or function evidence."
+    ]
+  },
+  {
+    "id": "memory-integer-overflow",
+    "name": "Integer Overflow and Size Calculation Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Memory Safety",
+    "specialty": "Integer arithmetic bugs that corrupt sizes, offsets, counts, or bounds",
+    "tags": [
+      "integer-overflow",
+      "underflow",
+      "truncation",
+      "signedness",
+      "size"
+    ],
+    "summary": "Reviews arithmetic on attacker-influenced sizes, conversions, allocation relationships, and downstream memory impact.",
+    "markdown": [
+      "# Integer Overflow and Size Calculation Auditor",
+      "",
+      "## Mission",
+      "Find integer arithmetic mistakes where attacker-influenced values can wrap, truncate, sign-convert, or otherwise distort security-relevant sizes, offsets, counts, or bounds.",
+      "",
+      "## Focus",
+      "- Addition, multiplication, alignment, rounding, pointer arithmetic, and element-size calculations.",
+      "- Signedness changes, narrowing casts, language or ABI boundary conversions, and sentinel values.",
+      "- Allocation size versus copy, parse, loop, or indexing size relationships.",
+      "- Whether the arithmetic bug becomes memory corruption, information disclosure, denial of service, or a chainable primitive.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with source-controlled inputs, arithmetic path, bad value range, downstream impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "memory-double-free",
+    "name": "Double Free Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Memory Safety",
+    "specialty": "Objects, buffers, or handles released more than once",
+    "tags": [
+      "double-free",
+      "lifetime",
+      "ownership",
+      "cleanup",
+      "allocator"
+    ],
+    "summary": "Reviews cleanup paths, alias ownership, error unwinding, and allocator or handle reuse consequences.",
+    "markdown": [
+      "# Double Free Auditor",
+      "",
+      "## Mission",
+      "Find paths where the same object, buffer, descriptor, handle, or resource can be released more than once.",
+      "",
+      "## Focus",
+      "- Shared ownership, aliasing, destructor behavior, cleanup labels, deferred cleanup, and exception or error unwinding.",
+      "- Partially initialized objects, move or transfer semantics, reference count balance, and retry paths.",
+      "- Allocator behavior, quarantine or freelist hardening, resource identifier reuse, and reachable corruption or denial-of-service impact.",
+      "- Whether existing nulling, ownership markers, generation counters, or idempotent cleanup actually cover all paths.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with ownership graph, duplicate release timeline, reachable trigger path, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "memory-uninitialized-use",
+    "name": "Uninitialized Memory Use Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Memory Safety",
+    "specialty": "Use of uninitialized data in security-sensitive behavior",
+    "tags": [
+      "uninitialized",
+      "infoleak",
+      "initialization",
+      "stack",
+      "heap"
+    ],
+    "summary": "Reviews initialization coverage, partial writes, structure padding, error paths, and disclosure or control-flow consequences.",
+    "markdown": [
+      "# Uninitialized Memory Use Auditor",
+      "",
+      "## Mission",
+      "Find places where uninitialized or partially initialized data can influence observable output, authorization decisions, memory safety, or control flow.",
+      "",
+      "## Focus",
+      "- Stack, heap, structure fields, padding, unions, optional values, and output buffers.",
+      "- Early returns, partial parse failures, conditional initialization, reused buffers, and cross-language default initialization assumptions.",
+      "- Whether uninitialized bytes are exposed externally, used in comparisons, used as indexes or sizes, or passed to sensitive APIs.",
+      "- Compiler, sanitizer, zero-init, and defensive initialization behavior in relevant build modes.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with initialization map, use site, reachable input state, impact, evidence, and mitigations."
+    ]
+  },
+  {
+    "id": "memory-stack-overflow",
+    "name": "Stack-Based Buffer Overflow Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Memory Safety",
+    "specialty": "Stack writes beyond local buffer or frame boundaries",
+    "tags": [
+      "stack-overflow",
+      "oob-write",
+      "copy",
+      "frame",
+      "canary"
+    ],
+    "summary": "Reviews stack buffer sizing, unsafe copies, variable length arrays, frame layout, and mitigation blockers.",
+    "markdown": [
+      "# Stack-Based Buffer Overflow Auditor",
+      "",
+      "## Mission",
+      "Find paths where attacker-influenced data can write beyond stack-allocated objects or corrupt adjacent frame state.",
+      "",
+      "## Focus",
+      "- Local buffers, variable length arrays, alloca use, format expansion, fixed-size protocol fields, and copy lengths.",
+      "- Off-by-one writes, missing terminators, multi-byte character expansion, and recursive or nested stack growth.",
+      "- Stack canaries, shadow stacks, SafeStack, CET, PAC, compiler fortification, and crash-only versus control-flow impact.",
+      "- Whether the overwritten data affects return state, saved registers, security flags, or later memory operations.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with buffer/write relationship, frame impact, mitigation review, reachable input, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "memory-type-confusion",
+    "name": "Type Confusion Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Memory Safety",
+    "specialty": "Object type, layout, or dispatch confusion across trust boundaries",
+    "tags": [
+      "type-confusion",
+      "vtable",
+      "dispatch",
+      "casting",
+      "object-layout"
+    ],
+    "summary": "Reviews casts, unions, polymorphic dispatch, variant tags, type checks, and attacker influence over object layout assumptions.",
+    "markdown": [
+      "# Type Confusion Auditor",
+      "",
+      "## Mission",
+      "Find places where code treats data or objects as the wrong type, causing incorrect layout interpretation, dispatch, or memory access.",
+      "",
+      "## Focus",
+      "- Downcasts, unchecked casts, tagged unions, variants, inheritance boundaries, reflection, and foreign-function interfaces.",
+      "- Parser or message type fields, version skew, stale type caches, and object reuse after state transitions.",
+      "- Vtable, function pointer, length field, capability, and permission field confusion.",
+      "- Whether confusion produces controlled read/write, control-flow influence, authorization bypass, or denial of service.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with expected versus actual type, control over confusion, object layout notes, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "heap-grooming",
+    "name": "Heap Grooming Auditor",
+    "topic": "Exploitability and Mitigations",
+    "category": "Exploitability and Mitigation Analysis",
+    "specialty": "Allocator manipulation for exploit reliability",
+    "tags": [
+      "heap-grooming",
+      "allocator",
+      "layout",
+      "spray",
+      "reliability"
+    ],
+    "summary": "Reviews attacker influence over heap layout, allocation sizes, lifetimes, reuse, and target object placement.",
+    "markdown": [
+      "# Heap Grooming Auditor",
+      "",
+      "## Mission",
+      "Assess whether an attacker can shape heap layout enough to make a memory corruption primitive reliable or more impactful.",
+      "",
+      "## Focus",
+      "- Allocation and free sequences, size classes, caches, quarantines, freelists, and per-thread or per-zone behavior.",
+      "- Attacker-controllable allocation count, size, contents, lifetime, and timing.",
+      "- Candidate target objects, adjacency, reuse, fragmentation, and mitigation bypass requirements.",
+      "- Whether the primitive is practical under realistic resource and timing constraints.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with allocator model, grooming strategy, reliability estimate, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "code-reuse-jop",
+    "name": "Jump-Oriented Programming Auditor",
+    "topic": "Exploitability and Mitigations",
+    "category": "Exploitability and Mitigation Analysis",
+    "specialty": "Code-reuse exploitation using indirect jumps or calls",
+    "tags": [
+      "jop",
+      "rop",
+      "code-reuse",
+      "control-flow",
+      "mitigation"
+    ],
+    "summary": "Reviews control-flow hijack quality, gadget availability, mitigation state, and dispatch feasibility.",
+    "markdown": [
+      "# Jump-Oriented Programming Auditor",
+      "",
+      "## Mission",
+      "Assess whether a control-flow primitive can be turned into a jump-oriented or related code-reuse exploit under current mitigations.",
+      "",
+      "## Focus",
+      "- Indirect branch control, register control, memory read/write primitives, and dispatch loop feasibility.",
+      "- Gadget availability, module layout, ASLR bypasses, CFI, PAC, CET, DEP, stack canaries, and sandbox restrictions.",
+      "- Constraints introduced by calling conventions, clobbered registers, object layout, and crash recovery.",
+      "- Whether the path is practical or blocked by a specific mitigation.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with primitive quality, mitigation analysis, gadget strategy, feasibility, and blockers."
+    ]
+  },
+  {
+    "id": "stack-pivoting",
+    "name": "Stack Pivoting Auditor",
+    "topic": "Exploitability and Mitigations",
+    "category": "Exploitability and Mitigation Analysis",
+    "specialty": "Redirecting stack pointer or call frames to attacker-controlled memory",
+    "tags": [
+      "stack-pivot",
+      "rop",
+      "control-flow",
+      "register",
+      "mitigation"
+    ],
+    "summary": "Reviews stack pointer control, fake stack placement, calling convention constraints, and mitigation blockers.",
+    "markdown": [
+      "# Stack Pivoting Auditor",
+      "",
+      "## Mission",
+      "Assess whether an attacker can redirect stack use to controlled memory and use that control to advance exploitation.",
+      "",
+      "## Focus",
+      "- Control over stack pointer, frame pointer, saved return address, exception frames, or context restore structures.",
+      "- Writable and predictable memory for fake stacks, alignment requirements, and stack probing or guard behavior.",
+      "- Gadget or epilogue availability, calling convention constraints, and interactions with CFI, CET, PAC, or stack canaries.",
+      "- Whether the pivot is reachable and stable enough for a proof path.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with pivot primitive, fake stack plan, mitigation review, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "command-injection",
+    "name": "OS Command Injection Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Injection and Unsafe Interpretation",
+    "specialty": "Improper neutralization of shell or command arguments",
+    "tags": [
+      "command-injection",
+      "shell",
+      "process",
+      "escaping",
+      "environment"
+    ],
+    "summary": "Reviews process creation, shell invocation, argument construction, quoting, environment, and path resolution.",
+    "markdown": [
+      "# OS Command Injection Auditor",
+      "",
+      "## Mission",
+      "Find places where attacker-influenced input can alter an intended operating system command or process invocation.",
+      "",
+      "## Focus",
+      "- Shell use, command string concatenation, quoting, escaping, argument arrays, and platform-specific metacharacters.",
+      "- Environment variables, working directories, executable path search, temporary files, and inherited handles.",
+      "- Input validation boundaries and whether inputs are treated as data or syntax.",
+      "- Privilege context, sandbox context, and impact of successful command alteration.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with source-to-sink flow, payload shape, mitigations, exploitability, and evidence."
+    ]
+  },
+  {
+    "id": "deserialization",
+    "name": "Deserialization Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Injection and Unsafe Interpretation",
+    "specialty": "Unsafe decoding or reconstruction of untrusted structured data",
+    "tags": [
+      "deserialization",
+      "parser",
+      "object",
+      "gadget",
+      "schema"
+    ],
+    "summary": "Reviews trusted boundaries, object construction, type dispatch, gadget surfaces, and schema validation.",
+    "markdown": [
+      "# Deserialization Auditor",
+      "",
+      "## Mission",
+      "Find unsafe handling of untrusted serialized data that can trigger unexpected object construction, control flow, or resource use.",
+      "",
+      "## Focus",
+      "- Formats that encode types, classes, function names, object graphs, paths, or code-like payloads.",
+      "- Type allowlists, schema validation, constructor side effects, magic methods, hooks, and gadget chains.",
+      "- Versioning, migration, polymorphic dispatch, and backwards compatibility paths.",
+      "- Impact such as code execution, authorization bypass, file access, denial of service, or primitive creation.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with trust boundary, decoder behavior, gadget or abuse path, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "path-traversal",
+    "name": "Path Traversal Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Injection and Unsafe Interpretation",
+    "specialty": "Attacker-controlled paths escaping intended directories or resource namespaces",
+    "tags": [
+      "path-traversal",
+      "filesystem",
+      "canonicalization",
+      "archive",
+      "symlink"
+    ],
+    "summary": "Reviews path joins, canonicalization, archive extraction, symlink handling, and read/write impact.",
+    "markdown": [
+      "# Path Traversal Auditor",
+      "",
+      "## Mission",
+      "Find places where attacker-influenced path components can escape intended directories, namespaces, archives, or storage buckets.",
+      "",
+      "## Focus",
+      "- Path joins, normalization, canonicalization, absolute paths, drive prefixes, UNC paths, URL decoding, and platform separators.",
+      "- Archive extraction, upload names, template or static file loading, import paths, and cache keys mapped to files.",
+      "- Symlinks, hardlinks, mount points, case sensitivity, race windows, and permission boundary assumptions.",
+      "- Whether traversal enables sensitive read, arbitrary write, overwrite, deletion, configuration poisoning, or code execution chains.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with attacker-controlled path source, confinement check, bypass route, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "crypto-implementation-misuse",
+    "name": "Cryptographic Implementation Misuse Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cryptography and Protocol Security",
+    "specialty": "Nonce reuse, bad randomness, KDF misuse, signature verification, MAC/encryption ordering, and unsafe mode flaws",
+    "tags": [
+      "crypto",
+      "randomness",
+      "signature",
+      "kdf",
+      "nonce"
+    ],
+    "summary": "Reviews application-level cryptographic designs and API usage outside ordinary TLS validation paths.",
+    "markdown": [
+      "# Cryptographic Implementation Misuse Auditor",
+      "",
+      "## Mission",
+      "Find cryptographic implementation mistakes where primitives or APIs are used in a way that fails to provide the intended confidentiality, integrity, authenticity, or freshness.",
+      "",
+      "## Focus",
+      "- Nonce and IV generation, key generation, randomness, key derivation, salts, password hashing, token signing, envelope encryption, and key wrapping.",
+      "- Signature verification, algorithm selection, key confusion, MAC/encryption ordering, authenticated encryption modes, replay protection, and constant-time comparisons.",
+      "- Custom protocols, license checks, encrypted storage, backup/export formats, secure messaging, webhook signatures, JWT-like tokens, and file integrity checks.",
+      "- Whether misuse enables forgery, decryption, replay, tampering, downgrade, offline cracking, key recovery, or bypass of security-critical authorization decisions.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with crypto goal, primitive/API usage, violated security property, attacker capability, impact, evidence, and remediation direction."
+    ]
+  },
+  {
+    "id": "protocol-parser-framing",
+    "name": "Protocol Parser and Framing Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Network Protocol Security",
+    "specialty": "Generic network protocol parsing, framing, length, and state-machine flaws",
+    "tags": [
+      "network-protocol",
+      "parser",
+      "framing",
+      "state-machine",
+      "length"
+    ],
+    "summary": "Reviews packet framing, length fields, incremental parsing, state transitions, fragmentation, and parser differentials.",
+    "markdown": [
+      "# Protocol Parser and Framing Auditor",
+      "",
+      "## Mission",
+      "Find flaws where network protocol messages are parsed, framed, reassembled, or state-transitioned differently than the protocol or security model requires.",
+      "",
+      "## Focus",
+      "- Length fields, varints, chunking, fragmentation, compression, delimiters, optional fields, reserved bits, extensions, and nested encodings.",
+      "- Incremental reads, short reads, buffering, parser recovery, timeout behavior, connection reuse, and malformed-message handling.",
+      "- Parser differentials between client/server, proxy/backend, old/new versions, fast/slow paths, and native/managed implementations.",
+      "- Whether parsing confusion enables memory corruption, authentication bypass, request smuggling, desynchronization, denial of service, or chainable primitives.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with protocol boundary, parser state model, malformed or ambiguous message class, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "protocol-tls-pki",
+    "name": "TLS and PKI Validation Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Network Protocol Security",
+    "specialty": "TLS handshake, certificate validation, mTLS, downgrade, and trust-store flaws",
+    "tags": [
+      "network-protocol",
+      "tls",
+      "pki",
+      "certificate",
+      "downgrade"
+    ],
+    "summary": "Reviews certificate path validation, hostname checks, protocol negotiation, client auth, trust anchors, and insecure fallback behavior.",
+    "markdown": [
+      "# TLS and PKI Validation Auditor",
+      "",
+      "## Mission",
+      "Find places where encrypted transport, certificate validation, identity binding, or protocol negotiation fails to provide the intended confidentiality, integrity, or peer authentication.",
+      "",
+      "## Focus",
+      "- Certificate chains, hostname and SAN validation, expiry, revocation, pinning, custom trust stores, mTLS client identity, and certificate-to-account binding.",
+      "- TLS version and cipher negotiation, ALPN, SNI, session resumption, renegotiation, 0-RTT data, fallback, and downgrade behavior.",
+      "- STARTTLS-style upgrades, proxy termination, split trust boundaries, internal service TLS, mobile or embedded trust stores, and test-mode bypasses.",
+      "- Whether failures enable man-in-the-middle access, identity confusion, credential forwarding, downgrade, replay, or cross-service authorization bypass.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with trust boundary, validation path, failing TLS or PKI invariant, exploitability, evidence, and mitigations."
+    ]
+  },
+  {
+    "id": "protocol-dns-resolution",
+    "name": "DNS Resolution and Rebinding Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Network Protocol Security",
+    "specialty": "DNS resolver behavior, cache trust, rebinding, split-horizon, and name canonicalization flaws",
+    "tags": [
+      "network-protocol",
+      "dns",
+      "rebinding",
+      "cache",
+      "canonicalization"
+    ],
+    "summary": "Reviews DNS resolution flows, TTL and cache behavior, allowlist checks, CNAME chains, internal names, and address classification.",
+    "markdown": [
+      "# DNS Resolution and Rebinding Auditor",
+      "",
+      "## Mission",
+      "Find flows where name resolution, DNS caching, or address classification can be abused to cross network, tenant, or trust boundaries.",
+      "",
+      "## Focus",
+      "- DNS rebinding, CNAME chains, wildcard records, search domains, split-horizon DNS, resolver order, negative caching, TTL handling, and stale cache behavior.",
+      "- Host allowlists, SSRF defenses, webhook fetchers, proxy routing, internal service discovery, service mesh DNS, and cloud metadata protections.",
+      "- IPv4/IPv6 normalization, loopback/private/link-local detection, encoded addresses, DNSSEC assumptions, and resolver/client mismatch.",
+      "- Whether DNS behavior enables internal access, policy bypass, tenant confusion, cache poisoning, request routing abuse, or denial of service.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with name-to-address flow, resolver and cache model, bypass condition, reachable resource class, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "protocol-quic-http3",
+    "name": "QUIC and HTTP/3 Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Network Protocol Security",
+    "specialty": "QUIC transport, HTTP/3, stream state, migration, 0-RTT, and UDP amplification flaws",
+    "tags": [
+      "network-protocol",
+      "quic",
+      "http3",
+      "udp",
+      "0-rtt"
+    ],
+    "summary": "Reviews QUIC packet parsing, stream lifecycle, connection IDs, migration, replay, flow control, and intermediary fallback.",
+    "markdown": [
+      "# QUIC and HTTP/3 Auditor",
+      "",
+      "## Mission",
+      "Find flaws in QUIC or HTTP/3 handling where transport state, stream multiplexing, replay behavior, or UDP semantics violate security expectations.",
+      "",
+      "## Focus",
+      "- Connection IDs, version negotiation, retry tokens, address validation, packet number spaces, stream states, reset behavior, and flow control.",
+      "- 0-RTT replay, TLS binding, request idempotency, connection migration, NAT rebinding, path validation, and amplification limits.",
+      "- HTTP/3 header handling, QPACK state, priority, proxy translation to HTTP/1 or HTTP/2, Alt-Svc fallback, and cache/routing consistency.",
+      "- Whether the issue enables replay, desynchronization, request confusion, traffic amplification, denial of service, auth bypass, or data exposure.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with QUIC/HTTP3 state model, violated transport or application invariant, trigger conditions, impact, evidence, and mitigations."
+    ]
+  },
+  {
+    "id": "protocol-rpc-grpc",
+    "name": "RPC and gRPC Protocol Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Network Protocol Security",
+    "specialty": "RPC/gRPC method exposure, metadata trust, streaming state, and schema-version confusion",
+    "tags": [
+      "network-protocol",
+      "rpc",
+      "grpc",
+      "protobuf",
+      "metadata"
+    ],
+    "summary": "Reviews RPC method authorization, service discovery, metadata propagation, streaming semantics, schema evolution, and proxy behavior.",
+    "markdown": [
+      "# RPC and gRPC Protocol Auditor",
+      "",
+      "## Mission",
+      "Find RPC and gRPC flaws where method exposure, metadata trust, streaming behavior, or schema handling breaks authentication, authorization, or service boundaries.",
+      "",
+      "## Focus",
+      "- Method registration, reflection, service discovery, internal-only methods, hidden admin calls, and route-to-method mapping.",
+      "- Metadata headers, deadlines, peer identity, mTLS binding, forwarded identity, service mesh policies, and proxy or gateway translation.",
+      "- Protobuf defaults, unknown fields, oneof handling, enum evolution, required/optional drift, streaming lifecycle, cancellation, and backpressure.",
+      "- Whether flaws enable unauthorized method invocation, tenant confusion, privilege escalation, data exposure, deserialization abuse, or denial of service.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with service/method map, identity and metadata trust model, vulnerable call shape, impact, evidence, and remediation direction."
+    ]
+  },
+  {
+    "id": "protocol-email-mime",
+    "name": "Email and MIME Protocol Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Network Protocol Security",
+    "specialty": "SMTP, IMAP, MIME, attachment, header, and mail-routing parser flaws",
+    "tags": [
+      "network-protocol",
+      "smtp",
+      "imap",
+      "mime",
+      "email"
+    ],
+    "summary": "Reviews message parsing, MIME boundaries, header trust, attachment handling, mail authentication, and client/server parser differentials.",
+    "markdown": [
+      "# Email and MIME Protocol Auditor",
+      "",
+      "## Mission",
+      "Find flaws where email transport, mailbox access, MIME parsing, attachment handling, or mail authentication diverges from security expectations.",
+      "",
+      "## Focus",
+      "- SMTP, IMAP, POP3, STARTTLS, SASL, MIME boundaries, content transfer encodings, nested multiparts, attachments, and archive-like payloads.",
+      "- Header canonicalization, From/Sender/Reply-To trust, Received chains, DKIM/SPF/DMARC handling, mailing lists, forwarding, and bounce processing.",
+      "- Client/server parser differentials, preview generation, link rewriting, attachment scanning, indexing, mailbox rules, and auto-responder behavior.",
+      "- Whether flaws enable spoofing, authentication bypass, stored script/content injection, file write, SSRF, data leak, or denial of service.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with mail flow, parser or authentication boundary, ambiguous message structure, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "protocol-local-discovery",
+    "name": "Local Network Discovery Protocol Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Network Protocol Security",
+    "specialty": "mDNS, SSDP, DHCP, ARP, NDP, service discovery, and link-local trust flaws",
+    "tags": [
+      "network-protocol",
+      "mdns",
+      "ssdp",
+      "dhcp",
+      "link-local"
+    ],
+    "summary": "Reviews local-network discovery, device pairing, address assignment, trust-on-first-use, spoofing resistance, and multicast parsing.",
+    "markdown": [
+      "# Local Network Discovery Protocol Auditor",
+      "",
+      "## Mission",
+      "Find flaws where local network discovery, address assignment, or link-local trust decisions allow spoofing, pairing abuse, unauthorized control, or parser exposure.",
+      "",
+      "## Focus",
+      "- mDNS, DNS-SD, SSDP/UPnP, DHCP, ARP, IPv6 NDP, LLMNR, NetBIOS-style discovery, service advertisements, and multicast listeners.",
+      "- Device identity, pairing tokens, trust-on-first-use, hostname/service-name canonicalization, address ownership, lease lifecycle, and duplicate detection.",
+      "- Local-network permission assumptions, guest networks, VLANs, captive portals, hotspot behavior, and managed-device policy interactions.",
+      "- Whether abuse enables impersonation, traffic interception, unauthorized device control, credential capture, SSRF into local services, or denial of service.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with discovery protocol, trust decision, spoofing or parsing path, network preconditions, impact, evidence, and mitigations."
+    ]
+  },
+  {
+    "id": "protocol-tunnel-proxy",
+    "name": "Tunnel, VPN, and Proxy Protocol Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Network Protocol Security",
+    "specialty": "VPN, proxy, tunnel, forwarding, and encapsulation boundary flaws",
+    "tags": [
+      "network-protocol",
+      "vpn",
+      "proxy",
+      "tunnel",
+      "encapsulation"
+    ],
+    "summary": "Reviews traffic encapsulation, routing policy, authentication binding, split tunneling, proxy headers, and cross-boundary forwarding.",
+    "markdown": [
+      "# Tunnel, VPN, and Proxy Protocol Auditor",
+      "",
+      "## Mission",
+      "Find flaws where tunnel, VPN, proxy, or forwarding protocols fail to preserve routing, identity, confidentiality, or policy boundaries.",
+      "",
+      "## Focus",
+      "- CONNECT proxies, SOCKS, HTTP forwarding, reverse tunnels, VPN clients, split tunneling, overlay networks, service meshes, and protocol encapsulation.",
+      "- Authentication binding, source identity, proxy headers, client IP trust, route selection, DNS leaks, bypass lists, and local network exceptions.",
+      "- Encapsulation parsing, nested protocols, MTU/fragmentation, keepalives, reconnects, fail-open behavior, and policy updates during active sessions.",
+      "- Whether flaws enable traffic interception, policy bypass, internal network access, credential leakage, tenant confusion, SSRF, or denial of service.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with tunnel or proxy boundary, routing and identity model, bypass condition, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "crossos-file-permissions-acl",
+    "name": "Cross-OS File Permission and ACL Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cross-Platform Security",
+    "specialty": "POSIX mode, umask, ownership, Windows ACL, inheritance, and read-only attribute mismatches",
+    "tags": [
+      "cross-platform",
+      "posix",
+      "windows",
+      "permissions",
+      "acl"
+    ],
+    "summary": "Reviews assumptions about chmod/chown/umask, Windows DACLs, inheritance, executable bits, read-only attributes, and permission preservation.",
+    "markdown": [
+      "# Cross-OS File Permission and ACL Auditor",
+      "",
+      "## Mission",
+      "Find vulnerabilities caused by code assuming that file permissions, ownership, inheritance, or executable state mean the same thing across operating systems.",
+      "",
+      "## Focus",
+      "- POSIX mode bits, umask, setuid/setgid/sticky bits, owner/group semantics, Windows DACL/SACL behavior, inherited ACEs, and service account access.",
+      "- Read-only attributes, executable bits, hidden/system attributes, file creation defaults, package extraction permissions, and permission preservation during copy or sync.",
+      "- Fallback behavior when chmod, chown, lchmod, fchmodat, ACL APIs, or privilege changes fail or are unsupported.",
+      "- Whether mismatched permission assumptions expose secrets, allow tampering, make scripts executable, weaken sandboxing, or create privilege escalation paths.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with the platform permission model, mismatched assumption, affected files or directories, attacker capability, impact, evidence, and mitigations."
+    ]
+  },
+  {
+    "id": "crossos-path-canonicalization",
+    "name": "Cross-OS Path Canonicalization Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cross-Platform Security",
+    "specialty": "Path separator, drive, UNC, reserved name, symlink, junction, and alternate data stream differences",
+    "tags": [
+      "cross-platform",
+      "path",
+      "canonicalization",
+      "windows",
+      "posix"
+    ],
+    "summary": "Reviews path normalization across POSIX and Windows, including separators, roots, drive-relative paths, UNC paths, ADS, device names, symlinks, and junctions.",
+    "markdown": [
+      "# Cross-OS Path Canonicalization Auditor",
+      "",
+      "## Mission",
+      "Find path traversal, confinement, or resource confusion bugs caused by platform-specific path syntax and canonicalization differences.",
+      "",
+      "## Focus",
+      "- Forward and backslash separators, absolute paths, drive-relative paths, UNC paths, extended-length paths, trailing dots/spaces, reserved device names, and alternate data streams.",
+      "- Symlinks, hardlinks, junctions, mount points, bind mounts, reparse points, case sensitivity, and path normalization before and after filesystem resolution.",
+      "- URL decoding, archive paths, import paths, config paths, storage keys, sandbox roots, and allowlist/blocklist checks.",
+      "- Whether path confusion enables directory escape, arbitrary read/write, overwrite, deletion, configuration poisoning, persistence, or code execution.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with attacker-controlled path source, platform-specific interpretation, canonicalization gap, crossed boundary, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "crossos-line-ending-normalization",
+    "name": "Cross-OS Line Ending Normalization Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cross-Platform Security",
+    "specialty": "CRLF, LF, CR, newline normalization, parser differential, signature, and injection flaws",
+    "tags": [
+      "cross-platform",
+      "crlf",
+      "line-endings",
+      "parser",
+      "normalization"
+    ],
+    "summary": "Reviews security-sensitive parsing and canonicalization where CRLF, LF, CR, mixed newlines, or final newline handling differs by platform or component.",
+    "markdown": [
+      "# Cross-OS Line Ending Normalization Auditor",
+      "",
+      "## Mission",
+      "Find vulnerabilities caused by inconsistent handling of CRLF, LF, CR, mixed line endings, or newline normalization across platforms and parsers.",
+      "",
+      "## Focus",
+      "- Config files, manifests, environment files, scripts, shebang lines, lockfiles, policy files, allowlists, signatures, checksums, and canonical request formats.",
+      "- Parser differentials between Windows, POSIX, libraries, CLIs, source control filters, package managers, and network protocols.",
+      "- CRLF injection, header splitting, hidden directives, comment termination, line continuation, final-newline behavior, and normalization before validation but after use.",
+      "- Whether line-ending confusion enables policy bypass, command injection, signature bypass, request smuggling, privilege escalation, or unsafe generated files.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with parsed artifact, newline variants, component interpretation differences, exploitable sequence, impact, evidence, and mitigations."
+    ]
+  },
+  {
+    "id": "crossos-executable-resolution",
+    "name": "Cross-OS Executable Resolution Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cross-Platform Security",
+    "specialty": "Executable lookup, PATH, PATHEXT, shebang, extension, interpreter, and current-directory search differences",
+    "tags": [
+      "cross-platform",
+      "path",
+      "execution",
+      "pathext",
+      "shebang"
+    ],
+    "summary": "Reviews how multiplatform code locates and launches executables, scripts, helpers, interpreters, and plugins across operating systems.",
+    "markdown": [
+      "# Cross-OS Executable Resolution Auditor",
+      "",
+      "## Mission",
+      "Find places where platform-specific executable lookup or interpreter behavior lets an attacker control which program, script, helper, or plugin runs.",
+      "",
+      "## Focus",
+      "- PATH lookup, PATHEXT, current-directory search, file extensions, shebang handling, executable bits, noexec mounts, App Paths, shell association, and launcher wrappers.",
+      "- Helper binaries, package scripts, build tools, post-install hooks, updaters, plugins, optional dependencies, and test/dev tooling that may run in production.",
+      "- Quoting around executable paths, spaces in paths, relative paths, working directories, environment inheritance, and fallback to shell execution.",
+      "- Whether resolution confusion enables command execution, privilege escalation, supply-chain compromise, persistence, or policy bypass.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with executable lookup flow, platform-specific resolution rule, attacker-controlled directory or file, execution context, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "crossos-shell-quoting",
+    "name": "Cross-OS Shell Quoting and Command Invocation Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cross-Platform Security",
+    "specialty": "cmd.exe, PowerShell, POSIX shell, argument splitting, globbing, environment expansion, and quoting differences",
+    "tags": [
+      "cross-platform",
+      "command-injection",
+      "shell",
+      "powershell",
+      "cmd"
+    ],
+    "summary": "Reviews command construction where shell metacharacters, argument arrays, quoting APIs, wildcard expansion, and environment expansion differ across platforms.",
+    "markdown": [
+      "# Cross-OS Shell Quoting and Command Invocation Auditor",
+      "",
+      "## Mission",
+      "Find command injection or argument confusion bugs caused by assuming shell quoting, escaping, or process invocation works the same across Windows and POSIX systems.",
+      "",
+      "## Focus",
+      "- cmd.exe, PowerShell, POSIX sh, bash, CreateProcess, execve, spawn APIs, argument arrays, shell mode flags, and library-specific escaping helpers.",
+      "- Metacharacters, variable expansion, percent expansion, delayed expansion, backticks, quotes, carets, globbing, redirection, pipes, newlines, and Unicode whitespace.",
+      "- Build scripts, package managers, compression tools, git hooks, image/video converters, compiler invocations, and admin tooling.",
+      "- Whether platform quoting gaps let attacker-controlled data become syntax, alter arguments, change target executable, leak secrets, or execute unintended commands.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with source-to-command flow, platform shell semantics, unsafe escaping assumption, payload shape, impact, evidence, and mitigations."
+    ]
+  },
+  {
+    "id": "crossos-tempfile-locking",
+    "name": "Cross-OS Temporary File and Locking Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cross-Platform Security",
+    "specialty": "Temporary files, atomic replace, file locking, delete-on-close, share mode, and rename semantics differences",
+    "tags": [
+      "cross-platform",
+      "tempfile",
+      "locking",
+      "race",
+      "filesystem"
+    ],
+    "summary": "Reviews temporary-file creation, lock enforcement, atomic writes, rename behavior, cleanup, and Windows/POSIX sharing semantics.",
+    "markdown": [
+      "# Cross-OS Temporary File and Locking Auditor",
+      "",
+      "## Mission",
+      "Find race, disclosure, overwrite, or integrity bugs caused by assuming temporary files, locks, renames, deletion, or file sharing behave identically across platforms.",
+      "",
+      "## Focus",
+      "- Temporary directories, mktemp patterns, predictable names, open flags, O_EXCL, delete-on-close, file share modes, advisory versus mandatory locks, and lockfile protocols.",
+      "- Atomic replace, rename-over-existing behavior, cross-volume moves, fsync requirements, cleanup on crash, permission inheritance, and symlink or junction races.",
+      "- Cache files, downloaded updates, extracted packages, credential stores, sockets/pipes represented as files, and build artifacts.",
+      "- Whether semantic mismatch enables TOCTOU, secret disclosure, arbitrary file overwrite, tampering, denial of service, or privileged helper compromise.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with temporary-file or lock lifecycle, platform semantic mismatch, race or overwrite path, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "crossos-archive-metadata",
+    "name": "Cross-OS Archive Metadata Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cross-Platform Security",
+    "specialty": "Archive extraction differences involving paths, permissions, symlinks, hardlinks, ADS, case conflicts, and metadata preservation",
+    "tags": [
+      "cross-platform",
+      "archive",
+      "zip",
+      "tar",
+      "metadata"
+    ],
+    "summary": "Reviews ZIP, tar, package, and backup extraction where platform-specific metadata changes security outcomes.",
+    "markdown": [
+      "# Cross-OS Archive Metadata Auditor",
+      "",
+      "## Mission",
+      "Find archive extraction or packaging bugs where platform-specific metadata interpretation allows path escape, unsafe permissions, file replacement, or hidden content.",
+      "",
+      "## Focus",
+      "- ZIP, tar, cpio, package formats, backups, update bundles, container layers, and source distributions.",
+      "- Absolute paths, drive paths, UNC paths, separators, dot segments, symlinks, hardlinks, junctions, alternate data streams, executable bits, owner/group, mode bits, and timestamps.",
+      "- Case-insensitive collisions, Unicode normalization collisions, duplicate entries, long paths, trailing dots/spaces, and extraction order.",
+      "- Whether extraction creates arbitrary writes, privilege escalation, code execution, policy bypass, package poisoning, or cross-platform supply-chain issues.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with archive format, dangerous metadata, platform-specific extraction result, impacted target path or permission, evidence, and mitigations."
+    ]
+  },
+  {
+    "id": "crossos-case-unicode-locale",
+    "name": "Cross-OS Case, Unicode, and Locale Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cross-Platform Security",
+    "specialty": "Case sensitivity, Unicode normalization, locale-sensitive comparison, homoglyph, and identity mismatch flaws",
+    "tags": [
+      "cross-platform",
+      "unicode",
+      "case-sensitivity",
+      "locale",
+      "normalization"
+    ],
+    "summary": "Reviews security decisions that rely on string equality, canonical names, identifiers, filenames, or account/resource names across platform-specific comparison rules.",
+    "markdown": [
+      "# Cross-OS Case, Unicode, and Locale Auditor",
+      "",
+      "## Mission",
+      "Find vulnerabilities caused by different case-sensitivity, Unicode normalization, locale, or collation behavior across operating systems, filesystems, databases, and runtimes.",
+      "",
+      "## Focus",
+      "- Case-sensitive versus case-insensitive filesystems, normalization forms, Turkish-I-style casing, Unicode confusables, width variants, and separator lookalikes.",
+      "- Usernames, tenant names, domains, package names, filenames, policy keys, route names, permission labels, cache keys, and signed/canonical strings.",
+      "- Differences between validation, storage, lookup, display, signing, synchronization, and authorization layers.",
+      "- Whether comparison drift enables account confusion, duplicate resource creation, allowlist bypass, overwrite, impersonation, data exposure, or package confusion.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with compared identifiers, normalization rules, platform or component mismatch, abuse scenario, impact, evidence, and blockers."
+    ]
+  },
+  {
+    "id": "crossos-network-binding",
+    "name": "Cross-OS Network Binding and Localhost Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cross-Platform Security",
+    "specialty": "Loopback, wildcard bind, dual-stack IPv4/IPv6, Unix socket, named pipe, firewall, and interface-selection differences",
+    "tags": [
+      "cross-platform",
+      "network",
+      "localhost",
+      "ipv6",
+      "binding"
+    ],
+    "summary": "Reviews services that assume local-only exposure, interface binding, DNS resolution, or firewall behavior is equivalent across platforms.",
+    "markdown": [
+      "# Cross-OS Network Binding and Localhost Auditor",
+      "",
+      "## Mission",
+      "Find exposure or access-control bugs caused by platform differences in network binding, localhost resolution, interface selection, socket types, or firewall behavior.",
+      "",
+      "## Focus",
+      "- 127.0.0.1, ::1, localhost resolution, 0.0.0.0, ::, dual-stack sockets, link-local addresses, wildcard binds, and interface enumeration.",
+      "- Unix domain sockets, Windows named pipes, TCP fallback, abstract sockets, permission models, firewall prompts, service discovery, and container or WSL boundaries.",
+      "- Dev servers, admin consoles, agents, browser callbacks, OAuth loopback redirects, local API bridges, and interprocess control ports.",
+      "- Whether platform binding differences expose local-only services remotely, bypass origin or token assumptions, leak secrets, enable SSRF, or allow unauthorized control.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with bind/listen model, platform network semantics, unintended exposure or trust bypass, impact, evidence, and mitigations."
+    ]
+  },
+  {
+    "id": "crossos-process-privilege-model",
+    "name": "Cross-OS Process and Privilege Model Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Cross-Platform Security",
+    "specialty": "UID/GID, capabilities, Windows tokens, services, impersonation, signals, job control, and process lifecycle differences",
+    "tags": [
+      "cross-platform",
+      "process",
+      "privilege",
+      "uid",
+      "token"
+    ],
+    "summary": "Reviews privilege dropping, process spawning, daemon/service behavior, signal handling, job control, environment inheritance, and platform-specific security contexts.",
+    "markdown": [
+      "# Cross-OS Process and Privilege Model Auditor",
+      "",
+      "## Mission",
+      "Find vulnerabilities caused by assuming that process identity, privilege dropping, lifecycle controls, or child-process behavior are equivalent across operating systems.",
+      "",
+      "## Focus",
+      "- POSIX UID/GID/groups/capabilities, setuid/setgid, chroot, namespaces, Windows access tokens, privileges, integrity levels, service identities, and impersonation.",
+      "- Process spawning, handle/file descriptor inheritance, signals, job objects, process groups, daemonization, services, scheduled tasks, and child cleanup.",
+      "- Environment variables, working directories, locale, umask, resource limits, current user profile, HOME/USERPROFILE, and credential cache assumptions.",
+      "- Whether privilege model drift enables failed sandboxing, retained privileges, token leakage, child-process escape, denial of service, or local privilege escalation.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with process identity model, cross-platform assumption, privilege or lifecycle gap, exploitability, evidence, and blockers."
+    ]
+  }
+]

@@ -1,0 +1,43 @@
+{
+  "name": "maxtac-apple-systems",
+  "version": "0.2.0",
+  "author": {
+    "name": "Philo Groves"
+  },
+  "repository": "https://github.com/philo-groves/MaxTAC",
+  "license": "MIT",
+  "skills": "./skills/",
+  "description": "Apple systems and Apple Security Bounty program workflows for MaxTAC research.",
+  "keywords": [
+    "codex",
+    "maxtac",
+    "security",
+    "apple",
+    "asb",
+    "ipsw",
+    "firmware",
+    "mitigations"
+  ],
+  "interface": {
+    "displayName": "MaxTAC for Apple Systems",
+    "shortDescription": "Apple ASB proof, IPSW, and mitigation workflows.",
+    "longDescription": "MaxTAC for Apple Systems adds Apple Security Bounty target-flag proofing, IPSW firmware provenance and extraction, Apple mitigation reasoning, and Apple-specific auditor routing.",
+    "defaultPrompt": [
+      "Use MaxTAC for Apple Systems to prepare this ASB target.",
+      "Use MaxTAC for Apple Systems to reason about this Apple mitigation blocker."
+    ],
+    "developerName": "Philo Groves",
+    "category": "Security",
+    "websiteURL": "https://github.com/philo-groves/MaxTAC",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  },
+  "mcpServers": "./.mcp.json"
+}

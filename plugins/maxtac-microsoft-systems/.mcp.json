@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "maxtac-microsoft-auditors": {
+      "command": "python",
+      "args": [
+        "scripts/auditor_mcp.py"
+      ],
+      "env": {
+        "MAXTAC_AUDITOR_PREFIX": "microsoft"
+      }
+    }
+  }
+}

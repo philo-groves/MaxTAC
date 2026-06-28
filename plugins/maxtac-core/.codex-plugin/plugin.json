@@ -1,0 +1,40 @@
+{
+  "name": "maxtac-core",
+  "version": "0.2.0",
+  "author": {
+    "name": "Philo Groves"
+  },
+  "repository": "https://github.com/philo-groves/MaxTAC",
+  "license": "MIT",
+  "skills": "./skills/",
+  "description": "Core MaxTAC workflow, workspace, ledger, reporting, and goal-bounded subagent orchestration.",
+  "keywords": [
+    "codex",
+    "maxtac",
+    "security",
+    "trusted-access-for-cyber",
+    "workflow",
+    "vulnerability-research"
+  ],
+  "interface": {
+    "displayName": "MaxTAC Core",
+    "shortDescription": "Core MaxTAC research workflow and ledgers.",
+    "longDescription": "MaxTAC Core coordinates authorized vulnerability research without loading domain-specific binary, web, supply-chain, Apple, or Microsoft guidance. It manages the research workspace, durable research library, primitive and chain ledgers, goal-bounded auditor/debater prompts, validation, proof, and reporting flow.",
+    "defaultPrompt": [
+      "Use MaxTAC Core to initialize this authorized research workspace.",
+      "Use MaxTAC Core to update findings and plan the next validation step."
+    ],
+    "developerName": "Philo Groves",
+    "category": "Security",
+    "websiteURL": "https://github.com/philo-groves/MaxTAC",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  }
+}

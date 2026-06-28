@@ -1,0 +1,41 @@
+{
+  "name": "maxtac-source",
+  "version": "0.2.0",
+  "author": {
+    "name": "Philo Groves"
+  },
+  "repository": "https://github.com/philo-groves/MaxTAC",
+  "license": "MIT",
+  "skills": "./skills/",
+  "description": "Source and decompiled-code static analysis workflows for MaxTAC research.",
+  "keywords": [
+    "codex",
+    "maxtac",
+    "security",
+    "sast",
+    "opengrep",
+    "control-flow",
+    "source-code"
+  ],
+  "interface": {
+    "displayName": "MaxTAC for Source",
+    "shortDescription": "SAST, source triage, CFG, and OpenGrep evidence.",
+    "longDescription": "MaxTAC for Source adds static surface triage, focused control-flow evidence, and OpenGrep rule guidance for source code and decompiled code targets. It is intended to pair with MaxTAC Core and whichever research domain pack owns the target.",
+    "defaultPrompt": [
+      "Use MaxTAC for Source to triage this authorized source target.",
+      "Create a focused MaxTAC Source packet for this route or subsystem."
+    ],
+    "developerName": "Philo Groves",
+    "category": "Security",
+    "websiteURL": "https://github.com/philo-groves/MaxTAC",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  }
+}

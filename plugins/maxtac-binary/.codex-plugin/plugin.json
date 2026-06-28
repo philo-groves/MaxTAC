@@ -1,0 +1,44 @@
+{
+  "name": "maxtac-binary",
+  "version": "0.2.0",
+  "author": {
+    "name": "Philo Groves"
+  },
+  "repository": "https://github.com/philo-groves/MaxTAC",
+  "license": "MIT",
+  "skills": "./skills/",
+  "description": "Binary and systems reverse engineering, dynamic debugging, and native fuzzing workflows for MaxTAC research.",
+  "keywords": [
+    "codex",
+    "maxtac",
+    "security",
+    "binary-analysis",
+    "reverse-engineering",
+    "ghidra",
+    "radare2",
+    "debugging",
+    "fuzzing"
+  ],
+  "interface": {
+    "displayName": "MaxTAC for Binary",
+    "shortDescription": "Binary RE, debugging, and systems fuzzing.",
+    "longDescription": "MaxTAC for Binary adds Ghidra, radare2, native debugger, instrumentation, crash replay, and systems fuzzing guidance without loading web application or supply-chain workflows.",
+    "defaultPrompt": [
+      "Use MaxTAC for Binary to triage this authorized binary target.",
+      "Use MaxTAC for Binary to capture repeatable crash or RE evidence."
+    ],
+    "developerName": "Philo Groves",
+    "category": "Security",
+    "websiteURL": "https://github.com/philo-groves/MaxTAC",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  },
+  "mcpServers": "./.mcp.json"
+}

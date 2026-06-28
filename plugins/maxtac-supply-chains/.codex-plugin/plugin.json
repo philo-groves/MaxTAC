@@ -1,0 +1,43 @@
+{
+  "name": "maxtac-supply-chains",
+  "version": "0.2.0",
+  "author": {
+    "name": "Philo Groves"
+  },
+  "repository": "https://github.com/philo-groves/MaxTAC",
+  "license": "MIT",
+  "skills": "./skills/",
+  "description": "Supply-chain, package, CI/CD, provenance, container, and release-pipeline research pack for MaxTAC.",
+  "keywords": [
+    "codex",
+    "maxtac",
+    "security",
+    "supply-chain",
+    "cicd",
+    "sbom",
+    "provenance",
+    "container-security"
+  ],
+  "interface": {
+    "displayName": "MaxTAC for Supply Chains",
+    "shortDescription": "Supply-chain and release-path research.",
+    "longDescription": "MaxTAC for Supply Chains adds dependency, package-manager, CI/CD, artifact provenance, signing, container, registry, and release-pipeline triage plus supply-chain auditor routing.",
+    "defaultPrompt": [
+      "Use MaxTAC for Supply Chains to triage this build or release path.",
+      "Map this package or CI/CD trust boundary with MaxTAC."
+    ],
+    "developerName": "Philo Groves",
+    "category": "Security",
+    "websiteURL": "https://github.com/philo-groves/MaxTAC",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  },
+  "mcpServers": "./.mcp.json"
+}

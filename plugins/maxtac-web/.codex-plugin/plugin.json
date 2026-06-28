@@ -1,0 +1,42 @@
+{
+  "name": "maxtac-web",
+  "version": "0.2.0",
+  "author": {
+    "name": "Philo Groves"
+  },
+  "repository": "https://github.com/philo-groves/MaxTAC",
+  "license": "MIT",
+  "skills": "./skills/",
+  "description": "Web application, API, browser-state, and SaaS workflow research pack for MaxTAC.",
+  "keywords": [
+    "codex",
+    "maxtac",
+    "security",
+    "web-security",
+    "api-security",
+    "browser-debugging",
+    "sast"
+  ],
+  "interface": {
+    "displayName": "MaxTAC for Web",
+    "shortDescription": "Web, API, session, and browser research.",
+    "longDescription": "MaxTAC for Web adds web surface triage, stateful API fuzzing, browser debugging, and web-focused auditor routing for authorized web application and SaaS targets.",
+    "defaultPrompt": [
+      "Use MaxTAC for Web to triage this authorized web target.",
+      "Use MaxTAC for Web to map this API workflow and select auditors."
+    ],
+    "developerName": "Philo Groves",
+    "category": "Security",
+    "websiteURL": "https://github.com/philo-groves/MaxTAC",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  },
+  "mcpServers": "./.mcp.json"
+}
