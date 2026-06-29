@@ -1,79 +1,88 @@
 ---
 name: maxtac-asb-flag-proof
-description: "Use this skill when an Apple Security Bounty chain needs target-flag proof for register control, arbitrary read/write, arbitrary code execution, or TCC modification on iOS, iPadOS, macOS, tvOS, visionOS, or watchOS."
+description: "Use this skill when an Apple Security Bounty chain needs a Commpage or TCC proof workflow and a verifiable proof packet for a target-flag claim."
 ---
 
 # MaxTAC ASB Flag Proof
-Use this skill when an Apple chain requires objective proof of a vulnerability that results in register control, arbitrary read/write, arbitrary code execution, or TCC modification. Do not use this skill for primitive findings; use it only with chains. Apple provides and requires target flags to prove these scenarios on iOS, iPadOS, macOS, tvOS, visionOS, and watchOS.
 
-## Types of Target Flags
-- Commpage Target Flag: provides precise addresses and values to use in the proof of vulnerability (PoV), resulting in predictable crash logs that clearly demonstrate achieving exploit primitives in userspace and kernel.
-- Transparency, Consent, and Control (TCC) Target Flag: allows to easily demonstrate write access to the per-user or system TCC database and confirm whether the PoV has fully compromised TCC.
+Use this skill to turn an Apple exploit chain into reviewable target-flag evidence. The goal is not to restate Apple's target flag page. The goal is to bind a claimed capability to the vulnerable target, capture the Commpage or TCC observations that prove it, and package the artifacts so another researcher can reproduce or falsify the claim.
 
-## Commpage Target Flag
-Many exploits begin by finding primitives of three fundamental levels of control:
-1. Register control: Partially or fully control the value in one or more registers in the CPU.
-2. Arbitrary read or write: Read and/or write at an attacker-chosen address.
-3. Code execution: Execute attacker-controlled code.
+Use this only after a real chain or strong exploitability primitive exists. For early primitive triage, use the relevant Source, Binary, Web, Android, or Apple mitigation workflow first.
 
-The system selects random numbers at boot and stores them in the commpage — a stable section of memory that can be read at the same address from any process. To demonstrate exploitability, use these values in the commpage as the contents to write into a register, the address to read from or write to, or the address to which to jump, from an attacker-controlled process.
+## Proof Packet Helper
 
-```
-// Apple Security Bounty random values
-#define _COMM_PAGE_ASB_TARGET_VALUE         (_COMM_PAGE_START_ADDRESS+0x320)        // uint64_t for random value
-#define _COMM_PAGE_ASB_TARGET_ADDRESS       (_COMM_PAGE_START_ADDRESS+0x328)        // uint64_t for random target address
-#define _COMM_PAGE_ASB_TARGET_KERN_VALUE    (_COMM_PAGE_START_ADDRESS+0x330)        // uint64_t for random kernel value
-#define _COMM_PAGE_ASB_TARGET_KERN_ADDRESS  (_COMM_PAGE_START_ADDRESS+0x338)        // uint64_t for random kernel target address
+Use `python3 <skill-dir>/scripts/proof-packet.py` to create and lint a packet:
+
+```bash
+python3 <skill-dir>/scripts/proof-packet.py create \
+  --output research/apple/<case-id>/asb-proof-packet.md \
+  --case-id <case-id> \
+  --flag-type commpage \
+  --target "target process or service" \
+  --build "macOS 15.2 24C101 arm64e"
+
+python3 <skill-dir>/scripts/proof-packet.py lint research/apple/<case-id>/asb-proof-packet.md
 ```
 
-To demonstrate any exploit primitive with the Commpage Target Flag, the PoV should crash and produce a crash log. Based on a quick inspection of register state, the crash log exposes the level of control the PoV achieved.
+Run `lint --strict` after filling the packet. The helper is intentionally small. It enforces packet shape and placeholder cleanup; it does not decide eligibility.
 
-Here’s an example crash log from an arbitrary read from the target address `0x08ad752109466b05` as identified with the exception address and register x8 control: `assets/arbitrary-read-example.crash`
+## Packet Shape
 
-To report of kernel or user-level privilege escalation, include a PoV using the Commpage Target Flag and an accompanying crash log to prove the capability demonstrated — and qualify for the maximum reward.
+Every proof packet should contain:
 
-Not every crash is exploitable. For example, Apple generally does not reward NULL-pointer dereferences or assertion failures, even if they include user-controlled values in other registers. The report is eligible for a reward only if Apple can confirm that the crash submitted is plausibly exploitable in a real-world attack. To maximize the potential reward, explain how the crash demonstrates that the vulnerability might be exploited, especially if the crash looks like an unexploitable NULL-pointer dereference or assertion failure.
+- Target flag claim: Commpage register control, Commpage arbitrary read, Commpage arbitrary write, Commpage code execution, kernel variant, or TCC integrity flag modification.
+- Target identity: process, service, bundle ID, binary path, code-signing identity, entitlements, sandbox profile, architecture, and whether the proof runs in userland, kernel, DriverKit, browser/JIT, or a brokered service.
+- Environment: product, build, hardware model, SIP and security policy state when relevant, development mode or test entitlement caveats, and exact PoV invocation.
+- Primitive chain: the vulnerability path that makes the flag observation attributable to the target, not to the harness.
+- Positive proof: crash, panic, `tccutil flag check`, log, register state, memory observation, or controlled sink output.
+- Negative control: patched build, disabled path, safe input, missing entitlement, reset TCC flag, non-vulnerable target, or same harness without the vulnerable chain.
+- Artifact index: PoV source, PoV binary hash, crash or panic logs, unified logs, screenshots or terminal transcripts, commpage values, TCC before/after output, codesign output, entitlements, and packet hashes.
 
-### Register Control
-To demonstrate register control in a userland context, the report needs to include a PoV that, when run, crashes the vulnerable process, with at least one general-purpose register set to `_COMM_PAGE_ASB_TARGET_VALUE`. The register state needs to appear in the crash report of the vulnerable process, so that Apple engineers can validate the achieved control of a general-purpose register. The same applies for kernel, while using the `_COMM_PAGE_ASB_TARGET_KERN_VALUE` instead.
+## Commpage Workflow
 
-To qualify for the category’s maximum reward, the PoV must demonstrate full 64 bits of control. If the PoV achieves fewer than 64 but more than 32 bits of control, it is eligible for a partial reward. If the PoV can achieve fewer than 64 bits at a time and is repeatable for arbitrary addresses, make sure to include this detail in the report.
+1. Identify the exact claim: register control, arbitrary read, arbitrary write, program-counter control, or kernel equivalent.
+2. Capture the Commpage values and addresses used by the PoV on the target build. Record whether values came from the vulnerable process, a controlled helper, a crash log, or a debugger. Preserve architecture and address width.
+3. Bind the observation to the vulnerable target. The packet must show that the target process, kernel path, broker, or service performed the controlled action because of the vulnerability.
+4. Make the terminal state reviewable. Prefer crash logs or panic logs that expose register state, fault address, exception type, thread, image UUIDs, and process identity. For non-crash proofs, record the exact sink that consumed or emitted the target value.
+5. Add a negative control that breaks the vulnerability path while keeping the harness and Commpage values comparable.
 
-### Arbitrary Read/Write
-To demonstrate arbitrary read/write capabilities, the report needs to demonstrate the ability to make the vulnerable process read from or write to `_COMM_PAGE_ASB_TARGET_ADDRESS` or `_COMM_PAGE_ASB_TARGET_KERN_ADDRESS`, based on whether targeting userspace or the kernel. To demonstrate a write, write the value from `_COMM_PAGE_ASB_TARGET_VALUE` to `_COMM_PAGE_ASB_TARGET_ADDRESS`.
+Useful packet questions:
 
-Here is an example PoV that demonstrates the read/write capability in userspace: `assets/read-write-example.c`
+- For register control, which general-purpose register carries the Commpage value, how many bits are controlled, and why is the register relevant at the sink?
+- For arbitrary read, which controlled read dereferences the Commpage target address, and where is the value observed?
+- For arbitrary write, which controlled write stores the Commpage target value at the Commpage target address, and how is the write verified?
+- For code execution or PC control, what path transfers control to the Commpage target address, and what register or fault state proves it?
+- For kernel claims, what shows the action occurred in the kernel path rather than a userland helper?
 
-### Arbitrary Code Execution
-To demonstrate arbitrary code execution, the report needs to demonstrate the ability to make the vulnerable process jump to the address `_COMM_PAGE_ASB_TARGET_ADDRESS` or `_COMM_PAGE_ASB_TARGET_KERN_ADDRESS`. The register state needs to appear in the program’s crash report, so Apple engineers can validate the achieved control of the instruction pointer (PC register on Apple silicon).
+The existing files in `<skill-dir>/assets/` are examples only. Treat them as scaffolding for local PoVs, not as canonical proof requirements.
 
-Here is an example PoV that demonstrates the arbitrary code execution capability: `assets/code-exec-example.c`
+## TCC Workflow
 
-## Transparency, Consent, and Control (TCC) Target Flag
-Transparency, Consent, and Control (TCC) settings help protect sensitive user data and allow users to see which apps they granted permission to access specific information, as well as grant or revoke future access. These preferences are stored in per-user and system databases, which are read-and-write protected by Full Disk Access (FDA) and System Integrity Protection (SIP), respectively.
+For TCC target-flag claims, prove modification of the integrity flag through the vulnerable path:
 
-Easily demonstrate modifying the user or system TCC database using two new verbs added to `tccutil` — `tccutil flag check` and `tccutil flag reset`. We’ve added a table to both user and system TCC databases called `integrity_flag`. integrity_flag does not grant any permissions and has no capability except to provide a concise way to demonstrate overwriting or forging the TCC database.
+1. Capture baseline output from `tccutil flag check`.
+2. Run the PoV without manual database edits outside the vulnerable path.
+3. Capture `tccutil flag check` after the PoV and note whether the user or system database changed.
+4. Reset with `tccutil flag reset` and capture the reset output.
+5. Include a negative control: no Full Disk Access where applicable, patched input, blocked broker path, reset database, or non-vulnerable target.
 
-After granting Full Disk Access to Terminal.app from the Security & Privacy pane under Settings.app, test this using SQLite:
+Use `assets/tcc-verbose-example.sh` and `assets/tcc-minimal-example.sh` only as examples for transcript shape. The report should explain the vulnerable path that changed the flag, not merely show that the flag can be changed from an authorized shell.
 
-```
-% sqlite3 TCC.db
-sqlite> select * from integrity_flag;
-integrity_flag|0
-sqlite> INSERT OR REPLACE INTO integrity_flag (key, value) VALUES ('integrity_flag', 1);
-sqlite> select * from integrity_flag;
-integrity_flag|1
-% tccutil flag check
-User: modified
-System: default
-```
+## Review Checklist
 
-`tccutil flag check` checks both the user and system TCC databases for the value of `integrity_flag`. After this inspection, `tccutil flag check` outputs “modified” for the TCC database that includes an `integrity_flag` that has been successfully modified to any value other than 0.
+Before calling the packet ready:
 
-For convenience, `tccutil flag reset` returns `integrity_flag` to value `0`. `tccutil flag reset` does not alter any other state in the user and system TCC databases. To remove all user-level TCC selections, use `tccutil reset All`. This command does not modify the `integrity_flag`.
+- The proof names the exact target flag and the exact capability demonstrated.
+- The observation is attributable to the vulnerable component.
+- The packet includes build, hardware, architecture, and target identity.
+- Positive and negative controls are both present.
+- Crashes are accompanied by enough register, thread, image, and exception detail to show the claimed capability.
+- PoV source, binaries, logs, transcripts, and screenshots are hashed or otherwise traceable.
+- Any weakened local state is disclosed and not used as the basis for the claim.
 
-Here is a verbose example: `assets/tcc-verbose-example.sh`
+## Hard Rules
 
-Here is a minimal example: `assets/tcc-minimal-example.sh`
-
-To qualify for the stated reward in this category and for accelerated awards, the report that demonstrates modifying the TCC database must use the new `tccutil` flag verbs to confirm impact. Use the above commands to check the state of the `integrity_flag` either in the PoV or in an accompanying video demonstration.
+- Do not claim a flag because a bug category usually leads to that flag.
+- Do not claim a Commpage flag from a crash that does not expose the controlled value, target address, register state, or fault path needed by the claim.
+- Do not claim TCC impact from manual SQLite edits or an already-authorized maintenance shell. The vulnerable path must cause the modification.
+- Do not include secrets, personal data, unrelated TCC database contents, or device identifiers that are not needed for verification.

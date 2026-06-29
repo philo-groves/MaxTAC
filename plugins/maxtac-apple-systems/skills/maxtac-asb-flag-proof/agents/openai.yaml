@@ -1,4 +1,4 @@
 interface:
   display_name: "MaxTAC ASB Flag Proof"
-  short_description: "Apple bounty target flag proofing"
-  default_prompt: "Use $maxtac-asb-flag-proof to capture Apple target-flag proof for an exploit chain."
+  short_description: "Commpage and TCC proof packets"
+  default_prompt: "Use $maxtac-asb-flag-proof to capture a Commpage or TCC proof packet for this Apple exploit chain."

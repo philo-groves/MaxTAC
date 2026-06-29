@@ -18,7 +18,7 @@ Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber p
 | MaxTAC for Web | `plugins/maxtac-web` | You need web/API/session/tenant triage, browser debugging, or stateful API fuzzing. |
 | MaxTAC for Supply Chains | `plugins/maxtac-supply-chains` | You need dependency, package, CI/CD, provenance, signing, registry, container, or release-pipeline triage. |
 | MaxTAC for Android | `plugins/maxtac-android` | You need APK/DEX/resource RE, Android component triage, ADB/logcat/JDWP/Frida runtime evidence, or Android-specific auditors. |
-| MaxTAC for Apple Systems | `plugins/maxtac-apple-systems` | You need Apple Security Bounty target-flag proofing, IPSW workflows, Apple mitigations, or Apple-specific auditors. |
+| MaxTAC for Apple Systems | `plugins/maxtac-apple-systems` | You need ASB Commpage/TCC proof packets, advanced IPSW patch-diff research, Apple mitigation-bypass workflows, or Apple-specific auditors. |
 | MaxTAC for Microsoft Systems | `plugins/maxtac-microsoft-systems` | You need MSRC LPAC proofing, Windows mitigation reasoning, or Microsoft/Windows-specific auditors. |
 
 Virtualization and general environment-management guidance is intentionally excluded from active packs.

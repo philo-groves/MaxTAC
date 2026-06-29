@@ -71,8 +71,8 @@ Install only the tools needed by the active plugin packs and current target. Cor
 
 | Tool | Used for | Pack |
 | --- | --- | --- |
-| `ipsw` | IPSW/OTA acquisition, metadata, extraction, kernelcache, dyld shared cache, IMG4, firmware diffing, Apple evidence workflows. | Apple Systems |
-| C compiler and Apple SDK tooling | Build Apple target-flag proof helpers. | Apple Systems |
+| `ipsw` | IPSW/OTA provenance, targeted extraction, kernelcache and dyld artifacts, firmware diffing, and Apple patch archaeology. | Apple Systems |
+| Apple SDK and binary-inspection tools (`codesign`, `otool`, `nm`, `log`, `sysctl`) | Proof packet metadata, entitlements, build state, crash/log evidence, and local PoV helpers. | Apple Systems |
 | Microsoft SandboxSecurityTools | LPAC and eligible sandbox proof setup. | Microsoft Systems |
 | PowerShell, `whoami`, `Get-Process`, `icacls`, `reg` | Windows build, token, process, ACL, and registry evidence. | Microsoft Systems |
 

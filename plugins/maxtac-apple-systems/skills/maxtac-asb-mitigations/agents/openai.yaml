@@ -1,4 +1,4 @@
 interface:
-  display_name: "MaxTAC ASB Mitigations"
-  short_description: "Apple mitigation bypass guidance"
-  default_prompt: "Use $maxtac-asb-mitigations to reason about Apple runtime defenses and bypass constraints."
+  display_name: "MaxTAC ASB Mitigation Bypass"
+  short_description: "Apple mitigation-bypass packet workflow"
+  default_prompt: "Use $maxtac-asb-mitigations to turn this Apple mitigation blocker into a bypass hypothesis, controls, and evidence packet."

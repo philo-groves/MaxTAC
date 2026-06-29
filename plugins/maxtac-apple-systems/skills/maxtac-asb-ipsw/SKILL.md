@@ -1,23 +1,33 @@
 ---
 name: maxtac-asb-ipsw
-description: "Use this skill when Apple firmware reverse engineering requires ipsw for IPSW/OTA download, extraction, kernelcache, dyld_shared_cache, DeviceTree, DMG, IMG4, iBoot, SEP, coprocessor, trust cache, filesystem, mount, diff, or Apple Security Bounty evidence workflows."
+description: "Use this skill when Apple vulnerability research needs advanced IPSW or OTA provenance, patch diffing, kernelcache or dyld analysis, and firmware-derived ASB evidence."
 ---
 
-# MaxTAC ASB IPSW
+# MaxTAC ASB IPSW Research
 
-Use `ipsw` when an Apple firmware artifact is the source of truth: IPSW and OTA acquisition, partial remote extraction, dyld shared cache triage, kernelcache and KEXT preparation, IMG4 payload work, restore image mounting, entitlement/database searches, and patched-vs-vulnerable firmware diffing.
+Use `ipsw` when firmware artifacts answer a vulnerability-research question. This skill is not a general IPSW usage manual. Start from the security question, preserve provenance, extract only the artifacts needed to answer it, and turn the result into root-cause, reachability, exploitability, or mitigation-bypass evidence.
 
-Treat every output as build-specific. Preserve the device product type, model or board when relevant, product version, build number, firmware URL or local source path, original file hash, selected restore identity, architecture, `ipsw` version, command line, and whether facts came from archive metadata, extracted files, reconstructed Mach-O output, or later RE tooling.
+Treat every fact as build-specific. Preserve the device product type, hardware model or board when relevant, product version, build number, firmware URL or local source path, original file hash, selected restore identity, architecture, `ipsw` version, command line, and whether the fact came from archive metadata, extracted files, reconstructed Mach-O output, diff output, or later RE tooling.
 
-Keep build-specific firmware bundles, extracted binaries, hashes, command logs, and generated metadata as artifacts. When firmware work reveals reusable platform knowledge, rewrite it into the stable system research library, such as `research/<platform>/firmware/provenance.md`, `research/<platform>/kernel/<subsystem>.md`, or `research/<platform>/<component>/<subsystem>.md`. Do not let build IDs, dates, or `ipsw` case IDs become the main library hierarchy.
+## Research Packet
+
+Create or update `research/apple-firmware/<case-id>/ipsw-research-packet.md` with:
+
+- Question: patch archaeology, vulnerable/fixed diff, kernelcache triage, dyld shared cache triage, entitlement or sandbox delta, trust-cache scope, firmware payload RE, or mitigation-bypass support.
+- Vulnerable and fixed builds, including exact device identifiers and restore identity where applicable.
+- Artifact provenance bundle path and hashes.
+- Component and attack surface: daemon, framework, app extension, kernel subsystem, KEXT, DriverKit extension, iBoot, SEP, coprocessor payload, trust cache, sandbox profile, entitlement, or launchd path.
+- Diff anchors: changed file paths, UUIDs, symbols, function starts, selectors, strings, entitlements, sandbox rules, launchd jobs, MIG routines, IOKit user-client methods, syscalls, or Mach traps.
+- Root-cause candidate and fix hypothesis.
+- Reachability evidence, not just changed-code evidence.
+- Exploitability or mitigation-bypass implication.
+- Artifacts needed by Source or Binary pack follow-up.
 
 ## Provenance Helper
 
-Use `python3 <skill-dir>/scripts/ipsw-provenance.py` to keep firmware-derived facts tied to one build, source hash, restore identity, architecture, tool version, command line, and fact source. The helper creates a bundle under `<workspace-root>/research/apple-firmware/<case-id>/` and lints whether the minimum provenance fields are present.
+Use `python3 <skill-dir>/scripts/ipsw-provenance.py` as the canonical helper. Actions are `init`, `record-command`, `add-artifact`, `lint`, and `summary`; the helper writes under `<workspace-root>/research/apple-firmware/<case-id>/`.
 
-Use `scripts/ipsw-provenance.py` as the canonical provenance helper; actions are `init`, `record-command`, `add-artifact`, `lint`, and `summary`.
-
-Initialize a provenance bundle:
+Initialize before extraction or diffing:
 
 ```bash
 python3 <skill-dir>/scripts/ipsw-provenance.py init \
@@ -31,18 +41,14 @@ python3 <skill-dir>/scripts/ipsw-provenance.py init \
   --command "ipsw info firmware.ipsw --json"
 ```
 
-Record commands and classify where facts came from:
+Record commands and attach outputs as evidence:
 
 ```bash
 python3 <skill-dir>/scripts/ipsw-provenance.py record-command <case-id> \
   --command "ipsw extract --kernel --json -o evidence/extract firmware.ipsw" \
   --fact-source extracted-file \
   --capture
-```
 
-Attach build-specific outputs:
-
-```bash
 python3 <skill-dir>/scripts/ipsw-provenance.py add-artifact <case-id> \
   --category kernelcache \
   --fact-source extracted-file \
@@ -50,72 +56,39 @@ python3 <skill-dir>/scripts/ipsw-provenance.py add-artifact <case-id> \
   --artifact ./evidence/extract/kernelcache.release.iphone
 ```
 
-Before using firmware evidence in a report or handoff, run:
+Before using firmware evidence in a report or handoff:
 
 ```bash
 python3 <skill-dir>/scripts/ipsw-provenance.py lint <case-id> --strict
 python3 <skill-dir>/scripts/ipsw-provenance.py summary <case-id>
 ```
 
-## Readiness Check
+## Advanced Workflow
 
-Identify the installed `ipsw` entrypoint and current command surface before using examples from this skill:
+1. Define the research question before downloading or extracting anything. Examples: "Which check was added for this CVE?", "Did the sandbox rule change make this broker path reachable?", "Which kernel user-client method gained validation?", or "Does the fixed build reveal a mitigation bypass constraint?"
+2. Acquire the smallest comparable artifact set: vulnerable build, fixed build, matching device class, matching OTA/IPSW type where possible, and any RSR or beta caveats.
+3. Extract narrow targets first: kernelcache, specific KEXTs, dyld shared cache members, entitlements, sandbox profiles, launchd plists, trust caches, DeviceTree, SEP or coprocessor payloads, or filesystem paths named by the question.
+4. Diff semantically. Prefer symbol, selector, string, function-start, entitlement, sandbox, launchd, trust-cache, and import deltas over broad file lists.
+5. Reconstruct root cause. A patch diff is a lead until reachability, attacker-controlled input, missing validation, state transition, or authorization drift is proven.
+6. Hand off to Binary or Source pack when the next step needs decompiler output, control-flow evidence, taint, crash replay, or instrumentation.
+7. Feed mitigation blockers into `maxtac-asb-mitigations` with build-specific symbols, UUIDs, and changed checks.
 
-```bash
-ipsw version
-ipsw --help
-ipsw download ipsw --help
-ipsw extract --help
-ipsw dyld --help
-ipsw kernel --help
-ipsw img4 --help
-```
+## Reference Routing
 
-On Windows, check the same commands in PowerShell:
+Read only the reference tied to the active question:
 
-```powershell
-ipsw.exe version
-ipsw.exe extract --help
-```
+- `<skill-dir>/references/ipsw-acquisition-and-metadata.md`: device/build selection, URLs, archive metadata, signing status, and hash fields.
+- `<skill-dir>/references/ipsw-extraction-and-mounting.md`: targeted extraction, mounting, filesystem paths, entitlements, and databases.
+- `<skill-dir>/references/ipsw-kernelcache-and-kexts.md`: kernelcache decompression, KEXT extraction, kernel C++ classes, MIG, traps, syscalls, and RE handoff.
+- `<skill-dir>/references/ipsw-dyld-shared-cache.md`: dyld shared cache extraction, ObjC/Swift metadata, selectors, symbols, addresses, and imports.
+- `<skill-dir>/references/ipsw-img4-aea-and-firmware.md`: IMG4, AEA, iBoot, SEP, coprocessor payloads, trust caches, and wrapped ramdisks.
+- `<skill-dir>/references/ipsw-diffing-and-asb-triage.md`: vulnerable/fixed diffing, patch archaeology, cache discipline, and ASB triage.
+- `<skill-dir>/references/ipsw-install-build.md`: only when `ipsw` is missing or the installed command surface is incompatible.
 
-If `ipsw` is missing or a source build is needed, ask first, then read `<skill-dir>/references/ipsw-install-build.md`.
+## Hard Rules
 
-Use explicit output directories. IPSW/OTA artifacts are large, and `ipsw diff` uses persistent caches by default.
-
-## Usage Guidance
-
-### Acquisition and Metadata
-
-Includes device lookup, IPSW and OTA selection, build/version disambiguation, remote URL discovery, archive listing, SystemVersion extraction, SHSH/signing status, firmware key provenance, and evidence fields to record before analysis.
-
-See: `<skill-dir>/references/ipsw-acquisition-and-metadata.md`
-
-### Extraction and Mounting
-
-Includes `ipsw extract` for kernelcache, dyld shared cache, DeviceTree, DMGs, iBoot, SEP, SPTM/TXM, Exclave bundles, filesystem regex extraction, JSON output, remote extraction, `ipsw mount` image types, AEA PEM databases, restore ramdisk identity selection, and entitlement database creation/search.
-
-See: `<skill-dir>/references/ipsw-extraction-and-mounting.md`
-
-### Kernelcache and KEXTs
-
-Includes decompression, KEXT listing/extraction, import resolution, kernel C++ class discovery, MIG subsystem, mach trap and syscall dumping, symbolication with signature folders, IDA handoff, and Ghidra/radare2 preparation boundaries.
-
-See: `<skill-dir>/references/ipsw-kernelcache-and-kexts.md`
-
-### dyld Shared Cache
-
-Includes iOS userspace cache extraction, standalone dylib reconstruction, ObjC/Swift metadata, symbol/address/offset conversion, string and selector search, imports, cross references, class-dump and swift-dump, and cache subfile handling.
-
-See: `<skill-dir>/references/ipsw-dyld-shared-cache.md`
-
-### IMG4, AEA, and Firmware Payloads
-
-Includes IMG4/IM4P/IM4M/IM4R parsing, raw versus decompressed payload extraction, KBAG extraction, keyed decryption, AEA1 DMG handling, wrapped restore ramdisks, iBoot/SEP/coprocessor payload triage, trust cache extraction, and payload handoff to binary RE tools.
-
-See: `<skill-dir>/references/ipsw-img4-aea-and-firmware.md`
-
-### Diffing and ASB Patch Triage
-
-Includes `ipsw diff` modes for files, firmware, launchd, entitlements, sandbox, feature flags, function starts, strings, KDK/signature use, OTA/RSR caveats, cache discipline, and workflows for turning firmware diffs into reportable Apple Security Bounty leads.
-
-See: `<skill-dir>/references/ipsw-diffing-and-asb-triage.md`
+- Do not present "file changed" as a finding without reachability and security-boundary reasoning.
+- Do not compare mismatched device classes, restore identities, beta trains, simulator artifacts, RSR payloads, or OTA/IPSW shapes without noting the caveat.
+- Do not flatten filesystem paths when path context is evidence.
+- Do not overwrite original firmware artifacts or extracted evidence. Work in explicit output directories.
+- Do not let build IDs and case IDs become the stable research-library hierarchy. Move reusable platform knowledge into stable `research/<platform>/...` notes after analysis.

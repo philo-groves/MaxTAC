@@ -16,15 +16,17 @@
     "asb",
     "ipsw",
     "firmware",
-    "mitigations"
+    "mitigations",
+    "bypass",
+    "commpage"
   ],
   "interface": {
     "displayName": "MaxTAC for Apple Systems",
-    "shortDescription": "Apple ASB proof, IPSW, and mitigation workflows.",
-    "longDescription": "MaxTAC for Apple Systems adds Apple Security Bounty target-flag proofing, IPSW firmware provenance and extraction, Apple mitigation reasoning, and Apple-specific auditor routing.",
+    "shortDescription": "Apple ASB proof, IPSW research, and mitigation-bypass workflows.",
+    "longDescription": "MaxTAC for Apple Systems adds Apple Security Bounty Commpage/TCC proof packets, advanced IPSW provenance and patch-diff research, Apple mitigation-bypass workflows, and Apple-specific auditor routing.",
     "defaultPrompt": [
-      "Use MaxTAC for Apple Systems to prepare this ASB target.",
-      "Use MaxTAC for Apple Systems to reason about this Apple mitigation blocker."
+      "Use MaxTAC for Apple Systems to prepare this ASB proof packet.",
+      "Use MaxTAC for Apple Systems to research this Apple mitigation bypass."
     ],
     "developerName": "Philo Groves",
     "category": "Security",
