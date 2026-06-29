@@ -28,7 +28,7 @@ import workspace_db  # noqa: E402
 STATE_FILE = ".maxtac-workspace.json"
 WORKSPACE_FILES = {
     "program-info.md": "authorized scope and exclusions",
-    workspace_db.DB_FILE: "SQLite primitive and chain finding ledger",
+    workspace_db.DB_FILE: "SQLite findings, debate tallies, audit index, and search memory",
 }
 WORKSPACE_DIRS = {
     "research": "scalable markdown research library",
@@ -314,6 +314,18 @@ def ledger_counts(ledger: dict[str, Any]) -> dict[str, int]:
         state = str(finding.get("state", "unknown"))
         counts[state] = counts.get(state, 0) + 1
     return counts
+
+
+def workspace_memory_counts(root: Path) -> dict[str, Any] | None:
+    if not (root / workspace_db.DB_FILE).exists():
+        return None
+    try:
+        return {
+            "debates": workspace_db.count_debates(root),
+            "audits": workspace_db.count_audits(root),
+        }
+    except Exception as exc:
+        return {"error": str(exc)}
 
 
 def count_lines(path: Path) -> int:
@@ -791,6 +803,9 @@ def cmd_status(args: argparse.Namespace) -> None:
                 "error": error,
                 "counts": ledger_counts(ledger) if ledger else {},
             }
+        payload["workspace_memory"] = workspace_memory_counts(root) or {
+            "error": f"{workspace_db.DB_FILE} missing"
+        }
         payload["large_markdown"] = [
             {"path": relative_to(path, root), "lines": lines}
             for path, lines in large_markdown_files(root, args.max_lines)
@@ -832,6 +847,14 @@ def cmd_status(args: argparse.Namespace) -> None:
             1 for finding in ledger.get("findings", []) if finding.get("state") not in TERMINAL_STATES
         )
         print(f"- {ledger_type}: {len(ledger.get('findings', []))} finding(s), active={active}, {summary or 'empty'}")
+
+    memory = workspace_memory_counts(root)
+    if memory is None:
+        print(f"Workspace memory: {workspace_db.DB_FILE} missing")
+    elif memory.get("error"):
+        print(f"Workspace memory: error: {memory['error']}")
+    else:
+        print(f"Workspace memory: debates={memory['debates']}, audits={memory['audits']}")
 
     large = large_markdown_files(root, args.max_lines)
     if large:

@@ -6,9 +6,18 @@ from __future__ import annotations
 import argparse
 import json
 import secrets
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+SKILL_DIR = SCRIPT_DIR.parent
+LEDGER_SCRIPTS_DIR = SKILL_DIR.parent / "maxtac-core-ledger" / "scripts"
+sys.path.insert(0, str(LEDGER_SCRIPTS_DIR))
+
+import workspace_db  # noqa: E402
 
 
 def generated_id(prefix: str) -> str:
@@ -106,6 +115,7 @@ Persist your ballot before completing the subagent run. Choose a stable subagent
 The `goal_activation` value must be `create_goal`, `/goal`, or `unavailable`. The `choice` value must be either `yes` or `no`. The `confidence` value must be an integer from 0 to 100. Use `blockers` for blockers or concerns about the debate topic, otherwise use null.
 """
     prompt_path.write_text(enriched, encoding="utf-8")
+    workspace_db.sync_debates(root, debate_id)
     print(enriched, end="")
 
 
@@ -268,6 +278,7 @@ def tally(debate_id: str, root: Path) -> None:
     tally_json_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     tally_path.write_text(render_tally_markdown(result), encoding="utf-8")
     summary_path.write_text(render_summary_markdown(result), encoding="utf-8")
+    workspace_db.sync_debates(root, debate_id)
 
     print(render_summary_markdown(result), end="")
     print()
@@ -276,13 +287,71 @@ def tally(debate_id: str, root: Path) -> None:
     print(f"Wrote debate summary: {summary_path}")
 
 
+def one_line(value: Any, limit: int = 140) -> str:
+    text = " ".join(str(value or "").split())
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3].rstrip() + "..."
+
+
+def render_debate_row(payload: dict[str, Any]) -> str:
+    counts = payload.get("counts") or {}
+    average = payload.get("average_confidence") or {}
+    return (
+        f"{payload.get('debate_id')} "
+        f"winner={payload.get('winner', 'none')} "
+        f"ballots={payload.get('ballots', 0)} "
+        f"yes={counts.get('yes', 0)} "
+        f"no={counts.get('no', 0)} "
+        f"avg_yes={float(average.get('yes', 0)):.1f} "
+        f"avg_no={float(average.get('no', 0)):.1f} "
+        f"updated={payload.get('updated_at', '')}"
+    )
+
+
+def print_debate_detail(payload: dict[str, Any]) -> None:
+    counts = payload.get("counts") or {}
+    average = payload.get("average_confidence") or {}
+    print(f"Debate: {payload.get('debate_id')}")
+    print(f"- directory: {payload.get('debate_dir', '')}")
+    print(f"- prompt: {payload.get('prompt_path', '')}")
+    print(f"- tally: {payload.get('tally_path', '') or 'missing'}")
+    print(f"- summary: {payload.get('summary_path', '') or 'missing'}")
+    print(f"- winner: {payload.get('winner', 'none')}")
+    print(f"- ballots: {payload.get('ballots', 0)}")
+    print(f"- yes: {counts.get('yes', 0)} (avg confidence {float(average.get('yes', 0)):.1f})")
+    print(f"- no: {counts.get('no', 0)} (avg confidence {float(average.get('no', 0)):.1f})")
+    print(f"- updated: {payload.get('updated_at', '')}")
+    print()
+    for ballot in payload.get("ballot_details", []):
+        print(f"## {ballot.get('subagent', '')}")
+        print(f"- file: {ballot.get('file', '')}")
+        print(f"- goal_activation: {ballot.get('goal_activation', '')}")
+        print(f"- choice: {ballot.get('choice', '')}")
+        print(f"- confidence: {ballot.get('confidence', '')}")
+        if ballot.get("blockers"):
+            print(f"- blockers: {ballot.get('blockers')}")
+        print()
+        print("### Evidence")
+        print(str(ballot.get("evidence", "")).rstrip())
+        print()
+        print("### Reasoning")
+        print(str(ballot.get("reasoning", "")).rstrip())
+        print()
+
+
 def base_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="MaxTAC debate helper")
     parser.add_argument("--root", default=".", help="Workspace root; prompt files should be staged under tmp/")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--prompt-file", type=Path, help="Enrich a persisted debate prompt")
     group.add_argument("--debate", help="Debate ID to review")
+    group.add_argument("--sync", action="store_true", help="Sync all debate artifacts into workspace.sqlite")
+    group.add_argument("--list", action="store_true", help="List synced debate tallies")
+    group.add_argument("--show", metavar="DEBATE_ID", help="Show synced debate details and ballot reasoning")
+    group.add_argument("--search", metavar="TEXT", help="Semantic search debate prompts, tallies, and ballots")
     parser.add_argument("--tally", action="store_true", help="Validate ballots and write tally.json, tally.md, and summary.md")
+    parser.add_argument("--limit", type=int, default=10, help="Maximum rows for list or search output")
     return parser
 
 
@@ -300,6 +369,34 @@ def main() -> None:
         if not args.tally:
             raise SystemExit("--debate requires --tally")
         tally(args.debate, root_path(args.root))
+        return
+
+    if args.tally:
+        raise SystemExit("--tally can only be used with --debate")
+
+    root = root_path(args.root)
+    if args.sync:
+        payloads = workspace_db.sync_debates(root)
+        print(f"Synced {len(payloads)} debate(s) into {workspace_db.DB_FILE}")
+    elif args.list:
+        for payload in workspace_db.list_debates(root)[: max(1, args.limit)]:
+            print(render_debate_row(payload))
+    elif args.show:
+        payload = workspace_db.get_debate(root, args.show)
+        if not payload:
+            raise SystemExit(f"Debate not found: {args.show}")
+        print_debate_detail(payload)
+    elif args.search:
+        rows = workspace_db.semantic_search_debates(root, args.search, args.limit)
+        if not rows:
+            print("No matching debates.")
+            return
+        for score, payload in rows:
+            print(f"{score:.6f} {render_debate_row(payload)}")
+            if payload.get("summary_path"):
+                print(f"  summary={payload.get('summary_path')}")
+            else:
+                print(f"  prompt={payload.get('prompt_path', '')}")
 
 
 if __name__ == "__main__":

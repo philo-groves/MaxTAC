@@ -41,7 +41,7 @@ Core creates and manages the shared workspace contract:
 
 ```text
 program-info.md    # authorized scope and exclusions
-workspace.sqlite   # primitive and chain findings, related evidence, milestones, and search index
+workspace.sqlite   # findings, debate tallies, audit index, and search memory
 reporting/         # submission-ready reports and evidence indexes
 research/          # durable research library
 debates/           # verifier debate results

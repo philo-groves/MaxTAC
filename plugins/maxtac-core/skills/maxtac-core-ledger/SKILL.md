@@ -12,6 +12,7 @@ Ledger updates are also part of the MaxTAC attention cadence. If a branch produc
 
 - Workspace database: `workspace.sqlite`
 - Legacy imports: existing `primitives.json` and `chains.json` are imported into `workspace.sqlite` when the database is first created.
+- Subagent memory: the same database indexes debate tallies and audit assessments for fast lookup, but the human-readable artifacts remain under `debates/` and `audits/`.
 
 ## Initialize the Ledger
 At the start of the research session, if no finding ledger exists, create it with: `python3 <skill-dir>/scripts/ledger.py init`
@@ -64,6 +65,13 @@ Use semantic SQLite search when the query is exploratory or spans title, target,
 
 ```
 python3 <skill-dir>/scripts/ledger.py search --semantic "tenant export guard proof" --type all
+```
+
+Before deciding a finding is novel, also search prior audit and debate memory through `maxtac-core-subagents` helper commands when the question may have already been assessed:
+
+```
+python3 <core-subagents-skill-dir>/scripts/audit-helper.py --root <workspace-root> --audit-search "tenant export guard proof"
+python3 <core-subagents-skill-dir>/scripts/debate-helper.py --root <workspace-root> --search "tenant export guard proof"
 ```
 
 ### Migrate Legacy JSON

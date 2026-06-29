@@ -33,8 +33,8 @@ Install this pack for every MaxTAC engagement, then add only the domain packs ne
 Core expects research artifacts such as:
 
 - `research/` durable notes.
-- `workspace.sqlite` primitive and chain findings, related evidence, milestones, and search index.
-- `audits/` auditor packets and receipts.
+- `workspace.sqlite` primitive and chain findings, debate tallies, audit index, related evidence, milestones, and search memory.
+- `audits/` auditor packets and receipts, indexed for semantic lookup.
 - `proof/` proof-of-vulnerability artifacts.
 - `contracts/` canonical result bundles.
 - `reporting/` submission-ready report projections.

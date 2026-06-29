@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import secrets
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,10 @@ from typing import Any
 SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
 AUDITORS_FILE = SKILL_DIR / "references" / "auditors.json"
+LEDGER_SCRIPTS_DIR = SKILL_DIR.parent / "maxtac-core-ledger" / "scripts"
+sys.path.insert(0, str(LEDGER_SCRIPTS_DIR))
+
+import workspace_db  # noqa: E402
 
 
 def generated_id(prefix: str) -> str:
@@ -237,7 +242,55 @@ Audit directory: `{audit_dir}`
 Persist the final audit assessment to `{assessment_path}` before completing the subagent run. Use Markdown. Include a `Goal Activation` section naming `create_goal`, `/goal`, or `unavailable`; then include the vulnerability hypothesis or audit focus, method, reviewed files or components, findings, evidence, exploitability notes, blockers, and a clear conclusion. Persist supporting evidence files in the same audit directory when useful.
 """
     prompt_path.write_text(enriched, encoding="utf-8")
+    workspace_db.sync_audits(root, audit_id)
     print(enriched, end="")
+
+
+def one_line(value: Any, limit: int = 160) -> str:
+    text = " ".join(str(value or "").split())
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3].rstrip() + "..."
+
+
+def render_audit_row(payload: dict[str, Any]) -> str:
+    status = "assessed" if payload.get("assessment_path") else "prompt-only"
+    artifacts = payload.get("artifacts") or []
+    conclusion = one_line(payload.get("conclusion") or payload.get("prompt_text"))
+    return (
+        f"{payload.get('audit_id')} "
+        f"status={status} "
+        f"artifacts={len(artifacts)} "
+        f"updated={payload.get('updated_at', '')} "
+        f"{conclusion}"
+    ).rstrip()
+
+
+def print_audit_detail(payload: dict[str, Any]) -> None:
+    print(f"Audit: {payload.get('audit_id')}")
+    print(f"- directory: {payload.get('audit_dir', '')}")
+    print(f"- prompt: {payload.get('prompt_path', '')}")
+    print(f"- assessment: {payload.get('assessment_path', '') or 'missing'}")
+    print(f"- goal_activation: {payload.get('goal_activation', '') or 'unknown'}")
+    print(f"- updated: {payload.get('updated_at', '')}")
+    print()
+    artifacts = payload.get("artifacts") or []
+    if artifacts:
+        print("Artifacts:")
+        for artifact in artifacts:
+            print(
+                f"- {artifact.get('path', '')} "
+                f"kind={artifact.get('kind', '')} "
+                f"size={artifact.get('size', 0)} "
+                f"mtime={artifact.get('mtime_utc', '')}"
+            )
+        print()
+    print("## Conclusion")
+    print(str(payload.get("conclusion", "")).rstrip() or "(missing)")
+    print()
+    if payload.get("assessment_text"):
+        print("## Assessment")
+        print(str(payload.get("assessment_text", "")).rstrip())
 
 
 def base_parser() -> argparse.ArgumentParser:
@@ -248,6 +301,11 @@ def base_parser() -> argparse.ArgumentParser:
     group.add_argument("--filter", metavar="TEXT", help="Filter auditors by text")
     group.add_argument("--show", metavar="AUDITOR_ID", help="Show full auditor markdown")
     group.add_argument("--prompt-file", type=Path, help="Enrich a persisted audit prompt")
+    group.add_argument("--audit-sync", action="store_true", help="Sync all audit artifacts into workspace.sqlite")
+    group.add_argument("--audit-list", action="store_true", help="List synced audit assessments")
+    group.add_argument("--audit-show", metavar="AUDIT_ID", help="Show synced audit details")
+    group.add_argument("--audit-search", metavar="TEXT", help="Semantic search audit prompts, assessments, and artifacts")
+    parser.add_argument("--limit", type=int, default=10, help="Maximum rows for audit list or search output")
     return parser
 
 
@@ -257,6 +315,34 @@ def main() -> None:
 
     if args.prompt_file:
         enrich_prompt(args.prompt_file, root_path(args.root))
+        return
+
+    root = root_path(args.root)
+    if args.audit_sync:
+        payloads = workspace_db.sync_audits(root)
+        print(f"Synced {len(payloads)} audit(s) into {workspace_db.DB_FILE}")
+        return
+    if args.audit_list:
+        for payload in workspace_db.list_audits(root)[: max(1, args.limit)]:
+            print(render_audit_row(payload))
+        return
+    if args.audit_show:
+        payload = workspace_db.get_audit(root, args.audit_show)
+        if not payload:
+            raise SystemExit(f"Audit not found: {args.audit_show}")
+        print_audit_detail(payload)
+        return
+    if args.audit_search:
+        rows = workspace_db.semantic_search_audits(root, args.audit_search, args.limit)
+        if not rows:
+            print("No matching audits.")
+            return
+        for score, payload in rows:
+            print(f"{score:.6f} {render_audit_row(payload)}")
+            if payload.get("assessment_path"):
+                print(f"  assessment={payload.get('assessment_path')}")
+            else:
+                print(f"  prompt={payload.get('prompt_path', '')}")
         return
 
     auditors = load_auditors()

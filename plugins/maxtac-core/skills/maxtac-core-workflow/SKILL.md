@@ -12,7 +12,7 @@ The following files and directories are managed under the base directory of the 
 
 ```
 program-info.md    # authorized scope and exclusions
-workspace.sqlite   # primitive and chain findings, related evidence, milestones, and search index
+workspace.sqlite   # findings, debate tallies, audit index, and search memory
 reporting/         # submission-ready reports and evidence indexes
 research/          # scalable markdown research library
 debates/           # debater subagent results
@@ -34,7 +34,7 @@ Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations 
 - `split-large-markdown`: split a markdown file over the large-file threshold into a submodule. Retain the source by default; delete it only with `--verified --delete-source` after confirming the transcription.
 - `report-ready`: check whether a proofed chain has the minimum workspace evidence needed to move into reporting.
 
-The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script and is stored in `<workspace-root>/workspace.sqlite`.
+The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script and is stored in `<workspace-root>/workspace.sqlite`. The same database also indexes debate tallies and audit assessments so agents can search prior votes, conclusions, blockers, and artifacts before repeating work.
 
 Use `scripts/workspace.py` as the canonical Core workspace helper. Domain or program-specific packs may expose MCP wrappers for their own workflows, but Core does not require them.
 
@@ -173,7 +173,9 @@ When source code or existing decompiler output is available, the Source pack can
 Analyze previously conducted recon, threat modeling, research, and surface triage to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.
 
 #### Spawn Auditors
-For each hypothesis, spawn one or more targeted, goal-bounded auditor subagents with `maxtac-core-subagents` skill guidance to scan for unique vulnerabilities. Use the active domain pack's auditor MCP tools or local auditor helper output to select the narrowest suitable auditor set, usually 1-4 auditors. Avoid a broad "logic analysis" audit when a specific business logic, authorization, parser, race, memory safety, platform, supply-chain, or mitigation auditor fits. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `<workspace-root>/audits/` directory.
+Before spawning a new auditor, search existing audit memory with `audit-helper.py --audit-search "<hypothesis boundary component>"`. If a prior assessment already covers the same boundary, reuse it, write a narrowed delta prompt, or update the ledger/research library instead of repeating the audit.
+
+For each remaining hypothesis, spawn one or more targeted, goal-bounded auditor subagents with `maxtac-core-subagents` skill guidance to scan for unique vulnerabilities. Use the active domain pack's auditor MCP tools or local auditor helper output to select the narrowest suitable auditor set, usually 1-4 auditors. Avoid a broad "logic analysis" audit when a specific business logic, authorization, parser, race, memory safety, platform, supply-chain, or mitigation auditor fits. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `<workspace-root>/audits/` directory and indexed into `workspace.sqlite` for later semantic lookup.
 
 #### Update Findings
 Based on audit results, use `maxtac-core-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state.
@@ -184,7 +186,7 @@ During scan, do not write unvalidated vulnerability claims into the research lib
 Go to this phase after the Scan phase or when additional pre-proofing validation is required.
 
 #### Spawn Debaters
-For each new finding or pre-proofing requirement, spawn three goal-bounded subagents with the `maxtac-core-subagents` skill to judge its validity. If the finding is a chain, also judge its reachability and exploitability. Each debater votes each finding as valid or invalid.
+For each new finding or pre-proofing requirement, spawn three goal-bounded subagents with the `maxtac-core-subagents` skill to judge its validity. If the finding is a chain, also judge its reachability and exploitability. Each debater votes each finding as valid or invalid. Debate tallies are indexed into `workspace.sqlite`; use `debate-helper.py --list`, `--show`, or `--search` to review previous votes before promoting, de-escalating, or reopening the same proposition.
 
 #### Update Findings
 If at least two subagents vote invalid, go to the Scan phase where more auditing may be conducted, or the finding may be `de-escalated`. If at least two subagents vote valid, the finding is promoted to `validated` using `maxtac-core-ledger` guidance and update the research (see next section). Before any promotion action, search the finding ledger to determine if the finding already exists, and if it does, use `maxtac-core-ledger` guidance to mark the `duplicate` state. If the finding is original, move to the Proof phase.

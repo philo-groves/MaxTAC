@@ -18,6 +18,8 @@ python <skill-dir>/scripts/readiness-check.py --kind debater --subagents <count>
 
 Use the local helper scripts for readiness checks, prompt enrichment, and debate ballot validation. Domain packs may expose auditor catalogs through MCP tools; the parent still owns final summaries.
 
+The helper scripts index audit and debate artifacts into `<workspace-root>/workspace.sqlite`. Treat the files under `audits/` and `debates/` as the human-readable source of truth, and use the SQLite-backed helper commands for majority counting, detail lookup, and semantic duplicate-work checks.
+
 The script prints `parallel` or `sequential` after checking available system resources against the requested subagent count. It reserves 4 GiB of available memory per requested subagent plus 1 GiB of headroom. Auditor subagents have an additional safety gate: if total system RAM is unknown or below 17 GiB, auditor readiness returns `sequential` regardless of available memory. Debaters and generic subagents are unaffected by the 17 GiB total-RAM gate.
 
 If the result is `parallel`, spawn subagents using standard Codex subagent spawning mechanisms without waiting for each to finish. If the result is `sequential`, spawn one subagent at a time, waiting for it to finish before spawning the next.
@@ -40,7 +42,13 @@ An auditor subagent is a specialist vulnerability researcher for an individual b
 ### Auditor Flow
 Every audit follows the same 5-step flow.
 
-1. **Choose the auditor**: prefer the active domain pack's auditor MCP tools, such as Web, Binary, Cloud, Supply Chains, Android, Apple Systems, or Microsoft Systems auditor list/filter/show tools. If no domain pack provides a suitable auditor, Core includes a small fallback catalog in `<skill-dir>/references/auditors.json`. Do not read the JSON file directly; instead, run:
+1. **Choose the auditor**: before creating a new audit, search existing audit memory for the hypothesis, boundary, and key component names:
+
+```
+python <skill-dir>/scripts/audit-helper.py --root <workspace-root> --audit-search "<hypothesis boundary component>"
+```
+
+If a matching assessment already answered the question, reuse it or record a narrowed delta prompt instead of duplicating the audit. Then prefer the active domain pack's auditor MCP tools, such as Web, Binary, Cloud, Supply Chains, Android, Apple Systems, or Microsoft Systems auditor list/filter/show tools. If no domain pack provides a suitable auditor, Core includes a small fallback catalog in `<skill-dir>/references/auditors.json`. Do not read the JSON file directly; instead, run:
 
 ```
 python <skill-dir>/scripts/audit-helper.py --list
@@ -66,7 +74,13 @@ Include the triage packet, relevant graph evidence, OpenGrep result summaries, a
 
 4. **Wait for the auditor**: during the wait, continue normal operations as the main agent in parallel, even for serial subagent spawns. During its work, the subagent persists evidence to `<workspace-root>/audits/<audit-id>/`.
 
-5. **Complete the audit**: after the auditor subagent finishes its work, verify `<workspace-root>/audits/<audit-id>/assessment.md` was persisted by the subagent. If not, quickly remediate by reviewing the subagent session and persisting a proper assessment.
+5. **Complete the audit**: after the auditor subagent finishes its work, verify `<workspace-root>/audits/<audit-id>/assessment.md` was persisted by the subagent. If not, quickly remediate by reviewing the subagent session and persisting a proper assessment. Then refresh the SQLite audit index:
+
+```
+python <skill-dir>/scripts/audit-helper.py --root <workspace-root> --audit-sync
+```
+
+Use `--audit-list`, `--audit-show <audit-id>`, or `--audit-search "<text>"` for later lookup of assessment details, artifacts, and conclusions.
 
 ## Debater Subagents
 A debater subagent reviews a debate topic, then votes on a ballot and explains its reasoning.
@@ -108,3 +122,11 @@ python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --debate <de
 ```
 
 The parent agent owns the final decision. Review `summary.md` against `tally.md` and the source ballots before using the result for a ledger state transition.
+
+The tally command also refreshes the SQLite debate index. Use these commands when reviewing previous votes:
+
+```
+python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --list
+python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --show <debate-id>
+python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --search "<proposition or evidence>"
+```

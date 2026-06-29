@@ -6,6 +6,7 @@ import json
 import re
 import sqlite3
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +17,7 @@ LEGACY_LEDGER_FILES = {
     "chain": Path("chains.json"),
 }
 TYPE_CHOICES = tuple(LEGACY_LEDGER_FILES)
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
 
 
 @dataclass(frozen=True)
@@ -120,6 +121,61 @@ def ensure_schema(conn: sqlite3.Connection) -> bool:
           PRIMARY KEY (finding_key, ordinal),
           FOREIGN KEY (finding_key) REFERENCES findings(finding_key) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS debates (
+          debate_id TEXT PRIMARY KEY,
+          debate_dir TEXT NOT NULL,
+          prompt_path TEXT NOT NULL,
+          prompt_text TEXT NOT NULL,
+          ballots INTEGER NOT NULL DEFAULT 0,
+          yes_count INTEGER NOT NULL DEFAULT 0,
+          no_count INTEGER NOT NULL DEFAULT 0,
+          winner TEXT NOT NULL DEFAULT 'none',
+          avg_yes_confidence REAL NOT NULL DEFAULT 0,
+          avg_no_confidence REAL NOT NULL DEFAULT 0,
+          tally_path TEXT NOT NULL DEFAULT '',
+          summary_path TEXT NOT NULL DEFAULT '',
+          updated_at TEXT NOT NULL,
+          raw_json TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS debate_ballots (
+          debate_id TEXT NOT NULL,
+          file_path TEXT NOT NULL,
+          subagent TEXT NOT NULL,
+          goal_activation TEXT NOT NULL,
+          choice TEXT NOT NULL,
+          confidence INTEGER NOT NULL,
+          reasoning TEXT NOT NULL,
+          evidence TEXT NOT NULL,
+          blockers TEXT,
+          raw_json TEXT NOT NULL,
+          PRIMARY KEY (debate_id, file_path),
+          FOREIGN KEY (debate_id) REFERENCES debates(debate_id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS audits (
+          audit_id TEXT PRIMARY KEY,
+          audit_dir TEXT NOT NULL,
+          prompt_path TEXT NOT NULL,
+          assessment_path TEXT NOT NULL,
+          prompt_text TEXT NOT NULL,
+          assessment_text TEXT NOT NULL,
+          goal_activation TEXT NOT NULL DEFAULT '',
+          conclusion TEXT NOT NULL DEFAULT '',
+          updated_at TEXT NOT NULL,
+          raw_json TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS audit_artifacts (
+          audit_id TEXT NOT NULL,
+          path TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          size INTEGER NOT NULL,
+          mtime_utc TEXT NOT NULL,
+          PRIMARY KEY (audit_id, path),
+          FOREIGN KEY (audit_id) REFERENCES audits(audit_id) ON DELETE CASCADE
+        );
         """
     )
     set_meta(conn, "schema_version", SCHEMA_VERSION)
@@ -127,6 +183,14 @@ def ensure_schema(conn: sqlite3.Connection) -> bool:
         conn.execute(
             "CREATE VIRTUAL TABLE IF NOT EXISTS finding_search USING fts5("
             "finding_key UNINDEXED, type UNINDEXED, text, tokenize='porter unicode61')"
+        )
+        conn.execute(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS debate_search USING fts5("
+            "debate_id UNINDEXED, text, tokenize='porter unicode61')"
+        )
+        conn.execute(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS audit_search USING fts5("
+            "audit_id UNINDEXED, text, tokenize='porter unicode61')"
         )
     except sqlite3.DatabaseError:
         set_meta(conn, "fts5_enabled", "0")
@@ -180,6 +244,32 @@ def search_text(finding: dict[str, Any]) -> str:
         finding.get("milestones", []),
     ]
     return " ".join(part for value in fields for part in text_values(value))
+
+
+def relative_to_root(root: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def read_optional_text(path: Path) -> str:
+    if not path.exists() or not path.is_file():
+        return ""
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def path_mtime(path: Path) -> str:
+    if not path.exists():
+        return ""
+    return datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).replace(microsecond=0).isoformat()
+
+
+def newest_mtime(paths: list[Path]) -> str:
+    existing = [path for path in paths if path.exists()]
+    if not existing:
+        return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return max(path_mtime(path) for path in existing)
 
 
 def read_legacy_ledger(root: Path, finding_type: str) -> dict[str, Any] | None:
@@ -381,3 +471,438 @@ def semantic_search(root: Path, finding_types: list[str], query: str, limit: int
             scored.append((-float(len(overlap)), str(row["type"]), finding))
     scored.sort(key=lambda item: (item[0], item[2].get("id", "")))
     return scored[:limit]
+
+
+def ballot_value(ballot: dict[str, Any], key: str, default: str = "") -> str:
+    value = ballot.get(key, default)
+    if value is None:
+        return ""
+    return str(value)
+
+
+def debate_payload_from_dir(root: Path, debate_dir: Path) -> dict[str, Any]:
+    debate_id = debate_dir.name
+    prompt_path = debate_dir / "prompt.md"
+    tally_path = debate_dir / "tally.json"
+    summary_path = debate_dir / "summary.md"
+    prompt_text = read_optional_text(prompt_path)
+    ballot_details: list[dict[str, Any]] = []
+    counts = {"yes": 0, "no": 0}
+    confidence_totals = {"yes": 0, "no": 0}
+
+    for ballot_path in sorted(debate_dir.glob("ballot-*.json")):
+        try:
+            ballot = json.loads(ballot_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise SystemExit(f"{ballot_path} is not valid JSON: {exc}") from exc
+        if not isinstance(ballot, dict):
+            raise SystemExit(f"{ballot_path} must contain a JSON object")
+        choice = ballot_value(ballot, "choice").lower()
+        if choice not in {"yes", "no"}:
+            raise SystemExit(f"{ballot_path} ballot choice must be yes or no")
+        confidence = ballot.get("confidence")
+        if not isinstance(confidence, int):
+            raise SystemExit(f"{ballot_path} ballot confidence must be an integer")
+        counts[choice] += 1
+        confidence_totals[choice] += confidence
+        ballot_details.append(
+            {
+                "file": relative_to_root(root, ballot_path),
+                "subagent": ballot_value(ballot, "subagent", ballot_path.stem.removeprefix("ballot-")),
+                "goal_activation": ballot_value(ballot, "goal_activation", "unknown"),
+                "choice": choice,
+                "confidence": confidence,
+                "reasoning": ballot_value(ballot, "reasoning"),
+                "evidence": ballot_value(ballot, "evidence"),
+                "blockers": ballot.get("blockers"),
+                "raw": ballot,
+            }
+        )
+
+    if counts["yes"] > counts["no"]:
+        winner = "yes"
+    elif counts["no"] > counts["yes"]:
+        winner = "no"
+    elif ballot_details:
+        winner = "tie"
+    else:
+        winner = "none"
+
+    return {
+        "debate_id": debate_id,
+        "debate_dir": relative_to_root(root, debate_dir),
+        "prompt_path": relative_to_root(root, prompt_path) if prompt_path.exists() else "",
+        "prompt_text": prompt_text,
+        "ballots": len(ballot_details),
+        "counts": counts,
+        "average_confidence": {
+            choice: (confidence_totals[choice] / counts[choice] if counts[choice] else 0)
+            for choice in ("yes", "no")
+        },
+        "winner": winner,
+        "tally_path": relative_to_root(root, tally_path) if tally_path.exists() else "",
+        "summary_path": relative_to_root(root, summary_path) if summary_path.exists() else "",
+        "ballot_details": ballot_details,
+        "updated_at": newest_mtime([prompt_path, tally_path, summary_path, *sorted(debate_dir.glob("ballot-*.json"))]),
+    }
+
+
+def debate_search_text(payload: dict[str, Any]) -> str:
+    return " ".join(
+        [
+            str(payload.get("debate_id", "")),
+            str(payload.get("prompt_text", "")),
+            json.dumps(payload.get("counts", {}), sort_keys=True),
+            str(payload.get("winner", "")),
+            " ".join(text_values(payload.get("ballot_details", []))),
+        ]
+    )
+
+
+def upsert_debate(conn: sqlite3.Connection, payload: dict[str, Any]) -> None:
+    debate_id = str(payload["debate_id"])
+    conn.execute("DELETE FROM debate_ballots WHERE debate_id = ?", (debate_id,))
+    if fts5_enabled(conn):
+        conn.execute("DELETE FROM debate_search WHERE debate_id = ?", (debate_id,))
+    raw_json = json.dumps(payload, sort_keys=True)
+    conn.execute(
+        """
+        INSERT INTO debates(
+          debate_id, debate_dir, prompt_path, prompt_text, ballots, yes_count, no_count,
+          winner, avg_yes_confidence, avg_no_confidence, tally_path, summary_path,
+          updated_at, raw_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(debate_id) DO UPDATE SET
+          debate_dir=excluded.debate_dir,
+          prompt_path=excluded.prompt_path,
+          prompt_text=excluded.prompt_text,
+          ballots=excluded.ballots,
+          yes_count=excluded.yes_count,
+          no_count=excluded.no_count,
+          winner=excluded.winner,
+          avg_yes_confidence=excluded.avg_yes_confidence,
+          avg_no_confidence=excluded.avg_no_confidence,
+          tally_path=excluded.tally_path,
+          summary_path=excluded.summary_path,
+          updated_at=excluded.updated_at,
+          raw_json=excluded.raw_json
+        """,
+        (
+            debate_id,
+            str(payload.get("debate_dir", "")),
+            str(payload.get("prompt_path", "")),
+            str(payload.get("prompt_text", "")),
+            int(payload.get("ballots", 0)),
+            int(payload.get("counts", {}).get("yes", 0)),
+            int(payload.get("counts", {}).get("no", 0)),
+            str(payload.get("winner", "none")),
+            float(payload.get("average_confidence", {}).get("yes", 0)),
+            float(payload.get("average_confidence", {}).get("no", 0)),
+            str(payload.get("tally_path", "")),
+            str(payload.get("summary_path", "")),
+            str(payload.get("updated_at", "")),
+            raw_json,
+        ),
+    )
+    for ballot in payload.get("ballot_details", []):
+        conn.execute(
+            """
+            INSERT INTO debate_ballots(
+              debate_id, file_path, subagent, goal_activation, choice, confidence,
+              reasoning, evidence, blockers, raw_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                debate_id,
+                str(ballot.get("file", "")),
+                str(ballot.get("subagent", "")),
+                str(ballot.get("goal_activation", "")),
+                str(ballot.get("choice", "")),
+                int(ballot.get("confidence", 0)),
+                str(ballot.get("reasoning", "")),
+                str(ballot.get("evidence", "")),
+                None if ballot.get("blockers") is None else str(ballot.get("blockers")),
+                json.dumps(ballot.get("raw", {}), sort_keys=True),
+            ),
+        )
+    if fts5_enabled(conn):
+        conn.execute(
+            "INSERT INTO debate_search(debate_id, text) VALUES (?, ?)",
+            (debate_id, debate_search_text(payload)),
+        )
+
+
+def sync_debates(root: Path, debate_id: str | None = None) -> list[dict[str, Any]]:
+    initialize_workspace_db(root)
+    debates_dir = root / "debates"
+    if debate_id:
+        candidates = [debates_dir / debate_id]
+    else:
+        candidates = sorted(path for path in debates_dir.glob("*") if path.is_dir()) if debates_dir.exists() else []
+    payloads = [debate_payload_from_dir(root, path) for path in candidates if path.exists() and path.is_dir()]
+    with connect(root) as conn:
+        ensure_schema(conn)
+        for payload in payloads:
+            upsert_debate(conn, payload)
+        conn.commit()
+    return payloads
+
+
+def list_debates(root: Path, *, sync: bool = True) -> list[dict[str, Any]]:
+    if sync:
+        sync_debates(root)
+    with connect(root) as conn:
+        ensure_schema(conn)
+        rows = conn.execute("SELECT raw_json FROM debates ORDER BY updated_at DESC, debate_id DESC").fetchall()
+    return [json.loads(row["raw_json"]) for row in rows]
+
+
+def get_debate(root: Path, debate_id: str, *, sync: bool = True) -> dict[str, Any] | None:
+    if sync:
+        sync_debates(root, debate_id)
+    with connect(root) as conn:
+        ensure_schema(conn)
+        row = conn.execute("SELECT raw_json FROM debates WHERE debate_id = ?", (debate_id,)).fetchone()
+    return json.loads(row["raw_json"]) if row else None
+
+
+def semantic_search_debates(root: Path, query: str, limit: int, *, sync: bool = True) -> list[tuple[float, dict[str, Any]]]:
+    if sync:
+        sync_debates(root)
+    query_text = fts_query(query)
+    if not query_text:
+        return []
+    limit = max(1, limit)
+    with connect(root) as conn:
+        ensure_schema(conn)
+        if fts5_enabled(conn):
+            rows = conn.execute(
+                """
+                SELECT debates.raw_json AS raw_json, bm25(debate_search) AS rank
+                FROM debate_search JOIN debates USING(debate_id)
+                WHERE debate_search MATCH ?
+                ORDER BY rank ASC LIMIT ?
+                """,
+                (query_text, limit),
+            ).fetchall()
+            return [(round(-float(row["rank"]), 6), json.loads(row["raw_json"])) for row in rows]
+        rows = conn.execute("SELECT raw_json FROM debates").fetchall()
+    wanted = token_set(query)
+    scored: list[tuple[float, dict[str, Any]]] = []
+    for row in rows:
+        payload = json.loads(row["raw_json"])
+        overlap = wanted & token_set(debate_search_text(payload))
+        if overlap:
+            scored.append((float(len(overlap)), payload))
+    scored.sort(key=lambda item: (item[0], item[1].get("updated_at", "")), reverse=True)
+    return scored[:limit]
+
+
+def extract_heading_section(text: str, heading: str) -> str:
+    pattern = re.compile(rf"^#+\s+{re.escape(heading)}\s*$", re.IGNORECASE | re.MULTILINE)
+    match = pattern.search(text)
+    if not match:
+        return ""
+    start = match.end()
+    next_heading = re.search(r"^#+\s+", text[start:], re.MULTILINE)
+    end = start + next_heading.start() if next_heading else len(text)
+    return text[start:end].strip()
+
+
+def extract_goal_activation(assessment: str) -> str:
+    section = extract_heading_section(assessment, "Goal Activation")
+    if not section:
+        match = re.search(r"Goal activation:\s*([^\n]+)", assessment, re.IGNORECASE)
+        return match.group(1).strip() if match else ""
+    first = section.splitlines()[0].strip() if section.splitlines() else ""
+    return first.strip("- `")
+
+
+def extract_conclusion(assessment: str) -> str:
+    for heading in ("Conclusion", "Verdict", "Assessment", "Findings"):
+        section = extract_heading_section(assessment, heading)
+        if section:
+            return section[:1200]
+    return assessment[:1200]
+
+
+def audit_payload_from_dir(root: Path, audit_dir: Path) -> dict[str, Any]:
+    audit_id = audit_dir.name
+    prompt_path = audit_dir / "prompt.md"
+    assessment_path = audit_dir / "assessment.md"
+    prompt_text = read_optional_text(prompt_path)
+    assessment_text = read_optional_text(assessment_path)
+    artifacts: list[dict[str, Any]] = []
+    for path in sorted(item for item in audit_dir.rglob("*") if item.is_file()):
+        if path.name in {"prompt.md", "assessment.md"}:
+            continue
+        artifacts.append(
+            {
+                "path": relative_to_root(root, path),
+                "kind": path.suffix.lower().lstrip(".") or "file",
+                "size": path.stat().st_size,
+                "mtime_utc": path_mtime(path),
+            }
+        )
+    return {
+        "audit_id": audit_id,
+        "audit_dir": relative_to_root(root, audit_dir),
+        "prompt_path": relative_to_root(root, prompt_path) if prompt_path.exists() else "",
+        "assessment_path": relative_to_root(root, assessment_path) if assessment_path.exists() else "",
+        "prompt_text": prompt_text,
+        "assessment_text": assessment_text,
+        "goal_activation": extract_goal_activation(assessment_text),
+        "conclusion": extract_conclusion(assessment_text),
+        "artifacts": artifacts,
+        "updated_at": newest_mtime([prompt_path, assessment_path, *[root / item["path"] for item in artifacts]]),
+    }
+
+
+def audit_search_text(payload: dict[str, Any]) -> str:
+    return " ".join(
+        [
+            str(payload.get("audit_id", "")),
+            str(payload.get("prompt_text", "")),
+            str(payload.get("assessment_text", "")),
+            str(payload.get("goal_activation", "")),
+            str(payload.get("conclusion", "")),
+            " ".join(text_values(payload.get("artifacts", []))),
+        ]
+    )
+
+
+def upsert_audit(conn: sqlite3.Connection, payload: dict[str, Any]) -> None:
+    audit_id = str(payload["audit_id"])
+    conn.execute("DELETE FROM audit_artifacts WHERE audit_id = ?", (audit_id,))
+    if fts5_enabled(conn):
+        conn.execute("DELETE FROM audit_search WHERE audit_id = ?", (audit_id,))
+    raw_json = json.dumps(payload, sort_keys=True)
+    conn.execute(
+        """
+        INSERT INTO audits(
+          audit_id, audit_dir, prompt_path, assessment_path, prompt_text,
+          assessment_text, goal_activation, conclusion, updated_at, raw_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(audit_id) DO UPDATE SET
+          audit_dir=excluded.audit_dir,
+          prompt_path=excluded.prompt_path,
+          assessment_path=excluded.assessment_path,
+          prompt_text=excluded.prompt_text,
+          assessment_text=excluded.assessment_text,
+          goal_activation=excluded.goal_activation,
+          conclusion=excluded.conclusion,
+          updated_at=excluded.updated_at,
+          raw_json=excluded.raw_json
+        """,
+        (
+            audit_id,
+            str(payload.get("audit_dir", "")),
+            str(payload.get("prompt_path", "")),
+            str(payload.get("assessment_path", "")),
+            str(payload.get("prompt_text", "")),
+            str(payload.get("assessment_text", "")),
+            str(payload.get("goal_activation", "")),
+            str(payload.get("conclusion", "")),
+            str(payload.get("updated_at", "")),
+            raw_json,
+        ),
+    )
+    for artifact in payload.get("artifacts", []):
+        conn.execute(
+            """
+            INSERT INTO audit_artifacts(audit_id, path, kind, size, mtime_utc)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                audit_id,
+                str(artifact.get("path", "")),
+                str(artifact.get("kind", "")),
+                int(artifact.get("size", 0)),
+                str(artifact.get("mtime_utc", "")),
+            ),
+        )
+    if fts5_enabled(conn):
+        conn.execute(
+            "INSERT INTO audit_search(audit_id, text) VALUES (?, ?)",
+            (audit_id, audit_search_text(payload)),
+        )
+
+
+def sync_audits(root: Path, audit_id: str | None = None) -> list[dict[str, Any]]:
+    initialize_workspace_db(root)
+    audits_dir = root / "audits"
+    if audit_id:
+        candidates = [audits_dir / audit_id]
+    else:
+        candidates = sorted(path for path in audits_dir.glob("*") if path.is_dir()) if audits_dir.exists() else []
+    payloads = [audit_payload_from_dir(root, path) for path in candidates if path.exists() and path.is_dir()]
+    with connect(root) as conn:
+        ensure_schema(conn)
+        for payload in payloads:
+            upsert_audit(conn, payload)
+        conn.commit()
+    return payloads
+
+
+def list_audits(root: Path, *, sync: bool = True) -> list[dict[str, Any]]:
+    if sync:
+        sync_audits(root)
+    with connect(root) as conn:
+        ensure_schema(conn)
+        rows = conn.execute("SELECT raw_json FROM audits ORDER BY updated_at DESC, audit_id DESC").fetchall()
+    return [json.loads(row["raw_json"]) for row in rows]
+
+
+def get_audit(root: Path, audit_id: str, *, sync: bool = True) -> dict[str, Any] | None:
+    if sync:
+        sync_audits(root, audit_id)
+    with connect(root) as conn:
+        ensure_schema(conn)
+        row = conn.execute("SELECT raw_json FROM audits WHERE audit_id = ?", (audit_id,)).fetchone()
+    return json.loads(row["raw_json"]) if row else None
+
+
+def semantic_search_audits(root: Path, query: str, limit: int, *, sync: bool = True) -> list[tuple[float, dict[str, Any]]]:
+    if sync:
+        sync_audits(root)
+    query_text = fts_query(query)
+    if not query_text:
+        return []
+    limit = max(1, limit)
+    with connect(root) as conn:
+        ensure_schema(conn)
+        if fts5_enabled(conn):
+            rows = conn.execute(
+                """
+                SELECT audits.raw_json AS raw_json, bm25(audit_search) AS rank
+                FROM audit_search JOIN audits USING(audit_id)
+                WHERE audit_search MATCH ?
+                ORDER BY rank ASC LIMIT ?
+                """,
+                (query_text, limit),
+            ).fetchall()
+            return [(round(-float(row["rank"]), 6), json.loads(row["raw_json"])) for row in rows]
+        rows = conn.execute("SELECT raw_json FROM audits").fetchall()
+    wanted = token_set(query)
+    scored: list[tuple[float, dict[str, Any]]] = []
+    for row in rows:
+        payload = json.loads(row["raw_json"])
+        overlap = wanted & token_set(audit_search_text(payload))
+        if overlap:
+            scored.append((float(len(overlap)), payload))
+    scored.sort(key=lambda item: (item[0], item[1].get("updated_at", "")), reverse=True)
+    return scored[:limit]
+
+
+def count_debates(root: Path) -> int:
+    with connect(root) as conn:
+        ensure_schema(conn)
+        row = conn.execute("SELECT COUNT(*) AS count FROM debates").fetchone()
+    return int(row["count"])
+
+
+def count_audits(root: Path) -> int:
+    with connect(root) as conn:
+        ensure_schema(conn)
+        row = conn.execute("SELECT COUNT(*) AS count FROM audits").fetchone()
+    return int(row["count"])
