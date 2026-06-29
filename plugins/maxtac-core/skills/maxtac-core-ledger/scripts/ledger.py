@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import workspace_db
+
 
 LEDGER_FILES = {
     "primitive": Path("primitives.json"),
@@ -61,6 +63,8 @@ def parse_repeated(values: list[str] | None) -> list[str]:
 
 
 def load_ledger(path: Path, ledger_type: str) -> dict[str, Any]:
+    if is_default_ledger_path(path, ledger_type):
+        return workspace_db.load_ledger(ledger_root(path), ledger_type)
     if not path.exists():
         return {"version": 1, "type": ledger_type, "findings": []}
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -72,9 +76,21 @@ def load_ledger(path: Path, ledger_type: str) -> dict[str, Any]:
 
 
 def save_ledger(path: Path, ledger: dict[str, Any], ledger_type: str) -> None:
+    if is_default_ledger_path(path, ledger_type):
+        workspace_db.save_ledger(ledger_root(path), ledger_type, ledger)
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     ledger["type"] = ledger_type
     path.write_text(json.dumps(ledger, indent=2) + "\n", encoding="utf-8")
+
+
+def is_default_ledger_path(path: Path, ledger_type: str) -> bool:
+    return path.name == LEDGER_FILES[ledger_type].name
+
+
+def ledger_root(path: Path) -> Path:
+    parent = path.parent
+    return parent if str(parent) else Path(".")
 
 
 def selected_types(selection: str) -> list[str]:
@@ -139,13 +155,29 @@ def search_findings(ledger: dict[str, Any], query: argparse.Namespace) -> list[t
     return results
 
 
-def format_finding(ledger_type: str, finding: dict[str, Any], *, score: int | None = None) -> str:
+def format_finding(ledger_type: str, finding: dict[str, Any], *, score: Any | None = None) -> str:
     score_text = f" score={score}" if score is not None else ""
     return f"{ledger_type}:{finding['id']}{score_text} {finding.get('state')}: {finding.get('title')}"
 
 
 def cmd_init(args: argparse.Namespace) -> None:
     for ledger_type, path in selected_ledgers(args, allow_all=True):
+        if is_default_ledger_path(path, ledger_type):
+            root = ledger_root(path)
+            result = workspace_db.initialize_workspace_db(root)
+            count = workspace_db.count_findings(root, ledger_type)
+            if count and not args.force:
+                print(f"Ledger already exists: {root / workspace_db.DB_FILE} ({ledger_type}, {count} finding(s))")
+                continue
+            if args.force:
+                workspace_db.save_ledger(root, ledger_type, {"version": 2, "type": ledger_type, "findings": []})
+                print(f"Reset {ledger_type} ledger in {root / workspace_db.DB_FILE}")
+            else:
+                status = "created" if result.created else "ready"
+                imported = result.imported.get(ledger_type, 0)
+                suffix = f", imported {imported} legacy finding(s)" if imported else ""
+                print(f"Initialized {ledger_type} ledger in {root / workspace_db.DB_FILE} ({status}{suffix})")
+            continue
         if path.exists() and not args.force:
             print(f"Ledger already exists: {path}")
             continue
@@ -184,6 +216,35 @@ def cmd_list(args: argparse.Namespace) -> None:
 
 
 def cmd_search(args: argparse.Namespace) -> None:
+    if args.semantic:
+        printed = False
+        selected = selected_ledgers(args, allow_all=True)
+        default = [(ledger_type, path) for ledger_type, path in selected if is_default_ledger_path(path, ledger_type)]
+        legacy = [(ledger_type, path) for ledger_type, path in selected if not is_default_ledger_path(path, ledger_type)]
+        roots: dict[Path, list[str]] = {}
+        for ledger_type, path in default:
+            roots.setdefault(ledger_root(path), []).append(ledger_type)
+        for root, ledger_types in roots.items():
+            for score, ledger_type, finding in workspace_db.semantic_search(root, ledger_types, args.semantic, args.limit):
+                print(format_finding(ledger_type, finding, score=score))
+                printed = True
+        for ledger_type, path in legacy:
+            ledger = load_ledger(path, ledger_type)
+            query = argparse.Namespace(
+                title=args.semantic,
+                target=None,
+                category=None,
+                location=None,
+                evidence=None,
+                related=None,
+            )
+            for score, finding in search_findings(ledger, query)[: args.limit]:
+                print(format_finding(ledger_type, finding, score=score))
+                printed = True
+        if not printed:
+            print("No likely matches.")
+        return
+
     printed = False
     for ledger_type, path in selected_ledgers(args, allow_all=True):
         ledger = load_ledger(path, ledger_type)
@@ -293,6 +354,17 @@ def cmd_milestone(args: argparse.Namespace) -> None:
     print(f"Added milestone to {ledger_type}:{finding['id']}: {args.note}")
 
 
+def cmd_migrate(args: argparse.Namespace) -> None:
+    root = Path(args.root).expanduser().resolve()
+    result = workspace_db.initialize_workspace_db(root, migrate_json=False)
+    imported = workspace_db.migrate_legacy_json(root, replace=args.replace)
+    print(f"Workspace DB: {root / workspace_db.DB_FILE} ({'created' if result.created else 'exists'})")
+    for ledger_type in TYPE_CHOICES:
+        count = imported.get(ledger_type, 0)
+        action = "replaced/imported" if args.replace else "imported"
+        print(f"- {ledger_type}: {action} {count} finding(s)")
+
+
 def add_type_arg(parser: argparse.ArgumentParser, *, allow_all: bool, default: str | None) -> None:
     parser.add_argument("--type", choices=TYPE_OR_ALL if allow_all else TYPE_CHOICES, default=default)
 
@@ -339,6 +411,7 @@ def base_parser() -> argparse.ArgumentParser:
     search = subparsers.add_parser("search")
     add_type_arg(search, allow_all=True, default=None)
     add_query_args(search)
+    search.add_argument("--semantic", "--query", help="Full-text SQLite query across finding text, evidence, related ids, and milestones")
     search.add_argument("--limit", type=int, default=10)
     search.set_defaults(func=cmd_search)
 
@@ -371,6 +444,11 @@ def base_parser() -> argparse.ArgumentParser:
     milestone.add_argument("finding_id")
     milestone.add_argument("--note", required=True)
     milestone.set_defaults(func=cmd_milestone)
+
+    migrate = subparsers.add_parser("migrate", help="Import legacy primitives.json and chains.json into workspace.sqlite")
+    migrate.add_argument("--root", default=".")
+    migrate.add_argument("--replace", action="store_true", help="Replace existing DB findings with legacy JSON ledgers")
+    migrate.set_defaults(func=cmd_migrate)
     return parser
 
 

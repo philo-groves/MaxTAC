@@ -6,9 +6,17 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+LEDGER_SCRIPTS_DIR = SCRIPT_DIR.parent.parent / "maxtac-core-ledger" / "scripts"
+sys.path.insert(0, str(LEDGER_SCRIPTS_DIR))
+
+import workspace_db  # noqa: E402
 
 
 SCHEMA_VERSION = "1.0"
@@ -191,16 +199,21 @@ def cmd_from_ledger(args: argparse.Namespace) -> None:
     if path.exists() and not args.force:
         raise SystemExit(f"result already exists: {path}")
     payload = base_result(args)
-    for ledger_type, ledger_path in (("primitive", root / "primitives.json"), ("chain", root / "chains.json")):
-        if not ledger_path.exists():
-            continue
-        ledger = read_json(ledger_path)
+    seen_contract_ids: set[str] = set()
+    for ledger_type, ledger in workspace_db.all_ledgers(root).items():
         for item in ledger.get("findings", []):
             if not isinstance(item, dict):
                 continue
+            ledger_id = str(item.get("id") or next_id(payload["findings"], "finding"))
+            contract_id = ledger_id if ledger_id not in seen_contract_ids else f"{ledger_type}-{ledger_id}"
+            counter = 2
+            while contract_id in seen_contract_ids:
+                contract_id = f"{ledger_type}-{ledger_id}-{counter}"
+                counter += 1
+            seen_contract_ids.add(contract_id)
             payload["findings"].append(
                 {
-                    "id": str(item.get("id") or next_id(payload["findings"], "finding")),
+                    "id": contract_id,
                     "type": ledger_type,
                     "state": str(item.get("state") or "discovered"),
                     "title": str(item.get("title") or "Untitled finding"),

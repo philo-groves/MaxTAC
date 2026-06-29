@@ -10,8 +10,8 @@ The ledger tracks finding state; it is not a replacement for the research librar
 
 Ledger updates are also part of the MaxTAC attention cadence. If a branch produces a promote, de-escalate, duplicate, limited, or no-finding decision, record that decision as a finding update or milestone instead of letting the next session infer it from old artifacts. These timestamps help distinguish useful deep work from tunnel vision.
 
-- Primitives path: `primitives.json`
-- Chains path: `chains.json`
+- Workspace database: `workspace.sqlite`
+- Legacy imports: existing `primitives.json` and `chains.json` are imported into `workspace.sqlite` when the database is first created.
 
 ## Initialize the Ledger
 At the start of the research session, if no finding ledger exists, create it with: `python3 <skill-dir>/scripts/ledger.py init`
@@ -35,7 +35,7 @@ These states are valid for both primitives and chains.
 
 ## Script Usage
 
-Use the `scripts/ledger.py` script instead of reading and editing ledger JSON files directly:
+Use the `scripts/ledger.py` script instead of reading and editing ledger storage directly:
 
 Keep promotions backed by ledger records and use `scripts/ledger.py` as the canonical Core ledger interface.
 
@@ -59,6 +59,20 @@ python3 <skill-dir>/scripts/ledger.py list --type chain
 ```
 python3 <skill-dir>/scripts/ledger.py search --title "Unchecked IOCTL output length" --target "example.sys" --category memory-safety --type primitive
 ```
+
+Use semantic SQLite search when the query is exploratory or spans title, target, category, locations, evidence, related IDs, primitive links, and milestones:
+
+```
+python3 <skill-dir>/scripts/ledger.py search --semantic "tenant export guard proof" --type all
+```
+
+### Migrate Legacy JSON
+
+```
+python3 <skill-dir>/scripts/ledger.py migrate --root <workspace-root>
+```
+
+Use `--replace` only when the legacy JSON files should overwrite existing DB findings.
 
 ### Add a Finding
 ```

@@ -9,6 +9,7 @@ import json
 import os
 import re
 import shutil
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -19,12 +20,15 @@ SKILL_DIR = SCRIPT_DIR.parent
 REFERENCES_DIR = SKILL_DIR / "references"
 PROGRAM_INFO_TEMPLATE = REFERENCES_DIR / "program-info.template.md"
 SUBSYSTEM_TEMPLATE = REFERENCES_DIR / "subsystem.template.md"
+LEDGER_SCRIPTS_DIR = SKILL_DIR.parent / "maxtac-core-ledger" / "scripts"
+sys.path.insert(0, str(LEDGER_SCRIPTS_DIR))
+
+import workspace_db  # noqa: E402
 
 STATE_FILE = ".maxtac-workspace.json"
 WORKSPACE_FILES = {
     "program-info.md": "authorized scope and exclusions",
-    "primitives.json": "individual findings ledger",
-    "chains.json": "combined findings ledger",
+    workspace_db.DB_FILE: "SQLite primitive and chain finding ledger",
 }
 WORKSPACE_DIRS = {
     "research": "scalable markdown research library",
@@ -36,10 +40,8 @@ WORKSPACE_DIRS = {
     "contracts": "canonical result contracts and coverage bundles",
     "reporting": "submission-ready reports and evidence indexes",
 }
-LEDGER_FILES = {
-    "primitive": Path("primitives.json"),
-    "chain": Path("chains.json"),
-}
+LEDGER_TYPES = workspace_db.TYPE_CHOICES
+LEGACY_LEDGER_FILES = workspace_db.LEGACY_LEDGER_FILES
 PHASES = (
     "prepare",
     "scan",
@@ -278,22 +280,26 @@ def initial_state(phase: str = "prepare", note: str = "Workspace initialized.") 
     }
 
 
-def create_ledger(path: Path, ledger_type: str, *, force: bool = False) -> str:
-    if path.exists() and not force:
-        payload = read_json(path)
-        if not isinstance(payload.get("findings"), list):
-            raise SystemExit(f"{path} is not a MaxTAC findings ledger")
+def create_ledger(root: Path, ledger_type: str, *, force: bool = False) -> str:
+    result = workspace_db.initialize_workspace_db(root)
+    count = workspace_db.count_findings(root, ledger_type)
+    if force:
+        workspace_db.save_ledger(root, ledger_type, {"version": 2, "type": ledger_type, "findings": []})
+        return "reset"
+    imported = result.imported.get(ledger_type, 0)
+    if imported:
+        return f"migrated {imported} legacy finding(s)"
+    if count:
         return "exists"
-    write_json(path, {"version": 1, "type": ledger_type, "findings": []})
-    return "created"
+    return "created" if result.created else "exists"
 
 
 def load_ledger(root: Path, ledger_type: str) -> tuple[Path, dict[str, Any] | None, str | None]:
-    path = root / LEDGER_FILES[ledger_type]
-    if not path.exists():
+    path = root / workspace_db.DB_FILE
+    if not path.exists() and not any((root / legacy_path).exists() for legacy_path in LEGACY_LEDGER_FILES.values()):
         return path, None, "missing"
     try:
-        payload = read_json(path)
+        payload = workspace_db.load_ledger(root, ledger_type)
     except SystemExit as exc:
         return path, None, str(exc)
     findings = payload.get("findings")
@@ -394,11 +400,14 @@ def file_timestamp(path: Path) -> datetime | None:
 
 
 def latest_ledger_timestamp(root: Path) -> datetime | None:
-    timestamps = [
-        timestamp
-        for relative_path in LEDGER_FILES.values()
-        if (timestamp := file_timestamp(root / relative_path)) is not None
-    ]
+    timestamps = []
+    db_timestamp = file_timestamp(root / workspace_db.DB_FILE)
+    if db_timestamp:
+        timestamps.append(db_timestamp)
+    for relative_path in LEGACY_LEDGER_FILES.values():
+        timestamp = file_timestamp(root / relative_path)
+        if timestamp:
+            timestamps.append(timestamp)
     return max(timestamps) if timestamps else None
 
 
@@ -623,7 +632,7 @@ def recursive_file_count(path: Path) -> int:
 def selected_chains(root: Path, chain_id: str | None) -> tuple[list[dict[str, Any]], list[str]]:
     _, ledger, error = load_ledger(root, "chain")
     if error or ledger is None:
-        return [], [f"chains.json is {error}"]
+        return [], [f"{workspace_db.DB_FILE} chain ledger is {error}"]
     chains = ledger.get("findings", [])
     if chain_id:
         matches = [finding for finding in chains if str(finding.get("id", "")).lower() == chain_id.lower()]
@@ -737,9 +746,9 @@ def cmd_init(args: argparse.Namespace) -> None:
         program_info.write_text(template.rstrip() + "\n", encoding="utf-8")
         print("- file: program-info.md created from template")
 
-    for ledger_type, relative_path in LEDGER_FILES.items():
-        status = create_ledger(root / relative_path, ledger_type, force=args.force_ledgers)
-        print(f"- ledger: {relative_path} {status}")
+    for ledger_type in LEDGER_TYPES:
+        status = create_ledger(root, ledger_type, force=args.force_ledgers)
+        print(f"- ledger: {workspace_db.DB_FILE} {ledger_type} {status}")
 
     state = load_state(root)
     if state and not args.force_state:
@@ -775,7 +784,7 @@ def cmd_status(args: argparse.Namespace) -> None:
         for dirname in WORKSPACE_DIRS:
             path = root / dirname
             payload["directories"][dirname] = path.is_dir()
-        for ledger_type in LEDGER_FILES:
+        for ledger_type in LEDGER_TYPES:
             path, ledger, error = load_ledger(root, ledger_type)
             payload["ledgers"][ledger_type] = {
                 "path": str(path),
@@ -812,7 +821,7 @@ def cmd_status(args: argparse.Namespace) -> None:
         print(f"- {status}: {dirname}/ - {description}")
 
     print("Ledgers:")
-    for ledger_type in LEDGER_FILES:
+    for ledger_type in LEDGER_TYPES:
         path, ledger, error = load_ledger(root, ledger_type)
         if error or ledger is None:
             print(f"- {ledger_type}: {error} ({relative_to(path, root)})")

@@ -12,8 +12,7 @@ The following files and directories are managed under the base directory of the 
 
 ```
 program-info.md    # authorized scope and exclusions
-primitives.json    # individual findings (primitives) of all states
-chains.json        # combined findings (chains) of all states
+workspace.sqlite   # primitive and chain findings, related evidence, milestones, and search index
 reporting/         # submission-ready reports and evidence indexes
 research/          # scalable markdown research library
 debates/           # debater subagent results
@@ -35,7 +34,7 @@ Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations 
 - `split-large-markdown`: split a markdown file over the large-file threshold into a submodule. Retain the source by default; delete it only with `--verified --delete-source` after confirming the transcription.
 - `report-ready`: check whether a proofed chain has the minimum workspace evidence needed to move into reporting.
 
-The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script.
+The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script and is stored in `<workspace-root>/workspace.sqlite`.
 
 Use `scripts/workspace.py` as the canonical Core workspace helper. Domain or program-specific packs may expose MCP wrappers for their own workflows, but Core does not require them.
 
