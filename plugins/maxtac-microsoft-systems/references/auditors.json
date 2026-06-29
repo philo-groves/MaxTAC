@@ -26,7 +26,7 @@
       "- Whether manipulation enables code execution, privilege escalation, persistence, integrity-level crossing, or unauthorized actions through a trusted COM server.",
       "",
       "## Output",
-      "Persist `assessment.md` with COM class and activation path, expected trust boundary, attacker-controlled registration or call surface, impact, evidence, and blockers."
+      "Persist an assessment with COM class and activation path, expected trust boundary, attacker-controlled registration or call surface, impact, evidence, and blockers."
     ]
   },
   {
@@ -56,7 +56,7 @@
       "- Whether abuse enables privilege escalation, lateral movement, sensitive data access, unauthenticated method calls, coercion, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with interface and activation map, security descriptor or authentication expectation, bypass path, actor context, impact, evidence, and mitigations."
+      "Persist an assessment with interface and activation map, security descriptor or authentication expectation, bypass path, actor context, impact, evidence, and mitigations."
     ]
   },
   {
@@ -86,7 +86,7 @@
       "- Whether the broker can be confused into file access, registry access, token use, privileged process creation, sandbox escape, or kernel attack-surface reachability.",
       "",
       "## Output",
-      "Persist `assessment.md` with broker/client trust model, ALPC interface behavior, confused-deputy or validation gap, gained capability, evidence, and blockers."
+      "Persist an assessment with broker/client trust model, ALPC interface behavior, confused-deputy or validation gap, gained capability, evidence, and blockers."
     ]
   },
   {
@@ -116,7 +116,7 @@
       "- Whether namespace abuse enables privilege escalation, sandbox escape, arbitrary file access, impersonation, denial of service, or persistence.",
       "",
       "## Output",
-      "Persist `assessment.md` with object namespace path, expected owner/ACL, attacker manipulation route, crossed boundary, impact, evidence, and mitigations."
+      "Persist an assessment with object namespace path, expected owner/ACL, attacker manipulation route, crossed boundary, impact, evidence, and mitigations."
     ]
   },
   {
@@ -146,7 +146,7 @@
       "- Whether abuse enables privilege escalation, cross-user access, network credential use, sandbox escape, or protected process access.",
       "",
       "## Output",
-      "Persist `assessment.md` with token flow, impersonation boundary, privilege or SID assumptions, abuse sequence, impact, evidence, and blockers."
+      "Persist an assessment with token flow, impersonation boundary, privilege or SID assumptions, abuse sequence, impact, evidence, and blockers."
     ]
   },
   {
@@ -176,7 +176,7 @@
       "- Whether influence results in administrator code execution, privileged configuration changes, token theft, UI spoofing, or durable elevation.",
       "",
       "## Output",
-      "Persist `assessment.md` with integrity/elevation model, lower-to-higher influence path, user interaction requirements, impact, evidence, and mitigations."
+      "Persist an assessment with integrity/elevation model, lower-to-higher influence path, user interaction requirements, impact, evidence, and mitigations."
     ]
   },
   {
@@ -206,7 +206,7 @@
       "- Whether abuse enables local privilege escalation, persistence, arbitrary file write/delete, credential access, or service-level denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with privileged component, control surface, writable or callable attacker input, execution context, impact, evidence, and blockers."
+      "Persist an assessment with privileged component, control surface, writable or callable attacker input, execution context, impact, evidence, and blockers."
     ]
   },
   {
@@ -236,7 +236,7 @@
       "- Whether the bug yields kernel memory corruption, arbitrary read/write, privilege escalation, protected process tampering, code integrity bypass, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with device and IOCTL map, caller access requirements, unsafe kernel boundary, primitive quality, exploitability, evidence, and blockers."
+      "Persist an assessment with device and IOCTL map, caller access requirements, unsafe kernel boundary, primitive quality, exploitability, evidence, and blockers."
     ]
   },
   {
@@ -266,7 +266,7 @@
       "- Whether abuse enables sandbox escape, cross-app data access, credential use, local network access, higher-integrity influence, or privileged code execution.",
       "",
       "## Output",
-      "Persist `assessment.md` with sandbox identity, capability model, escaped resource or brokered action, impact, evidence, and mitigations."
+      "Persist an assessment with sandbox identity, capability model, escaped resource or brokered action, impact, evidence, and mitigations."
     ]
   },
   {
@@ -296,7 +296,7 @@
       "- Whether bypassing policy enables arbitrary code execution, driver load, kernel tampering, defense evasion, persistence, or chainable privilege escalation.",
       "",
       "## Output",
-      "Persist `assessment.md` with policy model, allowed/blocked code path, bypass mechanism, execution context, impact, evidence, and blockers."
+      "Persist an assessment with policy model, allowed/blocked code path, bypass mechanism, execution context, impact, evidence, and blockers."
     ]
   }
 ]

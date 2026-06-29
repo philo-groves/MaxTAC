@@ -32,7 +32,8 @@ Use this pack with MaxTAC Core when the research question involves how source, d
 
 Supply-chain workflows commonly produce:
 
-- `audits/supply-chain/<case-id>/` packets for compromise hunts, source-artifact diffs, CI/CD takeover analysis, and OSS proof gates.
+- `proof/supply-chain/<case-id>/` evidence freezes and source-artifact diffs.
+- `tmp/supply-chain/<case-id>/` working packets for compromise hunts, CI/CD takeover analysis, and OSS proof gates.
 - Package metadata, lockfiles, registry responses, SBOMs, signatures, attestations, image digests, release asset hashes, and workflow logs.
 - Evidence freeze manifests created with `package-freeze.py`.
 - Directory or archive diff packets created with `artifact-diff.py`.

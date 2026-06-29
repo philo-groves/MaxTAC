@@ -108,7 +108,7 @@ def diff_files(repo: Path, base: str | None, head: str | None, include_non_sourc
 
 
 def scan_dir(root: Path, scan_id: str) -> Path:
-    return root / "audits" / "source-scans" / scan_id
+    return root / "contracts" / "source-scans" / scan_id
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:

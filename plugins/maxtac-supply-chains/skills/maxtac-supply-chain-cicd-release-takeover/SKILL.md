@@ -9,7 +9,7 @@ Use this skill when untrusted input may reach trusted build, publish, signing, d
 
 ## Takeover Packet
 
-Store results under `audits/supply-chain/<case-id>/cicd-release-takeover.md`:
+Store working results under `tmp/supply-chain/<case-id>/cicd-release-takeover.md`:
 
 - Low-trust source: fork PR, issue comment, branch, tag, scheduled workflow, dependency update, registry package, cache key, artifact upload, external webhook, or self-hosted runner job.
 - Trust boundary: workflow trigger, job dependency, artifact promotion, environment approval, OIDC federation, secret exposure, runner isolation, signing, package publish, or deployment.

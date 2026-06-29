@@ -26,7 +26,7 @@
       "- Whether the path can capture the TCC Target Flag, modify user or system TCC state, or obtain sensitive data despite the intended privacy prompt boundary.",
       "",
       "## Output",
-      "Persist `assessment.md` with the protected resource, expected consent boundary, bypass path, identity or attribution issue, TCC flag relevance, impact, evidence, and blockers."
+      "Persist an assessment with the protected resource, expected consent boundary, bypass path, identity or attribution issue, TCC flag relevance, impact, evidence, and blockers."
     ]
   },
   {
@@ -56,7 +56,7 @@
       "- Whether bypass requires only standard user interaction and whether code runs despite failing the intended trust, notarization, or first-run warning boundary.",
       "",
       "## Output",
-      "Persist `assessment.md` with delivery path, quarantine/provenance state, expected Gatekeeper decision, bypass sequence, interaction level, impact, evidence, and blockers."
+      "Persist an assessment with delivery path, quarantine/provenance state, expected Gatekeeper decision, bypass sequence, interaction level, impact, evidence, and blockers."
     ]
   },
   {
@@ -86,7 +86,7 @@
       "- Whether the escape reaches sensitive user data, unsandboxed filesystem access, privileged user-space code execution, kernel attack surface, or another Apple Security Bounty target outcome.",
       "",
       "## Output",
-      "Persist `assessment.md` with sandbox profile assumptions, broker or boundary crossed, capability gained, target flag relevance, impact, evidence, and blockers."
+      "Persist an assessment with sandbox profile assumptions, broker or boundary crossed, capability gained, target flag relevance, impact, evidence, and blockers."
     ]
   },
   {
@@ -116,7 +116,7 @@
       "- Whether the issue enables unsigned code execution, arbitrary entitlements, platform privilege confusion, or stronger exploit-chain postconditions.",
       "",
       "## Output",
-      "Persist `assessment.md` with the trust decision, expected signing or entitlement policy, bypass primitive, gained capability, impact, evidence, and blockers."
+      "Persist an assessment with the trust decision, expected signing or entitlement policy, bypass primitive, gained capability, impact, evidence, and blockers."
     ]
   },
   {
@@ -146,7 +146,7 @@
       "- Whether bypassing runtime policy yields code execution inside a trusted process, TCC or entitlement inheritance, persistence, or a stronger chain primitive.",
       "",
       "## Output",
-      "Persist `assessment.md` with runtime policy state, bypass vector, process identity, gained execution or tamper capability, impact, evidence, and mitigations."
+      "Persist an assessment with runtime policy state, bypass vector, process identity, gained execution or tamper capability, impact, evidence, and mitigations."
     ]
   },
   {
@@ -176,7 +176,7 @@
       "- Whether the issue persists across reboot, modifies Apple-signed system content, affects boot integrity, or creates durable privilege escalation.",
       "",
       "## Output",
-      "Persist `assessment.md` with protected component, expected SIP/SSV policy, bypass path, persistence or integrity impact, evidence, and blockers."
+      "Persist an assessment with protected component, expected SIP/SSV policy, bypass path, persistence or integrity impact, evidence, and blockers."
     ]
   },
   {
@@ -206,7 +206,7 @@
       "- Whether the escape reaches privileged user-space code execution, arbitrary read/write, sensitive data, kernel attack surface, or a Commpage Target Flag outcome.",
       "",
       "## Output",
-      "Persist `assessment.md` with initial WebContent capability, boundary crossed, broker or IPC weakness, gained privilege, target flag relevance, evidence, and blockers."
+      "Persist an assessment with initial WebContent capability, boundary crossed, broker or IPC weakness, gained privilege, target flag relevance, evidence, and blockers."
     ]
   },
   {
@@ -236,7 +236,7 @@
       "- Whether the bypass materially weakens protections for mercenary-spyware-style entry vectors or qualifies as a Lockdown Mode bonus-relevant finding.",
       "",
       "## Output",
-      "Persist `assessment.md` with restricted feature, expected Lockdown Mode behavior, bypass or inconsistency, affected platforms, impact, evidence, and blockers."
+      "Persist an assessment with restricted feature, expected Lockdown Mode behavior, bypass or inconsistency, affected platforms, impact, evidence, and blockers."
     ]
   },
   {
@@ -266,7 +266,7 @@
       "- Commpage Target Flag evidence, platform and SoC requirements, mitigation-specific blockers, and whether the primitive remains data-only or becomes execution control.",
       "",
       "## Output",
-      "Persist `assessment.md` with primitive quality, integrity boundary targeted, mitigation blocker or bypass path, target flag relevance, final capability, evidence, and weak links."
+      "Persist an assessment with primitive quality, integrity boundary targeted, mitigation blocker or bypass path, target flag relevance, final capability, evidence, and weak links."
     ]
   },
   {
@@ -296,7 +296,7 @@
       "- Whether the issue produces a reliable exploit primitive, only a crash, or a chainable postcondition on MIE-capable hardware and software.",
       "",
       "## Output",
-      "Persist `assessment.md` with memory primitive, MIE/EMTE coverage assumptions, bypass hypothesis, reliability, target hardware/software, evidence, and blockers."
+      "Persist an assessment with memory primitive, MIE/EMTE coverage assumptions, bypass hypothesis, reliability, target hardware/software, evidence, and blockers."
     ]
   }
 ]

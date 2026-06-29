@@ -31,7 +31,7 @@ Use this pack with MaxTAC Core when the target involves cloud accounts, subscrip
 
 Cloud workflows commonly produce:
 
-- `audits/cloud/<case-id>/` packets for surface triage, IAM boundary research, data exposure, and runtime boundary analysis.
+- `tmp/cloud/<case-id>/` packets for surface triage, IAM boundary research, data exposure, and runtime boundary analysis.
 - Resource identity maps, policy snippets, trust graphs, redacted CLI/API transcripts, audit log references, effective permission checks, and non-destructive proof steps.
 - Provider-specific evidence such as AWS account/ARN/region data, Azure tenant/subscription/resource IDs, and GCP organization/folder/project/resource names.
 

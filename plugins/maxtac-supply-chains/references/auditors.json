@@ -26,7 +26,7 @@
       "- Whether evidence proves compromise, needs isolated dynamic analysis, or only shows low-confidence indicators.",
       "",
       "## Output",
-      "Persist `assessment.md` with compromise hypothesis, artifact anchors, indicators, affected consumer path, positive and negative evidence, safe-handling notes, and proof gaps."
+      "Persist an assessment with compromise hypothesis, artifact anchors, indicators, affected consumer path, positive and negative evidence, safe-handling notes, and proof gaps."
     ]
   },
   {
@@ -55,7 +55,7 @@
       "- Whether mismatches are expected packaging output, benign generated files, suspicious artifacts, or confirmed release tampering.",
       "",
       "## Output",
-      "Persist `assessment.md` with source anchor, artifact anchor, normalized diff, provenance verdict, security-relevant deltas, evidence, and recommended follow-up."
+      "Persist an assessment with source anchor, artifact anchor, normalized diff, provenance verdict, security-relevant deltas, evidence, and recommended follow-up."
     ]
   },
   {
@@ -84,7 +84,7 @@
       "- Whether CI code execution reaches release authority, credential theft, artifact poisoning, signing abuse, cloud deployment, or package publication.",
       "",
       "## Output",
-      "Persist `assessment.md` with event-to-authority graph, attacker-controlled input, privileged consumer, exploit sequence, broken controls, impact, and blockers."
+      "Persist an assessment with event-to-authority graph, attacker-controlled input, privileged consumer, exploit sequence, broken controls, impact, and blockers."
     ]
   },
   {
@@ -113,7 +113,7 @@
       "- Whether the finding is reportable, needs product-impact proof, belongs upstream first, is not actionable, or needs further review.",
       "",
       "## Output",
-      "Persist `assessment.md` with scope basis, affected consumer, proof quality, exclusions checked, decision, and report-blocking gaps."
+      "Persist an assessment with scope basis, affected consumer, proof quality, exclusions checked, decision, and report-blocking gaps."
     ]
   },
   {
@@ -143,7 +143,7 @@
       "- Whether the pipeline allows secret exfiltration, artifact tampering, dependency poisoning, unauthorized deployment, persistent runner compromise, or release-signing abuse.",
       "",
       "## Output",
-      "Persist `assessment.md` with pipeline trust graph, untrusted input, privileged step or artifact boundary, exploit sequence, impact, evidence, and mitigations."
+      "Persist an assessment with pipeline trust graph, untrusted input, privileged step or artifact boundary, exploit sequence, impact, evidence, and mitigations."
     ]
   },
   {
@@ -173,7 +173,7 @@
       "- Whether confusion enables build compromise, developer workstation compromise, CI secret theft, production code execution, or release artifact poisoning.",
       "",
       "## Output",
-      "Persist `assessment.md` with dependency resolution model, confusing package or registry edge, attacker control path, impacted build/runtime context, evidence, and mitigations."
+      "Persist an assessment with dependency resolution model, confusing package or registry edge, attacker control path, impacted build/runtime context, evidence, and mitigations."
     ]
   },
   {
@@ -204,7 +204,7 @@
       "- Hand off to MaxTAC for Cloud when the proof depends on Kubernetes RBAC, workload identity, metadata services, node identity, or cloud IAM after deployment.",
       "",
       "## Output",
-      "Persist `assessment.md` with image and registry trust model, immutable digests, signature/provenance state, substitution or poisoning path, affected consumer, evidence, and Cloud handoff if runtime proof is needed."
+      "Persist an assessment with image and registry trust model, immutable digests, signature/provenance state, substitution or poisoning path, affected consumer, evidence, and Cloud handoff if runtime proof is needed."
     ]
   },
   {
@@ -234,7 +234,7 @@
       "- Whether exposure or lifecycle drift enables account takeover, cloud compromise, signing abuse, data access, persistence, or supply-chain compromise.",
       "",
       "## Output",
-      "Persist `assessment.md` with credential inventory, storage and propagation path, lifecycle failure, blast radius, evidence, and remediation direction."
+      "Persist an assessment with credential inventory, storage and propagation path, lifecycle failure, blast radius, evidence, and remediation direction."
     ]
   },
   {
@@ -264,7 +264,7 @@
       "- Whether misuse enables forgery, decryption, replay, tampering, downgrade, offline cracking, key recovery, or bypass of security-critical authorization decisions.",
       "",
       "## Output",
-      "Persist `assessment.md` with crypto goal, primitive/API usage, violated security property, attacker capability, impact, evidence, and remediation direction."
+      "Persist an assessment with crypto goal, primitive/API usage, violated security property, attacker capability, impact, evidence, and remediation direction."
     ]
   },
   {
@@ -294,7 +294,7 @@
       "- Whether the exposure enables data access, privileged actions, SSRF, command execution, or chainable primitives.",
       "",
       "## Output",
-      "Persist `assessment.md` with discovered surface, reachability evidence, required context, impact, and blockers."
+      "Persist an assessment with discovered surface, reachability evidence, required context, impact, and blockers."
     ]
   }
 ]

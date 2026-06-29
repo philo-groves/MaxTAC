@@ -17,7 +17,7 @@ def utc_now() -> str:
 
 
 def default_manifest_path(case_id: str) -> Path:
-    return Path("audits") / "supply-chain" / case_id / "freeze" / "manifest.json"
+    return Path("proof") / "supply-chain" / case_id / "freeze" / "manifest.json"
 
 
 def read_json(path: Path) -> dict[str, Any]:

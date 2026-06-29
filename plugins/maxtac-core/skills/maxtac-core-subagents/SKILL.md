@@ -18,7 +18,7 @@ python <skill-dir>/scripts/readiness-check.py --kind debater --subagents <count>
 
 Use the local helper scripts for readiness checks, prompt enrichment, and debate ballot validation. Domain packs may expose auditor catalogs through MCP tools; the parent still owns final summaries.
 
-The helper scripts index audit and debate artifacts into `<workspace-root>/workspace.sqlite`. Treat the files under `audits/` and `debates/` as the human-readable source of truth, and use the SQLite-backed helper commands for majority counting, detail lookup, and semantic duplicate-work checks.
+The helper scripts store audit and debate records in `<workspace-root>/workspace.sqlite`. Use the SQLite-backed helper commands for majority counting, detail lookup, and semantic duplicate-work checks.
 
 The script prints `parallel` or `sequential` after checking available system resources against the requested subagent count. It reserves 4 GiB of available memory per requested subagent plus 1 GiB of headroom. Auditor subagents have an additional safety gate: if total system RAM is unknown or below 17 GiB, auditor readiness returns `sequential` regardless of available memory. Debaters and generic subagents are unaffected by the 17 GiB total-RAM gate.
 
@@ -34,7 +34,7 @@ The generated prompt also requires a visible goal-activation record in the persi
 Bound each subagent goal tightly enough to avoid long-running drift but wide enough to be useful. For auditors, bound the goal to one hypothesis, one auditor specialty, the supplied packet/evidence, directly referenced files/functions, and immediately necessary callers/callees. For debaters, bound the goal to one binary proposition and the supplied or directly referenced evidence. Subagents must not broaden into repo-wide discovery, new fuzzing campaigns, new PoV construction, or unrelated refactors unless the prompt explicitly grants that scope.
 
 ## Attention Review Subagents
-When `workspace_status` reports an attention-lock warning, the parent may spawn a single goal-bounded auditor as an independent attention reviewer. The prompt should include the attention report, current phase, recent ledger summary, active branch, and the exact decision options: deepen, pivot, consolidate, phase-shift, or delegate-review. Use `audit-helper.py --prompt-file` or `audit_prompt_create`; do not spawn the reviewer from a raw prompt. The reviewer should persist an assessment under `audits/` that recommends one action and names the evidence or absence of evidence behind it.
+When `workspace_status` reports an attention-lock warning, the parent may spawn a single goal-bounded auditor as an independent attention reviewer. The prompt should include the attention report, current phase, recent ledger summary, active branch, and the exact decision options: deepen, pivot, consolidate, phase-shift, or delegate-review. Use `audit-helper.py --prompt-file` or `audit_prompt_create`; do not spawn the reviewer from a raw prompt. The reviewer should persist an assessment into `workspace.sqlite` that recommends one action and names the evidence or absence of evidence behind it.
 
 ## Auditor Subagents
 An auditor subagent is a specialist vulnerability researcher for an individual bug class, mitigation, program, or other security topic. Core owns the goal-bounded prompt, persistence, and debate mechanics. Installed domain packs own most auditor catalogs.
@@ -66,15 +66,15 @@ Prefer focused auditors over broad review. For example, use a specific `logic-*`
 python <skill-dir>/scripts/audit-helper.py --root <workspace-root> --prompt-file tmp/<prompt-name>.md
 ```
 
-The above script prints an enriched prompt; enrichment prepends Codex goal instructions and appends instructions to persist audit assessment files to `<workspace-root>/audits/<audit-id>/`. The script also creates the `<workspace-root>/audits/<audit-id>/` directory, then persists the subagent prompt there.
+The above script prints an enriched prompt; enrichment prepends Codex goal instructions and appends instructions to persist the audit assessment into `workspace.sqlite`. It also creates the SQLite audit record for the generated audit ID.
 
 Include the triage packet, relevant graph evidence, OpenGrep result summaries, and exact file/function references in the prompt. Omit unrelated checklist text and avoid asking the auditor to rediscover the whole target.
 
 3. **Spawn the auditor**: use the enriched prompt unchanged, including its first-action goal activation instructions, to spawn the auditor subagent. There is no script for this phase; use standard Codex subagent spawning mechanisms. If the session is at maximum subagents and one is stopped, replace a stopped subagent. See the "Parallel or Sequential" section above for parallelism guidance.
 
-4. **Wait for the auditor**: during the wait, continue normal operations as the main agent in parallel, even for serial subagent spawns. During its work, the subagent persists evidence to `<workspace-root>/audits/<audit-id>/`.
+4. **Wait for the auditor**: during the wait, continue normal operations as the main agent in parallel, even for serial subagent spawns. The subagent should record its final assessment through the helper command embedded in the enriched prompt.
 
-5. **Complete the audit**: after the auditor subagent finishes its work, verify `<workspace-root>/audits/<audit-id>/assessment.md` was persisted by the subagent. If not, quickly remediate by reviewing the subagent session and persisting a proper assessment. Then refresh the SQLite audit index:
+5. **Complete the audit**: after the auditor subagent finishes its work, verify `audit-helper.py --audit-show <audit-id>` returns an assessment. If not, quickly remediate by reviewing the subagent session and recording a proper assessment. Then refresh the SQLite audit index:
 
 ```
 python <skill-dir>/scripts/audit-helper.py --root <workspace-root> --audit-sync
@@ -94,11 +94,11 @@ Every debate follows the same 5-step flow.
 python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --prompt-file tmp/<prompt-name>.md
 ```
 
-The above script prints an enriched prompt; enrichment prepends Codex goal instructions and appends instructions to persist debate ballot files to `<workspace-root>/debates/<debate-id>/`. The script also creates the `<workspace-root>/debates/<debate-id>/` directory, then persists the subagent prompt there.
+The above script prints an enriched prompt; enrichment prepends Codex goal instructions and appends instructions to persist each debate ballot into `workspace.sqlite`. It also creates the SQLite debate record for the generated debate ID.
 
 2. **Spawn debater subagents**: use the enriched prompt unchanged, including its first-action goal activation instructions, to spawn three debater subagents. There is no script for this phase; use standard Codex subagent spawning mechanisms. If the session is at maximum subagents and one is stopped, replace a stopped subagent. See the "Parallel or Sequential" section above for parallelism guidance.
 
-3. **Wait for the debaters**: during the wait, continue normal operations as the main agent in parallel, even for serial subagent spawns. Each subagent persists its ballot to `<workspace-root>/debates/<debate-id>/ballot-<subagent-name>.json`, with a JSON structure as follows:
+3. **Wait for the debaters**: during the wait, continue normal operations as the main agent in parallel, even for serial subagent spawns. Each subagent records its ballot through the helper command embedded in the enriched prompt, using a JSON structure as follows:
 
 ```
 {
@@ -113,15 +113,15 @@ The above script prints an enriched prompt; enrichment prepends Codex goal instr
 }
 ```
 
-4. **Complete the debate**: after the debater subagents finish their work, verify `<workspace-root>/debates/<debate-id>/ballot-<subagent-name>.json` was persisted by each subagent. If not, quickly remediate by reviewing the subagent session(s) and persisting appropriate ballot(s).
+4. **Complete the debate**: after the debater subagents finish their work, verify `debate-helper.py --show <debate-id>` lists each expected ballot. If not, quickly remediate by reviewing the subagent session(s) and recording appropriate ballot(s).
 
-5. **Tally the debate**: after all ballots are persisted, tally the debate by reviewing each ballot and writing a summary of the results, including which side won and why, supported by evidence from the ballots. Persist the machine totals to `<workspace-root>/debates/<debate-id>/tally.json`, the ballot-by-ballot review to `<workspace-root>/debates/<debate-id>/tally.md`, and the parent-facing summary to `<workspace-root>/debates/<debate-id>/summary.md`. To generate these outputs, run:
+5. **Tally the debate**: after all ballots are persisted, tally the debate by reviewing each ballot and writing a summary of the results, including which side won and why, supported by evidence from the ballots. To store the machine totals, ballot-by-ballot review, and parent-facing summary in `workspace.sqlite`, run:
 
 ```
 python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --debate <debate-id> --tally
 ```
 
-The parent agent owns the final decision. Review `summary.md` against `tally.md` and the source ballots before using the result for a ledger state transition.
+The parent agent owns the final decision. Review `debate-helper.py --show <debate-id>` before using the result for a ledger state transition.
 
 The tally command also refreshes the SQLite debate index. Use these commands when reviewing previous votes:
 

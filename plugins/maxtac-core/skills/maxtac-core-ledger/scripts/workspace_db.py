@@ -473,6 +473,10 @@ def semantic_search(root: Path, finding_types: list[str], query: str, limit: int
     return scored[:limit]
 
 
+def utc_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
 def ballot_value(ballot: dict[str, Any], key: str, default: str = "") -> str:
     value = ballot.get(key, default)
     if value is None:
@@ -480,45 +484,49 @@ def ballot_value(ballot: dict[str, Any], key: str, default: str = "") -> str:
     return str(value)
 
 
-def debate_payload_from_dir(root: Path, debate_dir: Path) -> dict[str, Any]:
-    debate_id = debate_dir.name
-    prompt_path = debate_dir / "prompt.md"
-    tally_path = debate_dir / "tally.json"
-    summary_path = debate_dir / "summary.md"
-    prompt_text = read_optional_text(prompt_path)
-    ballot_details: list[dict[str, Any]] = []
+def normalize_ballot(ballot: dict[str, Any], expected_debate: str) -> dict[str, Any]:
+    if not isinstance(ballot, dict):
+        raise SystemExit("Ballot must be a JSON object")
+    debate = ballot_value(ballot, "debate")
+    if debate and debate != expected_debate:
+        raise SystemExit(f"Ballot debate must be {expected_debate}")
+    choice = ballot_value(ballot, "choice").lower()
+    if choice not in {"yes", "no"}:
+        raise SystemExit("Ballot choice must be yes or no")
+    confidence = ballot.get("confidence")
+    if not isinstance(confidence, int) or confidence < 0 or confidence > 100:
+        raise SystemExit("Ballot confidence must be an integer from 0 to 100")
+    subagent = ballot_value(ballot, "subagent").strip()
+    if not subagent:
+        raise SystemExit("Ballot is missing subagent")
+    normalized = {
+        "file": f"sqlite:{subagent}",
+        "subagent": subagent,
+        "goal_activation": ballot_value(ballot, "goal_activation", "unknown"),
+        "choice": choice,
+        "confidence": confidence,
+        "reasoning": ballot_value(ballot, "reasoning"),
+        "evidence": ballot_value(ballot, "evidence"),
+        "blockers": ballot.get("blockers"),
+        "raw": dict(ballot, debate=expected_debate, choice=choice),
+    }
+    return normalized
+
+
+def recompute_debate(payload: dict[str, Any]) -> dict[str, Any]:
     counts = {"yes": 0, "no": 0}
     confidence_totals = {"yes": 0, "no": 0}
-
-    for ballot_path in sorted(debate_dir.glob("ballot-*.json")):
-        try:
-            ballot = json.loads(ballot_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            raise SystemExit(f"{ballot_path} is not valid JSON: {exc}") from exc
+    ballot_details = []
+    for ballot in payload.get("ballot_details") or []:
         if not isinstance(ballot, dict):
-            raise SystemExit(f"{ballot_path} must contain a JSON object")
-        choice = ballot_value(ballot, "choice").lower()
-        if choice not in {"yes", "no"}:
-            raise SystemExit(f"{ballot_path} ballot choice must be yes or no")
-        confidence = ballot.get("confidence")
-        if not isinstance(confidence, int):
-            raise SystemExit(f"{ballot_path} ballot confidence must be an integer")
+            continue
+        choice = str(ballot.get("choice", "")).lower()
+        if choice not in counts:
+            continue
+        confidence = int(ballot.get("confidence", 0))
         counts[choice] += 1
         confidence_totals[choice] += confidence
-        ballot_details.append(
-            {
-                "file": relative_to_root(root, ballot_path),
-                "subagent": ballot_value(ballot, "subagent", ballot_path.stem.removeprefix("ballot-")),
-                "goal_activation": ballot_value(ballot, "goal_activation", "unknown"),
-                "choice": choice,
-                "confidence": confidence,
-                "reasoning": ballot_value(ballot, "reasoning"),
-                "evidence": ballot_value(ballot, "evidence"),
-                "blockers": ballot.get("blockers"),
-                "raw": ballot,
-            }
-        )
-
+        ballot_details.append(ballot)
     if counts["yes"] > counts["no"]:
         winner = "yes"
     elif counts["no"] > counts["yes"]:
@@ -527,24 +535,22 @@ def debate_payload_from_dir(root: Path, debate_dir: Path) -> dict[str, Any]:
         winner = "tie"
     else:
         winner = "none"
-
-    return {
-        "debate_id": debate_id,
-        "debate_dir": relative_to_root(root, debate_dir),
-        "prompt_path": relative_to_root(root, prompt_path) if prompt_path.exists() else "",
-        "prompt_text": prompt_text,
-        "ballots": len(ballot_details),
-        "counts": counts,
-        "average_confidence": {
-            choice: (confidence_totals[choice] / counts[choice] if counts[choice] else 0)
-            for choice in ("yes", "no")
-        },
-        "winner": winner,
-        "tally_path": relative_to_root(root, tally_path) if tally_path.exists() else "",
-        "summary_path": relative_to_root(root, summary_path) if summary_path.exists() else "",
-        "ballot_details": ballot_details,
-        "updated_at": newest_mtime([prompt_path, tally_path, summary_path, *sorted(debate_dir.glob("ballot-*.json"))]),
+    payload["ballot_details"] = sorted(ballot_details, key=lambda item: str(item.get("subagent", "")))
+    payload["ballots"] = len(ballot_details)
+    payload["counts"] = counts
+    payload["average_confidence"] = {
+        choice: (confidence_totals[choice] / counts[choice] if counts[choice] else 0)
+        for choice in ("yes", "no")
     }
+    payload["winner"] = winner
+    payload.setdefault("debate_dir", "")
+    payload.setdefault("prompt_path", "")
+    payload.setdefault("tally_path", "")
+    payload.setdefault("summary_path", "")
+    payload.setdefault("tally_text", "")
+    payload.setdefault("summary_text", "")
+    payload["updated_at"] = payload.get("updated_at") or utc_now()
+    return payload
 
 
 def debate_search_text(payload: dict[str, Any]) -> str:
@@ -554,12 +560,15 @@ def debate_search_text(payload: dict[str, Any]) -> str:
             str(payload.get("prompt_text", "")),
             json.dumps(payload.get("counts", {}), sort_keys=True),
             str(payload.get("winner", "")),
+            str(payload.get("tally_text", "")),
+            str(payload.get("summary_text", "")),
             " ".join(text_values(payload.get("ballot_details", []))),
         ]
     )
 
 
 def upsert_debate(conn: sqlite3.Connection, payload: dict[str, Any]) -> None:
+    payload = recompute_debate(dict(payload))
     debate_id = str(payload["debate_id"])
     conn.execute("DELETE FROM debate_ballots WHERE debate_id = ?", (debate_id,))
     if fts5_enabled(conn):
@@ -614,7 +623,7 @@ def upsert_debate(conn: sqlite3.Connection, payload: dict[str, Any]) -> None:
             """,
             (
                 debate_id,
-                str(ballot.get("file", "")),
+                str(ballot.get("file") or f"sqlite:{ballot.get('subagent', '')}"),
                 str(ballot.get("subagent", "")),
                 str(ballot.get("goal_activation", "")),
                 str(ballot.get("choice", "")),
@@ -632,16 +641,81 @@ def upsert_debate(conn: sqlite3.Connection, payload: dict[str, Any]) -> None:
         )
 
 
-def sync_debates(root: Path, debate_id: str | None = None) -> list[dict[str, Any]]:
+def create_debate(root: Path, debate_id: str, prompt_text: str) -> dict[str, Any]:
     initialize_workspace_db(root)
-    debates_dir = root / "debates"
-    if debate_id:
-        candidates = [debates_dir / debate_id]
-    else:
-        candidates = sorted(path for path in debates_dir.glob("*") if path.is_dir()) if debates_dir.exists() else []
-    payloads = [debate_payload_from_dir(root, path) for path in candidates if path.exists() and path.is_dir()]
+    payload = {
+        "debate_id": debate_id,
+        "debate_dir": "",
+        "prompt_path": "",
+        "prompt_text": prompt_text,
+        "ballot_details": [],
+        "tally_text": "",
+        "summary_text": "",
+        "updated_at": utc_now(),
+    }
     with connect(root) as conn:
         ensure_schema(conn)
+        upsert_debate(conn, payload)
+        conn.commit()
+    return payload
+
+
+def record_debate_ballot(root: Path, debate_id: str, ballot: dict[str, Any]) -> dict[str, Any]:
+    payload = get_debate(root, debate_id, sync=False)
+    if not payload:
+        raise SystemExit(f"Debate not found: {debate_id}")
+    normalized = normalize_ballot(ballot, debate_id)
+    existing = [
+        item
+        for item in payload.get("ballot_details", [])
+        if str(item.get("subagent", "")) != normalized["subagent"]
+    ]
+    payload["ballot_details"] = [*existing, normalized]
+    payload["updated_at"] = utc_now()
+    with connect(root) as conn:
+        ensure_schema(conn)
+        upsert_debate(conn, payload)
+        conn.commit()
+    return get_debate(root, debate_id, sync=False) or payload
+
+
+def store_debate_text(root: Path, debate_id: str, *, tally_text: str, summary_text: str) -> dict[str, Any]:
+    payload = get_debate(root, debate_id, sync=False)
+    if not payload:
+        raise SystemExit(f"Debate not found: {debate_id}")
+    payload["tally_text"] = tally_text
+    payload["summary_text"] = summary_text
+    payload["updated_at"] = utc_now()
+    with connect(root) as conn:
+        ensure_schema(conn)
+        upsert_debate(conn, payload)
+        conn.commit()
+    return get_debate(root, debate_id, sync=False) or payload
+
+
+def tally_debate(root: Path, debate_id: str) -> dict[str, Any]:
+    payload = get_debate(root, debate_id, sync=False)
+    if not payload:
+        raise SystemExit(f"Debate not found: {debate_id}")
+    if not payload.get("ballot_details"):
+        raise SystemExit(f"No ballots found for debate: {debate_id}")
+    payload["updated_at"] = utc_now()
+    with connect(root) as conn:
+        ensure_schema(conn)
+        upsert_debate(conn, payload)
+        conn.commit()
+    return get_debate(root, debate_id, sync=False) or payload
+
+
+def sync_debates(root: Path, debate_id: str | None = None) -> list[dict[str, Any]]:
+    initialize_workspace_db(root)
+    with connect(root) as conn:
+        ensure_schema(conn)
+        if debate_id:
+            rows = conn.execute("SELECT raw_json FROM debates WHERE debate_id = ?", (debate_id,)).fetchall()
+        else:
+            rows = conn.execute("SELECT raw_json FROM debates ORDER BY updated_at DESC, debate_id DESC").fetchall()
+        payloads = [json.loads(row["raw_json"]) for row in rows]
         for payload in payloads:
             upsert_debate(conn, payload)
         conn.commit()
@@ -726,38 +800,6 @@ def extract_conclusion(assessment: str) -> str:
     return assessment[:1200]
 
 
-def audit_payload_from_dir(root: Path, audit_dir: Path) -> dict[str, Any]:
-    audit_id = audit_dir.name
-    prompt_path = audit_dir / "prompt.md"
-    assessment_path = audit_dir / "assessment.md"
-    prompt_text = read_optional_text(prompt_path)
-    assessment_text = read_optional_text(assessment_path)
-    artifacts: list[dict[str, Any]] = []
-    for path in sorted(item for item in audit_dir.rglob("*") if item.is_file()):
-        if path.name in {"prompt.md", "assessment.md"}:
-            continue
-        artifacts.append(
-            {
-                "path": relative_to_root(root, path),
-                "kind": path.suffix.lower().lstrip(".") or "file",
-                "size": path.stat().st_size,
-                "mtime_utc": path_mtime(path),
-            }
-        )
-    return {
-        "audit_id": audit_id,
-        "audit_dir": relative_to_root(root, audit_dir),
-        "prompt_path": relative_to_root(root, prompt_path) if prompt_path.exists() else "",
-        "assessment_path": relative_to_root(root, assessment_path) if assessment_path.exists() else "",
-        "prompt_text": prompt_text,
-        "assessment_text": assessment_text,
-        "goal_activation": extract_goal_activation(assessment_text),
-        "conclusion": extract_conclusion(assessment_text),
-        "artifacts": artifacts,
-        "updated_at": newest_mtime([prompt_path, assessment_path, *[root / item["path"] for item in artifacts]]),
-    }
-
-
 def audit_search_text(payload: dict[str, Any]) -> str:
     return " ".join(
         [
@@ -772,7 +814,17 @@ def audit_search_text(payload: dict[str, Any]) -> str:
 
 
 def upsert_audit(conn: sqlite3.Connection, payload: dict[str, Any]) -> None:
+    payload = dict(payload)
     audit_id = str(payload["audit_id"])
+    payload.setdefault("audit_dir", "")
+    payload.setdefault("prompt_path", "")
+    payload.setdefault("assessment_path", "")
+    payload.setdefault("prompt_text", "")
+    payload.setdefault("assessment_text", "")
+    payload["goal_activation"] = extract_goal_activation(str(payload.get("assessment_text", "")))
+    payload["conclusion"] = extract_conclusion(str(payload.get("assessment_text", "")))
+    payload.setdefault("artifacts", [])
+    payload["updated_at"] = payload.get("updated_at") or utc_now()
     conn.execute("DELETE FROM audit_artifacts WHERE audit_id = ?", (audit_id,))
     if fts5_enabled(conn):
         conn.execute("DELETE FROM audit_search WHERE audit_id = ?", (audit_id,))
@@ -828,16 +880,47 @@ def upsert_audit(conn: sqlite3.Connection, payload: dict[str, Any]) -> None:
         )
 
 
-def sync_audits(root: Path, audit_id: str | None = None) -> list[dict[str, Any]]:
+def create_audit(root: Path, audit_id: str, prompt_text: str) -> dict[str, Any]:
     initialize_workspace_db(root)
-    audits_dir = root / "audits"
-    if audit_id:
-        candidates = [audits_dir / audit_id]
-    else:
-        candidates = sorted(path for path in audits_dir.glob("*") if path.is_dir()) if audits_dir.exists() else []
-    payloads = [audit_payload_from_dir(root, path) for path in candidates if path.exists() and path.is_dir()]
+    payload = {
+        "audit_id": audit_id,
+        "audit_dir": "",
+        "prompt_path": "",
+        "assessment_path": "",
+        "prompt_text": prompt_text,
+        "assessment_text": "",
+        "artifacts": [],
+        "updated_at": utc_now(),
+    }
     with connect(root) as conn:
         ensure_schema(conn)
+        upsert_audit(conn, payload)
+        conn.commit()
+    return payload
+
+
+def record_audit_assessment(root: Path, audit_id: str, assessment_text: str) -> dict[str, Any]:
+    payload = get_audit(root, audit_id, sync=False)
+    if not payload:
+        raise SystemExit(f"Audit not found: {audit_id}")
+    payload["assessment_text"] = assessment_text
+    payload["updated_at"] = utc_now()
+    with connect(root) as conn:
+        ensure_schema(conn)
+        upsert_audit(conn, payload)
+        conn.commit()
+    return get_audit(root, audit_id, sync=False) or payload
+
+
+def sync_audits(root: Path, audit_id: str | None = None) -> list[dict[str, Any]]:
+    initialize_workspace_db(root)
+    with connect(root) as conn:
+        ensure_schema(conn)
+        if audit_id:
+            rows = conn.execute("SELECT raw_json FROM audits WHERE audit_id = ?", (audit_id,)).fetchall()
+        else:
+            rows = conn.execute("SELECT raw_json FROM audits ORDER BY updated_at DESC, audit_id DESC").fetchall()
+        payloads = [json.loads(row["raw_json"]) for row in rows]
         for payload in payloads:
             upsert_audit(conn, payload)
         conn.commit()

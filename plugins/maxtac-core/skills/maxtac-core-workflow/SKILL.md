@@ -15,8 +15,6 @@ program-info.md    # authorized scope and exclusions
 workspace.sqlite   # findings, debate tallies, audit index, and search memory
 reporting/         # submission-ready reports and evidence indexes
 research/          # scalable markdown research library
-debates/           # debater subagent results
-audits/            # auditor subagent results
 proof/             # proof-of-vulnerability (PoV) development
 fuzz/              # fuzzing inputs, scripts, and artifacts
 contracts/         # canonical result bundles and deterministic report projections
@@ -48,7 +46,7 @@ Treat `research/` as a permanent, cross-session security book about the target p
 Before persisting any markdown, classify it:
 
 - **Research library markdown**: synthesized knowledge a future session should read to understand the system. Put it in the narrowest stable subsystem submodule under `research/`.
-- **Artifact markdown**: evidence manifests, command transcripts, reproduction logs, generated packets, or exact tool output. Put it under the relevant submodule's `artifacts/`, an `audits/` case, `proof/`, `fuzz/`, or `tmp/`.
+- **Artifact markdown**: evidence manifests, command transcripts, reproduction logs, generated packets, or exact tool output. Put it under the relevant submodule's `artifacts/`, `proof/`, `fuzz/`, `contracts/`, or `tmp/`.
 
 Markdown under `artifacts/` is the exception. If a markdown file contains conclusions, triage reasoning, reusable negative evidence, or a subsystem model, rewrite those facts into a sibling research-library note and leave the artifact as a source link. A future reader should be able to learn the system by reading `research/**/*.md` outside `artifacts/`, then inspect artifacts only for proof and provenance.
 
@@ -105,7 +103,7 @@ Every substantial scan, RE branch, proof branch, or negative result should close
 
 - **Incorporated**: reusable knowledge was rewritten into a named research-library markdown file, with artifact links.
 - **Artifact-only**: no reusable system knowledge was produced; keep only raw evidence and state why.
-- **Deferred**: the branch is incomplete; leave a pointer in `tmp/`, `audits/`, or a ledger evidence link, not as a misleading library chapter.
+- **Deferred**: the branch is incomplete; leave a pointer in `tmp/`, `workspace.sqlite`, or a ledger evidence link, not as a misleading library chapter.
 
 This prevents session goals from becoming the library structure and prevents `artifacts/` from becoming a hidden markdown knowledge base.
 
@@ -175,12 +173,12 @@ Analyze previously conducted recon, threat modeling, research, and surface triag
 #### Spawn Auditors
 Before spawning a new auditor, search existing audit memory with `audit-helper.py --audit-search "<hypothesis boundary component>"`. If a prior assessment already covers the same boundary, reuse it, write a narrowed delta prompt, or update the ledger/research library instead of repeating the audit.
 
-For each remaining hypothesis, spawn one or more targeted, goal-bounded auditor subagents with `maxtac-core-subagents` skill guidance to scan for unique vulnerabilities. Use the active domain pack's auditor MCP tools or local auditor helper output to select the narrowest suitable auditor set, usually 1-4 auditors. Avoid a broad "logic analysis" audit when a specific business logic, authorization, parser, race, memory safety, platform, supply-chain, or mitigation auditor fits. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis. Audit results are stored in the `<workspace-root>/audits/` directory and indexed into `workspace.sqlite` for later semantic lookup.
+For each remaining hypothesis, spawn one or more targeted, goal-bounded auditor subagents with `maxtac-core-subagents` skill guidance to scan for unique vulnerabilities. Use the active domain pack's auditor MCP tools or local auditor helper output to select the narrowest suitable auditor set, usually 1-4 auditors. Avoid a broad "logic analysis" audit when a specific business logic, authorization, parser, race, memory safety, platform, supply-chain, or mitigation auditor fits. Each audit results in a hypothesis-evidence packet containing audit methods and security analysis stored in `workspace.sqlite` for later semantic lookup.
 
 #### Update Findings
 Based on audit results, use `maxtac-core-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state.
 
-During scan, do not write unvalidated vulnerability claims into the research library as facts. Do update research markdown for stable system knowledge learned during the branch, especially architecture, reachability gates, authorization invariants, and negative results that will prevent future duplicate work. Keep speculative packets, broad match sets, and raw branch notes in `audits/`, `tmp/`, or `artifacts/` until they are rewritten into book-like subsystem notes.
+During scan, do not write unvalidated vulnerability claims into the research library as facts. Do update research markdown for stable system knowledge learned during the branch, especially architecture, reachability gates, authorization invariants, and negative results that will prevent future duplicate work. Keep speculative packets, broad match sets, and raw branch notes in `workspace.sqlite`, `tmp/`, or `artifacts/` until they are rewritten into book-like subsystem notes.
 
 ### 3. Validation
 Go to this phase after the Scan phase or when additional pre-proofing validation is required.

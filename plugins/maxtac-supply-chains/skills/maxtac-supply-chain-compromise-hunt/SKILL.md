@@ -9,7 +9,7 @@ Use this skill to hunt for actual or likely supply-chain compromise, not ordinar
 
 ## Hunt Packet
 
-Store findings under `audits/supply-chain/<case-id>/compromise-hunt.md`:
+Store working findings under `tmp/supply-chain/<case-id>/compromise-hunt.md`:
 
 - Artifact: package, version, image digest, release asset, commit, tag, lockfile entry, action, build tool, installer, or registry event.
 - Ecosystem: npm, PyPI, Go, Cargo, Maven, Gradle, NuGet, RubyGems, Packagist, Homebrew, apt/yum, container registry, GitHub Actions, or other.
@@ -25,8 +25,8 @@ Use `package-freeze.py` when a case needs a durable manifest of package metadata
 
 ```text
 python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-compromise-hunt/scripts/package-freeze.py create --case-id <case-id> --target "<package-or-release>" --ecosystem <ecosystem> --coordinates <name> --version <version> --artifact-url <url>
-python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-compromise-hunt/scripts/package-freeze.py add-artifact --manifest audits/supply-chain/<case-id>/freeze/manifest.json --path <local-artifact> --category package
-python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-compromise-hunt/scripts/package-freeze.py lint --manifest audits/supply-chain/<case-id>/freeze/manifest.json
+python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-compromise-hunt/scripts/package-freeze.py add-artifact --manifest proof/supply-chain/<case-id>/freeze/manifest.json --path <local-artifact> --category package
+python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-compromise-hunt/scripts/package-freeze.py lint --manifest proof/supply-chain/<case-id>/freeze/manifest.json
 ```
 
 Store the manifest with the hunt packet and cite its SHA-256 values in reports.

@@ -26,7 +26,7 @@
       "- Whether a lower-privileged actor can access, mutate, or trigger privileged state.",
       "",
       "## Output",
-      "Persist `assessment.md` with actor/object matrix, bypass path, required privileges, impact, and evidence."
+      "Persist an assessment with actor/object matrix, bypass path, required privileges, impact, and evidence."
     ]
   },
   {
@@ -56,7 +56,7 @@
       "- Practical abuse scenario and whether impact is security-relevant.",
       "",
       "## Output",
-      "Persist `assessment.md` with expected invariant, bypass sequence, evidence, impact, and remediation direction."
+      "Persist an assessment with expected invariant, bypass sequence, evidence, impact, and remediation direction."
     ]
   },
   {
@@ -86,7 +86,7 @@
       "- Whether the exposure enables data access, privileged actions, SSRF, command execution, or chainable primitives.",
       "",
       "## Output",
-      "Persist `assessment.md` with discovered surface, reachability evidence, required context, impact, and blockers."
+      "Persist an assessment with discovered surface, reachability evidence, required context, impact, and blockers."
     ]
   },
   {
@@ -116,7 +116,7 @@
       "- Privilege context, sandbox context, and impact of successful command alteration.",
       "",
       "## Output",
-      "Persist `assessment.md` with source-to-sink flow, payload shape, mitigations, exploitability, and evidence."
+      "Persist an assessment with source-to-sink flow, payload shape, mitigations, exploitability, and evidence."
     ]
   },
   {
@@ -146,7 +146,7 @@
       "- Impact such as code execution, authorization bypass, file access, denial of service, or primitive creation.",
       "",
       "## Output",
-      "Persist `assessment.md` with trust boundary, decoder behavior, gadget or abuse path, evidence, and blockers."
+      "Persist an assessment with trust boundary, decoder behavior, gadget or abuse path, evidence, and blockers."
     ]
   },
   {
@@ -176,7 +176,7 @@
       "- Whether exploitation changes data access, mutates data, bypasses authorization, or creates a chainable primitive.",
       "",
       "## Output",
-      "Persist `assessment.md` with source-to-query flow, unsafe query fragment, trust boundary, impact, mitigations, and evidence."
+      "Persist an assessment with source-to-query flow, unsafe query fragment, trust boundary, impact, mitigations, and evidence."
     ]
   },
   {
@@ -206,7 +206,7 @@
       "- Whether traversal enables sensitive read, arbitrary write, overwrite, deletion, configuration poisoning, or code execution chains.",
       "",
       "## Output",
-      "Persist `assessment.md` with attacker-controlled path source, confinement check, bypass route, impact, evidence, and blockers."
+      "Persist an assessment with attacker-controlled path source, confinement check, bypass route, impact, evidence, and blockers."
     ]
   },
   {
@@ -236,7 +236,7 @@
       "- Whether response content, timing, status, or side effects provide meaningful confidentiality, integrity, or chain impact.",
       "",
       "## Output",
-      "Persist `assessment.md` with source-to-fetch flow, parser and policy behavior, reachable resource class, impact, evidence, and mitigations."
+      "Persist an assessment with source-to-fetch flow, parser and policy behavior, reachable resource class, impact, evidence, and mitigations."
     ]
   },
   {
@@ -266,7 +266,7 @@
       "- Whether the issue enables data disclosure, authorization bypass, server-side execution, stored injection, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with template source, execution context, data/code boundary failure, impact, evidence, and blockers."
+      "Persist an assessment with template source, execution context, data/code boundary failure, impact, evidence, and blockers."
     ]
   },
   {
@@ -296,7 +296,7 @@
       "- Cookie/session protections, CSRF boundaries, CSP effectiveness, sensitive data exposure, and account action impact.",
       "",
       "## Output",
-      "Persist `assessment.md` with source-to-sink flow, rendering context, sanitizer or policy gap, impact, evidence, and mitigations."
+      "Persist an assessment with source-to-sink flow, rendering context, sanitizer or policy gap, impact, evidence, and mitigations."
     ]
   },
   {
@@ -326,7 +326,7 @@
       "- Whether bypassing one state grants account access, privilege, session fixation, token minting, or downstream authorization impact.",
       "",
       "## Output",
-      "Persist `assessment.md` with the expected auth state machine, bypass transition, required actor context, impact, evidence, and blockers."
+      "Persist an assessment with the expected auth state machine, bypass transition, required actor context, impact, evidence, and blockers."
     ]
   },
   {
@@ -356,7 +356,7 @@
       "- Whether the resulting authority enables data access, mutation, billing changes, security setting changes, or further chains.",
       "",
       "## Output",
-      "Persist `assessment.md` with actor/role matrix, privilege-grant path, missing invariant, impact, evidence, and remediation direction."
+      "Persist an assessment with actor/role matrix, privilege-grant path, missing invariant, impact, evidence, and remediation direction."
     ]
   },
   {
@@ -386,7 +386,7 @@
       "- Whether bypassing the entitlement creates financial loss, data exposure, unfair resource use, or privilege expansion.",
       "",
       "## Output",
-      "Persist `assessment.md` with entitlement model, bypass route, affected feature or quota, impact, evidence, and mitigations."
+      "Persist an assessment with entitlement model, bypass route, affected feature or quota, impact, evidence, and mitigations."
     ]
   },
   {
@@ -416,7 +416,7 @@
       "- Whether abuse enables free goods, balance creation, unauthorized refunds, revenue loss, or chainable account takeover paths.",
       "",
       "## Output",
-      "Persist `assessment.md` with financial invariant, abuse sequence, ledger or state mismatch, impact, evidence, and blockers."
+      "Persist an assessment with financial invariant, abuse sequence, ledger or state mismatch, impact, evidence, and blockers."
     ]
   },
   {
@@ -446,7 +446,7 @@
       "- Whether replay creates duplicate value, bypasses limits, corrupts workflow state, or enables denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with replayable action, ordering or duplication sequence, violated invariant, impact, evidence, and mitigations."
+      "Persist an assessment with replayable action, ordering or duplication sequence, violated invariant, impact, evidence, and mitigations."
     ]
   },
   {
@@ -476,7 +476,7 @@
       "- Whether bypassing the gate enables privileged changes, fraud, public exposure, policy evasion, or irreversible operations.",
       "",
       "## Output",
-      "Persist `assessment.md` with expected approval invariant, bypass sequence, actor separation analysis, impact, evidence, and blockers."
+      "Persist an assessment with expected approval invariant, bypass sequence, actor separation analysis, impact, evidence, and blockers."
     ]
   },
   {
@@ -506,7 +506,7 @@
       "- Whether relationship confusion enables unauthorized read, write, transfer, deletion, privilege escalation, or data inheritance.",
       "",
       "## Output",
-      "Persist `assessment.md` with object relationship graph, tenant boundary expectation, bypass edge, impact, evidence, and remediation direction."
+      "Persist an assessment with object relationship graph, tenant boundary expectation, bypass edge, impact, evidence, and remediation direction."
     ]
   },
   {
@@ -536,7 +536,7 @@
       "- Whether abuse causes data loss, tenant-wide impact, remote service crash, recovery bypass, or operational denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with destructive primitive, scope control failure, reachable sequence, impact, evidence, and mitigations."
+      "Persist an assessment with destructive primitive, scope control failure, reachable sequence, impact, evidence, and mitigations."
     ]
   },
   {
@@ -566,7 +566,7 @@
       "- Whether least privilege, human confirmation, policy enforcement, and output validation constrain the agent after a logic failure.",
       "",
       "## Output",
-      "Persist `assessment.md` with agent authority model, tool/action boundary failure, abuse sequence, impact, evidence, and mitigations."
+      "Persist an assessment with agent authority model, tool/action boundary failure, abuse sequence, impact, evidence, and mitigations."
     ]
   },
   {
@@ -596,7 +596,7 @@
       "- Whether the drift is externally reachable and produces access, integrity, availability, privacy, or fraud impact.",
       "",
       "## Output",
-      "Persist `assessment.md` with stated or inferred invariant, implementation divergence, exploit path, impact, evidence, and blockers."
+      "Persist an assessment with stated or inferred invariant, implementation divergence, exploit path, impact, evidence, and blockers."
     ]
   },
   {
@@ -626,7 +626,7 @@
       "- Whether desynchronization enables request smuggling, cache poisoning, auth bypass, cross-user data exposure, SSRF, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with frontend/backend parse model, ambiguous HTTP message, affected intermediary chain, impact, evidence, and mitigations."
+      "Persist an assessment with frontend/backend parse model, ambiguous HTTP message, affected intermediary chain, impact, evidence, and mitigations."
     ]
   },
   {
@@ -656,7 +656,7 @@
       "- Whether flaws enable cross-site WebSocket hijacking, unauthorized subscription, cross-tenant data exposure, command injection into event handlers, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with handshake and subscription model, actor/channel matrix, bypass path, impact, evidence, and blockers."
+      "Persist an assessment with handshake and subscription model, actor/channel matrix, bypass path, impact, evidence, and blockers."
     ]
   },
   {
@@ -686,7 +686,7 @@
       "- Whether failures enable man-in-the-middle access, identity confusion, credential forwarding, downgrade, replay, or cross-service authorization bypass.",
       "",
       "## Output",
-      "Persist `assessment.md` with trust boundary, validation path, failing TLS or PKI invariant, exploitability, evidence, and mitigations."
+      "Persist an assessment with trust boundary, validation path, failing TLS or PKI invariant, exploitability, evidence, and mitigations."
     ]
   },
   {
@@ -716,7 +716,7 @@
       "- Whether DNS behavior enables internal access, policy bypass, tenant confusion, cache poisoning, request routing abuse, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with name-to-address flow, resolver and cache model, bypass condition, reachable resource class, impact, evidence, and blockers."
+      "Persist an assessment with name-to-address flow, resolver and cache model, bypass condition, reachable resource class, impact, evidence, and blockers."
     ]
   },
   {
@@ -746,7 +746,7 @@
       "- Whether the issue enables replay, desynchronization, request confusion, traffic amplification, denial of service, auth bypass, or data exposure.",
       "",
       "## Output",
-      "Persist `assessment.md` with QUIC/HTTP3 state model, violated transport or application invariant, trigger conditions, impact, evidence, and mitigations."
+      "Persist an assessment with QUIC/HTTP3 state model, violated transport or application invariant, trigger conditions, impact, evidence, and mitigations."
     ]
   },
   {
@@ -776,7 +776,7 @@
       "- Whether flaws enable account takeover, login CSRF, tenant confusion, privilege escalation, token theft, session fixation, or access to protected resources.",
       "",
       "## Output",
-      "Persist `assessment.md` with identity flow diagram, token/assertion trust boundary, vulnerable binding or validation step, impact, evidence, and mitigations."
+      "Persist an assessment with identity flow diagram, token/assertion trust boundary, vulnerable binding or validation step, impact, evidence, and mitigations."
     ]
   }
 ]

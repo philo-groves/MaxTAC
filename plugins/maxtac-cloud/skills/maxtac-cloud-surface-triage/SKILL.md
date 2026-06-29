@@ -32,7 +32,7 @@ Use this skill as the first pass for authorized AWS, Azure, and GCP vulnerabilit
 
 ## Cloud Surface Triage Packet
 
-Store results under `audits/cloud/<case-id>/surface-triage.md`:
+When a file packet is useful, store results under `tmp/cloud/<case-id>/surface-triage.md`:
 
 ```markdown
 ## Cloud Surface Triage Packet

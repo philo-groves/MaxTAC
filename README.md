@@ -44,8 +44,6 @@ program-info.md    # authorized scope and exclusions
 workspace.sqlite   # findings, debate tallies, audit index, and search memory
 reporting/         # submission-ready reports and evidence indexes
 research/          # durable research library
-debates/           # verifier debate results
-audits/            # auditor results
 proof/             # proof-of-vulnerability development
 fuzz/              # fuzzing inputs, scripts, and artifacts
 contracts/         # canonical result bundles and generated reports

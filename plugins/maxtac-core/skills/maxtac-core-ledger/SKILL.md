@@ -12,7 +12,7 @@ Ledger updates are also part of the MaxTAC attention cadence. If a branch produc
 
 - Workspace database: `workspace.sqlite`
 - Legacy imports: existing `primitives.json` and `chains.json` are imported into `workspace.sqlite` when the database is first created.
-- Subagent memory: the same database indexes debate tallies and audit assessments for fast lookup, but the human-readable artifacts remain under `debates/` and `audits/`.
+- Subagent memory: the same database stores and indexes debate tallies and audit assessments for fast lookup.
 
 ## Initialize the Ledger
 At the start of the research session, if no finding ledger exists, create it with: `python3 <skill-dir>/scripts/ledger.py init`

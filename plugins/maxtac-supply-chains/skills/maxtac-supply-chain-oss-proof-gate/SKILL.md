@@ -15,13 +15,13 @@ Use `python3 <skill-dir>/scripts/oss_gate.py` to create and lint a gate packet:
 
 ```bash
 python3 <skill-dir>/scripts/oss_gate.py create \
-  --output audits/supply-chain/<case-id>/oss-proof-gate.md \
+  --output tmp/supply-chain/<case-id>/oss-proof-gate.md \
   --case-id <case-id> \
   --target "package or project" \
   --ecosystem npm \
   --claim "dependency confusion reaches release CI"
 
-python3 <skill-dir>/scripts/oss_gate.py lint audits/supply-chain/<case-id>/oss-proof-gate.md
+python3 <skill-dir>/scripts/oss_gate.py lint tmp/supply-chain/<case-id>/oss-proof-gate.md
 ```
 
 Run `lint --strict` after filling the packet.

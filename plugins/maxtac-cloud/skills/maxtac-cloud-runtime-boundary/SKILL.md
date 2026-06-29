@@ -9,7 +9,7 @@ Use this skill when code execution, request influence, container control, pod co
 
 ## Runtime Boundary Packet
 
-Store results under `audits/cloud/<case-id>/runtime-boundary.md`:
+When a file packet is useful, store results under `tmp/cloud/<case-id>/runtime-boundary.md`:
 
 - Provider, target service, runtime, region, and resource IDs.
 - Starting capability: HTTP request influence, SSRF, container shell, pod exec, job control, function update, environment read, build step, or VM access.

@@ -26,7 +26,7 @@
       "- De-escalation when a chain link is speculative or blocked.",
       "",
       "## Output",
-      "Persist `assessment.md` with chain graph, preconditions and postconditions, evidence for each edge, final impact, and weak links."
+      "Persist an assessment with chain graph, preconditions and postconditions, evidence for each edge, final impact, and weak links."
     ]
   },
   {
@@ -56,7 +56,7 @@
       "- Whether the exposure enables data access, privileged actions, SSRF, command execution, or chainable primitives.",
       "",
       "## Output",
-      "Persist `assessment.md` with discovered surface, reachability evidence, required context, impact, and blockers."
+      "Persist an assessment with discovered surface, reachability evidence, required context, impact, and blockers."
     ]
   }
 ]

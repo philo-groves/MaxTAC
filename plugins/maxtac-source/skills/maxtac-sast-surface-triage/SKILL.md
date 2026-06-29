@@ -138,7 +138,7 @@ python3 <skill-dir>/scripts/packet.py prompt surface-packet.md cfg-evidence.md o
 
 The helper refuses to convert invalid packets unless `--allow-invalid` is passed. Do not use `--allow-invalid` for normal workflow handoff. The generated auditor prompt explicitly tells auditors that packets are structured triage and evidence, not proof of a validated, proofed, or reportable finding. Before spawning a subagent from a generated auditor prompt, pass it through `maxtac-core-subagents` via `audit-helper.py --prompt-file` or `audit_prompt_create` so the final subagent prompt includes Codex goal instructions and persistence paths.
 
-Store generated packets in `audits/`, `tmp/`, or the relevant subsystem's `artifacts/`. Do not let packets become the durable research library. When a packet closes a path or captures a reusable invariant, incorporate the conclusion into the corresponding system-focused markdown file and link back to the packet.
+Store generated packets in `tmp/` or the relevant subsystem's `artifacts/`. Do not let packets become the durable research library. When a packet closes a path or captures a reusable invariant, incorporate the conclusion into the corresponding system-focused markdown file and link back to the packet.
 
 Produce this compact packet before spawning auditors or writing rules:
 

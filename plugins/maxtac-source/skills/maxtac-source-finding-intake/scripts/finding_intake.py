@@ -285,7 +285,7 @@ def cmd_normalize(args: argparse.Namespace) -> None:
     if source_type not in SOURCE_TYPES:
         raise SystemExit(f"unsupported source type: {source_type}")
     intake_id = args.intake_id or now_id()
-    output = Path(args.output).resolve() if args.output else root / "audits" / "intake" / intake_id / "intake.json"
+    output = Path(args.output).resolve() if args.output else root / "contracts" / "intake" / intake_id / "intake.json"
     raw_dir = output.parent / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
     raw_copy = raw_dir / input_path.name

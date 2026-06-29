@@ -14,7 +14,7 @@ This is not a source scan. Do not claim exhaustive coverage, run PoCs, or edit c
 Store intake bundles under:
 
 ```text
-audits/intake/<intake-id>/
+contracts/intake/<intake-id>/
   raw/
   intake.json
 ```
@@ -31,7 +31,7 @@ python <skill-dir>/scripts/finding_intake.py normalize --root <workspace-root> -
 
 If `--source-type auto` is used, the helper detects SARIF-like JSON, GitHub code-scanning alerts, Dependabot alerts, generic JSON, or freeform text.
 
-For GitHub, Jira, or Linear, first retrieve the exact content through the available connector, CLI, or API authorized by the user, save it under `audits/intake/<id>/raw/`, then normalize that saved file. Preserve source URLs and issue IDs in the normalized item references.
+For GitHub, Jira, or Linear, first retrieve the exact content through the available connector, CLI, or API authorized by the user, save it under `contracts/intake/<id>/raw/`, then normalize that saved file. Preserve source URLs and issue IDs in the normalized item references.
 
 ## Static Triage
 
@@ -50,8 +50,8 @@ For each normalized item:
 Use the helper to validate and summarize the normalized file:
 
 ```text
-python <skill-dir>/scripts/finding_intake.py validate audits/intake/<id>/intake.json
-python <skill-dir>/scripts/finding_intake.py summarize audits/intake/<id>/intake.json
+python <skill-dir>/scripts/finding_intake.py validate contracts/intake/<id>/intake.json
+python <skill-dir>/scripts/finding_intake.py summarize contracts/intake/<id>/intake.json
 ```
 
 ## Boundary Gate

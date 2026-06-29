@@ -26,7 +26,7 @@
       "- Whether an attacker can win the race reliably enough to affect confidentiality, integrity, or code execution.",
       "",
       "## Output",
-      "Persist `assessment.md` with the reviewed paths, preconditions, race timeline, exploitability notes, and relevant evidence."
+      "Persist an assessment with the reviewed paths, preconditions, race timeline, exploitability notes, and relevant evidence."
     ]
   },
   {
@@ -56,7 +56,7 @@
       "- Existing mitigations such as quarantines, generation counters, locks, or nulling patterns.",
       "",
       "## Output",
-      "Persist `assessment.md` with the lifetime graph, trigger preconditions, evidence, exploitability assessment, and blockers."
+      "Persist an assessment with the lifetime graph, trigger preconditions, evidence, exploitability assessment, and blockers."
     ]
   },
   {
@@ -86,7 +86,7 @@
       "- Sanitizer coverage, assertions, fuzz targets, and defensive length normalization.",
       "",
       "## Output",
-      "Persist `assessment.md` with the data-flow, failing bounds condition, reachable inputs, impact, and supporting evidence."
+      "Persist an assessment with the data-flow, failing bounds condition, reachable inputs, impact, and supporting evidence."
     ]
   },
   {
@@ -116,7 +116,7 @@
       "- Crash, corruption, information leak, or code execution potential.",
       "",
       "## Output",
-      "Persist `assessment.md` with the allocation/write relationship, exploitability notes, and precise file or function evidence."
+      "Persist an assessment with the allocation/write relationship, exploitability notes, and precise file or function evidence."
     ]
   },
   {
@@ -146,7 +146,7 @@
       "- Whether the arithmetic bug becomes memory corruption, information disclosure, denial of service, or a chainable primitive.",
       "",
       "## Output",
-      "Persist `assessment.md` with source-controlled inputs, arithmetic path, bad value range, downstream impact, evidence, and blockers."
+      "Persist an assessment with source-controlled inputs, arithmetic path, bad value range, downstream impact, evidence, and blockers."
     ]
   },
   {
@@ -176,7 +176,7 @@
       "- Whether existing nulling, ownership markers, generation counters, or idempotent cleanup actually cover all paths.",
       "",
       "## Output",
-      "Persist `assessment.md` with ownership graph, duplicate release timeline, reachable trigger path, impact, evidence, and blockers."
+      "Persist an assessment with ownership graph, duplicate release timeline, reachable trigger path, impact, evidence, and blockers."
     ]
   },
   {
@@ -206,7 +206,7 @@
       "- Compiler, sanitizer, zero-init, and defensive initialization behavior in relevant build modes.",
       "",
       "## Output",
-      "Persist `assessment.md` with initialization map, use site, reachable input state, impact, evidence, and mitigations."
+      "Persist an assessment with initialization map, use site, reachable input state, impact, evidence, and mitigations."
     ]
   },
   {
@@ -236,7 +236,7 @@
       "- Whether the overwritten data affects return state, saved registers, security flags, or later memory operations.",
       "",
       "## Output",
-      "Persist `assessment.md` with buffer/write relationship, frame impact, mitigation review, reachable input, evidence, and blockers."
+      "Persist an assessment with buffer/write relationship, frame impact, mitigation review, reachable input, evidence, and blockers."
     ]
   },
   {
@@ -266,7 +266,7 @@
       "- Whether confusion produces controlled read/write, control-flow influence, authorization bypass, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with expected versus actual type, control over confusion, object layout notes, impact, evidence, and blockers."
+      "Persist an assessment with expected versus actual type, control over confusion, object layout notes, impact, evidence, and blockers."
     ]
   },
   {
@@ -296,7 +296,7 @@
       "- Whether the primitive is practical under realistic resource and timing constraints.",
       "",
       "## Output",
-      "Persist `assessment.md` with allocator model, grooming strategy, reliability estimate, evidence, and blockers."
+      "Persist an assessment with allocator model, grooming strategy, reliability estimate, evidence, and blockers."
     ]
   },
   {
@@ -326,7 +326,7 @@
       "- Whether the path is practical or blocked by a specific mitigation.",
       "",
       "## Output",
-      "Persist `assessment.md` with primitive quality, mitigation analysis, gadget strategy, feasibility, and blockers."
+      "Persist an assessment with primitive quality, mitigation analysis, gadget strategy, feasibility, and blockers."
     ]
   },
   {
@@ -356,7 +356,7 @@
       "- Whether the pivot is reachable and stable enough for a proof path.",
       "",
       "## Output",
-      "Persist `assessment.md` with pivot primitive, fake stack plan, mitigation review, evidence, and blockers."
+      "Persist an assessment with pivot primitive, fake stack plan, mitigation review, evidence, and blockers."
     ]
   },
   {
@@ -386,7 +386,7 @@
       "- Privilege context, sandbox context, and impact of successful command alteration.",
       "",
       "## Output",
-      "Persist `assessment.md` with source-to-sink flow, payload shape, mitigations, exploitability, and evidence."
+      "Persist an assessment with source-to-sink flow, payload shape, mitigations, exploitability, and evidence."
     ]
   },
   {
@@ -416,7 +416,7 @@
       "- Impact such as code execution, authorization bypass, file access, denial of service, or primitive creation.",
       "",
       "## Output",
-      "Persist `assessment.md` with trust boundary, decoder behavior, gadget or abuse path, evidence, and blockers."
+      "Persist an assessment with trust boundary, decoder behavior, gadget or abuse path, evidence, and blockers."
     ]
   },
   {
@@ -446,7 +446,7 @@
       "- Whether traversal enables sensitive read, arbitrary write, overwrite, deletion, configuration poisoning, or code execution chains.",
       "",
       "## Output",
-      "Persist `assessment.md` with attacker-controlled path source, confinement check, bypass route, impact, evidence, and blockers."
+      "Persist an assessment with attacker-controlled path source, confinement check, bypass route, impact, evidence, and blockers."
     ]
   },
   {
@@ -476,7 +476,7 @@
       "- Whether misuse enables forgery, decryption, replay, tampering, downgrade, offline cracking, key recovery, or bypass of security-critical authorization decisions.",
       "",
       "## Output",
-      "Persist `assessment.md` with crypto goal, primitive/API usage, violated security property, attacker capability, impact, evidence, and remediation direction."
+      "Persist an assessment with crypto goal, primitive/API usage, violated security property, attacker capability, impact, evidence, and remediation direction."
     ]
   },
   {
@@ -506,7 +506,7 @@
       "- Whether parsing confusion enables memory corruption, authentication bypass, request smuggling, desynchronization, denial of service, or chainable primitives.",
       "",
       "## Output",
-      "Persist `assessment.md` with protocol boundary, parser state model, malformed or ambiguous message class, impact, evidence, and blockers."
+      "Persist an assessment with protocol boundary, parser state model, malformed or ambiguous message class, impact, evidence, and blockers."
     ]
   },
   {
@@ -536,7 +536,7 @@
       "- Whether failures enable man-in-the-middle access, identity confusion, credential forwarding, downgrade, replay, or cross-service authorization bypass.",
       "",
       "## Output",
-      "Persist `assessment.md` with trust boundary, validation path, failing TLS or PKI invariant, exploitability, evidence, and mitigations."
+      "Persist an assessment with trust boundary, validation path, failing TLS or PKI invariant, exploitability, evidence, and mitigations."
     ]
   },
   {
@@ -566,7 +566,7 @@
       "- Whether DNS behavior enables internal access, policy bypass, tenant confusion, cache poisoning, request routing abuse, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with name-to-address flow, resolver and cache model, bypass condition, reachable resource class, impact, evidence, and blockers."
+      "Persist an assessment with name-to-address flow, resolver and cache model, bypass condition, reachable resource class, impact, evidence, and blockers."
     ]
   },
   {
@@ -596,7 +596,7 @@
       "- Whether the issue enables replay, desynchronization, request confusion, traffic amplification, denial of service, auth bypass, or data exposure.",
       "",
       "## Output",
-      "Persist `assessment.md` with QUIC/HTTP3 state model, violated transport or application invariant, trigger conditions, impact, evidence, and mitigations."
+      "Persist an assessment with QUIC/HTTP3 state model, violated transport or application invariant, trigger conditions, impact, evidence, and mitigations."
     ]
   },
   {
@@ -626,7 +626,7 @@
       "- Whether flaws enable unauthorized method invocation, tenant confusion, privilege escalation, data exposure, deserialization abuse, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with service/method map, identity and metadata trust model, vulnerable call shape, impact, evidence, and remediation direction."
+      "Persist an assessment with service/method map, identity and metadata trust model, vulnerable call shape, impact, evidence, and remediation direction."
     ]
   },
   {
@@ -656,7 +656,7 @@
       "- Whether flaws enable spoofing, authentication bypass, stored script/content injection, file write, SSRF, data leak, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with mail flow, parser or authentication boundary, ambiguous message structure, impact, evidence, and blockers."
+      "Persist an assessment with mail flow, parser or authentication boundary, ambiguous message structure, impact, evidence, and blockers."
     ]
   },
   {
@@ -686,7 +686,7 @@
       "- Whether abuse enables impersonation, traffic interception, unauthorized device control, credential capture, SSRF into local services, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with discovery protocol, trust decision, spoofing or parsing path, network preconditions, impact, evidence, and mitigations."
+      "Persist an assessment with discovery protocol, trust decision, spoofing or parsing path, network preconditions, impact, evidence, and mitigations."
     ]
   },
   {
@@ -716,7 +716,7 @@
       "- Whether flaws enable traffic interception, policy bypass, internal network access, credential leakage, tenant confusion, SSRF, or denial of service.",
       "",
       "## Output",
-      "Persist `assessment.md` with tunnel or proxy boundary, routing and identity model, bypass condition, impact, evidence, and blockers."
+      "Persist an assessment with tunnel or proxy boundary, routing and identity model, bypass condition, impact, evidence, and blockers."
     ]
   },
   {
@@ -746,7 +746,7 @@
       "- Whether mismatched permission assumptions expose secrets, allow tampering, make scripts executable, weaken sandboxing, or create privilege escalation paths.",
       "",
       "## Output",
-      "Persist `assessment.md` with the platform permission model, mismatched assumption, affected files or directories, attacker capability, impact, evidence, and mitigations."
+      "Persist an assessment with the platform permission model, mismatched assumption, affected files or directories, attacker capability, impact, evidence, and mitigations."
     ]
   },
   {
@@ -776,7 +776,7 @@
       "- Whether path confusion enables directory escape, arbitrary read/write, overwrite, deletion, configuration poisoning, persistence, or code execution.",
       "",
       "## Output",
-      "Persist `assessment.md` with attacker-controlled path source, platform-specific interpretation, canonicalization gap, crossed boundary, impact, evidence, and blockers."
+      "Persist an assessment with attacker-controlled path source, platform-specific interpretation, canonicalization gap, crossed boundary, impact, evidence, and blockers."
     ]
   },
   {
@@ -806,7 +806,7 @@
       "- Whether line-ending confusion enables policy bypass, command injection, signature bypass, request smuggling, privilege escalation, or unsafe generated files.",
       "",
       "## Output",
-      "Persist `assessment.md` with parsed artifact, newline variants, component interpretation differences, exploitable sequence, impact, evidence, and mitigations."
+      "Persist an assessment with parsed artifact, newline variants, component interpretation differences, exploitable sequence, impact, evidence, and mitigations."
     ]
   },
   {
@@ -836,7 +836,7 @@
       "- Whether resolution confusion enables command execution, privilege escalation, supply-chain compromise, persistence, or policy bypass.",
       "",
       "## Output",
-      "Persist `assessment.md` with executable lookup flow, platform-specific resolution rule, attacker-controlled directory or file, execution context, impact, evidence, and blockers."
+      "Persist an assessment with executable lookup flow, platform-specific resolution rule, attacker-controlled directory or file, execution context, impact, evidence, and blockers."
     ]
   },
   {
@@ -866,7 +866,7 @@
       "- Whether platform quoting gaps let attacker-controlled data become syntax, alter arguments, change target executable, leak secrets, or execute unintended commands.",
       "",
       "## Output",
-      "Persist `assessment.md` with source-to-command flow, platform shell semantics, unsafe escaping assumption, payload shape, impact, evidence, and mitigations."
+      "Persist an assessment with source-to-command flow, platform shell semantics, unsafe escaping assumption, payload shape, impact, evidence, and mitigations."
     ]
   },
   {
@@ -896,7 +896,7 @@
       "- Whether semantic mismatch enables TOCTOU, secret disclosure, arbitrary file overwrite, tampering, denial of service, or privileged helper compromise.",
       "",
       "## Output",
-      "Persist `assessment.md` with temporary-file or lock lifecycle, platform semantic mismatch, race or overwrite path, impact, evidence, and blockers."
+      "Persist an assessment with temporary-file or lock lifecycle, platform semantic mismatch, race or overwrite path, impact, evidence, and blockers."
     ]
   },
   {
@@ -926,7 +926,7 @@
       "- Whether extraction creates arbitrary writes, privilege escalation, code execution, policy bypass, package poisoning, or cross-platform supply-chain issues.",
       "",
       "## Output",
-      "Persist `assessment.md` with archive format, dangerous metadata, platform-specific extraction result, impacted target path or permission, evidence, and mitigations."
+      "Persist an assessment with archive format, dangerous metadata, platform-specific extraction result, impacted target path or permission, evidence, and mitigations."
     ]
   },
   {
@@ -956,7 +956,7 @@
       "- Whether comparison drift enables account confusion, duplicate resource creation, allowlist bypass, overwrite, impersonation, data exposure, or package confusion.",
       "",
       "## Output",
-      "Persist `assessment.md` with compared identifiers, normalization rules, platform or component mismatch, abuse scenario, impact, evidence, and blockers."
+      "Persist an assessment with compared identifiers, normalization rules, platform or component mismatch, abuse scenario, impact, evidence, and blockers."
     ]
   },
   {
@@ -986,7 +986,7 @@
       "- Whether platform binding differences expose local-only services remotely, bypass origin or token assumptions, leak secrets, enable SSRF, or allow unauthorized control.",
       "",
       "## Output",
-      "Persist `assessment.md` with bind/listen model, platform network semantics, unintended exposure or trust bypass, impact, evidence, and mitigations."
+      "Persist an assessment with bind/listen model, platform network semantics, unintended exposure or trust bypass, impact, evidence, and mitigations."
     ]
   },
   {
@@ -1016,7 +1016,7 @@
       "- Whether privilege model drift enables failed sandboxing, retained privileges, token leakage, child-process escape, denial of service, or local privilege escalation.",
       "",
       "## Output",
-      "Persist `assessment.md` with process identity model, cross-platform assumption, privilege or lifecycle gap, exploitability, evidence, and blockers."
+      "Persist an assessment with process identity model, cross-platform assumption, privilege or lifecycle gap, exploitability, evidence, and blockers."
     ]
   }
 ]

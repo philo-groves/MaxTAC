@@ -53,7 +53,7 @@ python <skill-dir>/scripts/contract.py add-finding <result.json> --title "Missin
 Add or close a coverage surface:
 
 ```text
-python <skill-dir>/scripts/contract.py add-surface <result.json> --surface "Export API routes" --risk-area authz --disposition reported --receipt "audits/source-scan/work_ledger.jsonl" --notes "Covered route handlers and shared export helper."
+python <skill-dir>/scripts/contract.py add-surface <result.json> --surface "Export API routes" --risk-area authz --disposition reported --receipt "contracts/source-scans/export-api/work_ledger.jsonl" --notes "Covered route handlers and shared export helper."
 ```
 
 Validate and project:

@@ -198,16 +198,13 @@ def enrich_prompt(prompt_file: Path, root: Path) -> None:
     prompt_path_input = workspace_path(root, prompt_file, "Prompt file")
     raw_prompt = read_text(prompt_path_input).rstrip()
     audit_id = generated_id("audit")
-    audit_dir = root / "audits" / audit_id
-    audit_dir.mkdir(parents=True, exist_ok=False)
-
-    assessment_path = audit_dir / "assessment.md"
-    prompt_path = audit_dir / "prompt.md"
+    helper_path = Path(__file__).resolve()
+    assessment_path = f"tmp/assessment-{audit_id}.md"
     goal_objective = (
         "Produce a focused MaxTAC audit assessment for the supplied hypothesis, auditor specialty, and evidence, "
-        f"then persist it to {assessment_path}. Negative end outcome: if the supplied context, directly referenced "
-        "files, or available tools are insufficient to decide the hypothesis within a bounded pass, stop broadening "
-        "scope and persist an assessment with blockers, missing evidence, and the safest recommended next step."
+        f"then persist it to {workspace_db.DB_FILE}. Negative end outcome: if the supplied context, directly "
+        "referenced files, or available tools are insufficient to decide the hypothesis within a bounded pass, stop "
+        "broadening scope and persist an assessment with blockers, missing evidence, and the safest recommended next step."
     )
     goal_call = json.dumps({"objective": goal_objective})
     enriched = f"""FIRST ACTION REQUIRED: activate a Codex goal before doing any audit work.
@@ -237,12 +234,16 @@ Bounds: inspect the supplied packet/evidence, directly referenced files/function
 ## MaxTAC Audit Persistence Instructions
 
 Audit ID: `{audit_id}`
-Audit directory: `{audit_dir}`
 
-Persist the final audit assessment to `{assessment_path}` before completing the subagent run. Use Markdown. Include a `Goal Activation` section naming `create_goal`, `/goal`, or `unavailable`; then include the vulnerability hypothesis or audit focus, method, reviewed files or components, findings, evidence, exploitability notes, blockers, and a clear conclusion. Persist supporting evidence files in the same audit directory when useful.
+Persist the final audit assessment to `{workspace_db.DB_FILE}` before completing the subagent run. Draft the Markdown assessment at `{assessment_path}`, then record it with:
+
+```text
+python "{helper_path}" --root "{root}" --audit {audit_id} --record-assessment {assessment_path}
+```
+
+Include a `Goal Activation` section naming `create_goal`, `/goal`, or `unavailable`; then include the vulnerability hypothesis or audit focus, method, reviewed files or components, findings, evidence, exploitability notes, blockers, and a clear conclusion. Summarize supporting evidence in the assessment and cite durable artifact paths from `research/`, `proof/`, `fuzz/`, `contracts/`, or `tmp/` when needed.
 """
-    prompt_path.write_text(enriched, encoding="utf-8")
-    workspace_db.sync_audits(root, audit_id)
+    workspace_db.create_audit(root, audit_id, enriched)
     print(enriched, end="")
 
 
@@ -254,7 +255,7 @@ def one_line(value: Any, limit: int = 160) -> str:
 
 
 def render_audit_row(payload: dict[str, Any]) -> str:
-    status = "assessed" if payload.get("assessment_path") else "prompt-only"
+    status = "assessed" if payload.get("assessment_text") else "prompt-only"
     artifacts = payload.get("artifacts") or []
     conclusion = one_line(payload.get("conclusion") or payload.get("prompt_text"))
     return (
@@ -268,9 +269,7 @@ def render_audit_row(payload: dict[str, Any]) -> str:
 
 def print_audit_detail(payload: dict[str, Any]) -> None:
     print(f"Audit: {payload.get('audit_id')}")
-    print(f"- directory: {payload.get('audit_dir', '')}")
-    print(f"- prompt: {payload.get('prompt_path', '')}")
-    print(f"- assessment: {payload.get('assessment_path', '') or 'missing'}")
+    print(f"- storage: {workspace_db.DB_FILE}")
     print(f"- goal_activation: {payload.get('goal_activation', '') or 'unknown'}")
     print(f"- updated: {payload.get('updated_at', '')}")
     print()
@@ -293,6 +292,13 @@ def print_audit_detail(payload: dict[str, Any]) -> None:
         print(str(payload.get("assessment_text", "")).rstrip())
 
 
+def record_assessment(audit_id: str, assessment_file: Path, root: Path) -> None:
+    assessment_path = workspace_path(root, assessment_file, "Assessment file")
+    assessment_text = read_text(assessment_path)
+    payload = workspace_db.record_audit_assessment(root, audit_id, assessment_text)
+    print(render_audit_row(payload))
+
+
 def base_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="MaxTAC auditor helper")
     parser.add_argument("--root", default=".", help="Workspace root; prompt files should be staged under tmp/")
@@ -301,10 +307,12 @@ def base_parser() -> argparse.ArgumentParser:
     group.add_argument("--filter", metavar="TEXT", help="Filter auditors by text")
     group.add_argument("--show", metavar="AUDITOR_ID", help="Show full auditor markdown")
     group.add_argument("--prompt-file", type=Path, help="Enrich a persisted audit prompt")
-    group.add_argument("--audit-sync", action="store_true", help="Sync all audit artifacts into workspace.sqlite")
+    group.add_argument("--audit", metavar="AUDIT_ID", help="Audit ID to update")
+    group.add_argument("--audit-sync", action="store_true", help="Refresh audit search records in workspace.sqlite")
     group.add_argument("--audit-list", action="store_true", help="List synced audit assessments")
     group.add_argument("--audit-show", metavar="AUDIT_ID", help="Show synced audit details")
     group.add_argument("--audit-search", metavar="TEXT", help="Semantic search audit prompts, assessments, and artifacts")
+    parser.add_argument("--record-assessment", type=Path, help="Record an assessment Markdown file into workspace.sqlite")
     parser.add_argument("--limit", type=int, default=10, help="Maximum rows for audit list or search output")
     return parser
 
@@ -314,13 +322,22 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.prompt_file:
+        if args.record_assessment:
+            raise SystemExit("--record-assessment can only be used with --audit")
         enrich_prompt(args.prompt_file, root_path(args.root))
         return
 
     root = root_path(args.root)
+    if args.audit:
+        if not args.record_assessment:
+            raise SystemExit("--audit requires --record-assessment")
+        record_assessment(args.audit, args.record_assessment, root)
+        return
+    if args.record_assessment:
+        raise SystemExit("--record-assessment can only be used with --audit")
     if args.audit_sync:
         payloads = workspace_db.sync_audits(root)
-        print(f"Synced {len(payloads)} audit(s) into {workspace_db.DB_FILE}")
+        print(f"Refreshed {len(payloads)} audit record(s) in {workspace_db.DB_FILE}")
         return
     if args.audit_list:
         for payload in workspace_db.list_audits(root)[: max(1, args.limit)]:
@@ -339,10 +356,6 @@ def main() -> None:
             return
         for score, payload in rows:
             print(f"{score:.6f} {render_audit_row(payload)}")
-            if payload.get("assessment_path"):
-                print(f"  assessment={payload.get('assessment_path')}")
-            else:
-                print(f"  prompt={payload.get('prompt_path', '')}")
         return
 
     auditors = load_auditors()

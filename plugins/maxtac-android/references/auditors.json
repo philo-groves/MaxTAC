@@ -19,7 +19,7 @@
       "- Whether caller identity and input state are checked in the reached code path.",
       "",
       "## Output",
-      "Persist `assessment.md` with component table, caller model, protected asset, reachability evidence, and impact."
+      "Persist an assessment with component table, caller model, protected asset, reachability evidence, and impact."
     ]
   },
   {
@@ -42,7 +42,7 @@
       "- Whether server-side or local account state is bound to the caller and expected session.",
       "",
       "## Output",
-      "Persist `assessment.md` with crafted input, launch path, state assumptions, observed behavior, and impact."
+      "Persist an assessment with crafted input, launch path, state assumptions, observed behavior, and impact."
     ]
   },
   {
@@ -65,7 +65,7 @@
       "- Caller identity, row-level authorization, file mode, and persisted URI grants.",
       "",
       "## Output",
-      "Persist `assessment.md` with provider authority/path, command transcript, returned data or mutation, and impact."
+      "Persist an assessment with provider authority/path, command transcript, returned data or mutation, and impact."
     ]
   },
   {
@@ -88,7 +88,7 @@
       "- Whether attacker-controlled web content reaches account actions, tokens, files, or device APIs.",
       "",
       "## Output",
-      "Persist `assessment.md` with origin model, bridge methods, trigger page/URI, runtime evidence, and impact."
+      "Persist an assessment with origin model, bridge methods, trigger page/URI, runtime evidence, and impact."
     ]
   },
   {
@@ -111,7 +111,7 @@
       "- Token lifetime, encryption state, device lock assumptions, and work profile boundaries.",
       "",
       "## Output",
-      "Persist `assessment.md` with data class, storage path, access actor, evidence, and security impact."
+      "Persist an assessment with data class, storage path, access actor, evidence, and security impact."
     ]
   },
   {
@@ -134,7 +134,7 @@
       "- Binding of tokens to account, device, app install, server session, or user presence.",
       "",
       "## Output",
-      "Persist `assessment.md` with key lifecycle, crypto invariant, bypass path, evidence, and exploitability."
+      "Persist an assessment with key lifecycle, crypto invariant, bypass path, evidence, and exploitability."
     ]
   },
   {
@@ -157,7 +157,7 @@
       "- Confused deputy paths into account, file, network, device, or enterprise operations.",
       "",
       "## Output",
-      "Persist `assessment.md` with IPC interface, caller model, authorization check, trigger, and impact."
+      "Persist an assessment with IPC interface, caller model, authorization check, trigger, and impact."
     ]
   },
   {
@@ -180,7 +180,7 @@
       "- Whether Binary pack follow-up is needed for native RE, fuzzing, or memory-safety proof.",
       "",
       "## Output",
-      "Persist `assessment.md` with code-loading source, trust decision, native boundary, evidence, and next-pack routing."
+      "Persist an assessment with code-loading source, trust decision, native boundary, evidence, and next-pack routing."
     ]
   },
   {
@@ -203,7 +203,7 @@
       "- Cross-account confusion, stale sessions, shared devices, work profiles, and multi-user state.",
       "",
       "## Output",
-      "Persist `assessment.md` with identity invariant, malicious actor path, captured evidence, and impact."
+      "Persist an assessment with identity invariant, malicious actor path, captured evidence, and impact."
     ]
   },
   {
@@ -226,7 +226,7 @@
       "- User consent screens, revocation behavior, partial grants, and policy-sensitive data handling.",
       "",
       "## Output",
-      "Persist `assessment.md` with permission boundary, actor, reachable path, evidence, and privacy/security impact."
+      "Persist an assessment with permission boundary, actor, reachable path, evidence, and privacy/security impact."
     ]
   }
 ]

@@ -27,7 +27,7 @@
       "- Confused deputy conditions, missing external IDs, weak audience or subject constraints, tag/condition drift, and delegated deployment authority.",
       "",
       "## Output",
-      "Persist `assessment.md` with principal, target boundary, policy sources, deny controls, escalation or impersonation path, non-destructive proof, impact, and blockers."
+      "Persist an assessment with principal, target boundary, policy sources, deny controls, escalation or impersonation path, non-destructive proof, impact, and blockers."
     ]
   },
   {
@@ -58,7 +58,7 @@
       "- Public access controls, resource policies, ACLs, inherited IAM, cross-account sharing, object-level permissions, retention bypass, and key-policy mismatch.",
       "",
       "## Output",
-      "Persist `assessment.md` with data asset, expected audience, exposure primitive, read/write/list/restore/decrypt proof, sensitive impact, and remediation constraints."
+      "Persist an assessment with data asset, expected audience, exposure primitive, read/write/list/restore/decrypt proof, sensitive impact, and remediation constraints."
     ]
   },
   {
@@ -89,7 +89,7 @@
       "- SSRF-to-metadata, pod escape to node identity, overly broad execution roles, egress paths, token audience confusion, and secret mount leakage.",
       "",
       "## Output",
-      "Persist `assessment.md` with runtime identity, metadata or workload-identity boundary, reachable credentials or resources, redacted proof, impact, and safety controls."
+      "Persist an assessment with runtime identity, metadata or workload-identity boundary, reachable credentials or resources, redacted proof, impact, and safety controls."
     ]
   },
   {
@@ -120,7 +120,7 @@
       "- Pod specs, token mounts, secret mounts, hostPath, privileged pods, RBAC verbs, image pull secrets, admission bypass, and egress to metadata.",
       "",
       "## Output",
-      "Persist `assessment.md` with namespace/workload identity map, cloud trust binding, crossed boundary, proof transcript, impact, and hardening blockers."
+      "Persist an assessment with namespace/workload identity map, cloud trust binding, crossed boundary, proof transcript, impact, and hardening blockers."
     ]
   },
   {
@@ -151,7 +151,7 @@
       "- DNS, load balancer, proxy, NAT, metadata egress, management API reachability, cross-region paths, and control-plane/data-plane mismatch.",
       "",
       "## Output",
-      "Persist `assessment.md` with source, destination, expected perimeter, observed route or policy gap, proof, impact, and residual controls."
+      "Persist an assessment with source, destination, expected perimeter, observed route or policy gap, proof, impact, and residual controls."
     ]
   },
   {
@@ -182,7 +182,7 @@
       "- Decrypt-only versus administer permissions, overwrite or rollback paths, stale versions, broad readers, secret material in logs, and CI/CD exposure.",
       "",
       "## Output",
-      "Persist `assessment.md` with secret/key identity, intended readers or operators, access path, redacted proof, blast radius, and evidence preservation notes."
+      "Persist an assessment with secret/key identity, intended readers or operators, access path, redacted proof, blast radius, and evidence preservation notes."
     ]
   }
 ]

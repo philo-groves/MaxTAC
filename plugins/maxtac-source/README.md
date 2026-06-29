@@ -35,9 +35,9 @@ Use this pack with MaxTAC Core when the target includes source code, generated c
 
 Source workflows commonly write:
 
-- `audits/source-scans/<scan-id>/` worklists, coverage rows, and receipts.
-- `audits/intake/<intake-id>/` normalized external findings.
-- CFG, call graph, and OpenGrep evidence under the active audit directory.
+- `contracts/source-scans/<scan-id>/` worklists, coverage rows, and receipts.
+- `contracts/intake/<intake-id>/` normalized external findings.
+- CFG, call graph, and OpenGrep evidence under `tmp/` or the relevant research artifact directory.
 - Codebase Memory packets from optional graph, architecture, ADR, and diff-impact queries.
 - Core result contracts under `contracts/<result-id>/`.
 

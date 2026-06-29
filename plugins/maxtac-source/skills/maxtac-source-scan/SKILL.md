@@ -12,7 +12,7 @@ Use this skill for bounded source-code security review where coverage claims mus
 By default, source scans live under the MaxTAC workspace:
 
 ```text
-audits/source-scans/<scan-id>/
+contracts/source-scans/<scan-id>/
   metadata.json
   worklist.jsonl
   coverage.jsonl
@@ -63,7 +63,7 @@ python <skill-dir>/scripts/source_scan.py init --root <workspace-root> --target-
 Close a row:
 
 ```text
-python <skill-dir>/scripts/source_scan.py receipt --scan-dir <workspace-root>/audits/source-scans/<id> --path src/export.py --disposition no_issue_found --risk-area authz --note "Route guard dominates export helper."
+python <skill-dir>/scripts/source_scan.py receipt --scan-dir <workspace-root>/contracts/source-scans/<id> --path src/export.py --disposition no_issue_found --risk-area authz --note "Route guard dominates export helper."
 ```
 
 Record a reportable finding row:

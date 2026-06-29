@@ -10,7 +10,7 @@ Install this pack for every MaxTAC engagement, then add only the domain packs ne
 - Tracking primitives, chains, validation state, proof state, duplicates, and de-escalations.
 - Creating canonical result bundles with coverage, findings, evidence, limitations, and deterministic report output.
 - Routing focused auditor and verifier-debate subagents.
-- Keeping durable research notes separate from transient audit artifacts.
+- Keeping durable research notes separate from transient review artifacts.
 
 ## Skills
 
@@ -33,8 +33,7 @@ Install this pack for every MaxTAC engagement, then add only the domain packs ne
 Core expects research artifacts such as:
 
 - `research/` durable notes.
-- `workspace.sqlite` primitive and chain findings, debate tallies, audit index, related evidence, milestones, and search memory.
-- `audits/` auditor packets and receipts, indexed for semantic lookup.
+- `workspace.sqlite` primitive and chain findings, debate tallies, audit assessments, related evidence, milestones, and search memory.
 - `proof/` proof-of-vulnerability artifacts.
 - `contracts/` canonical result bundles.
 - `reporting/` submission-ready report projections.

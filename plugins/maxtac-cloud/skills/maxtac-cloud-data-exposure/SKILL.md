@@ -9,7 +9,7 @@ Use this skill when the security question is whether cloud data, backups, logs, 
 
 ## Data Exposure Packet
 
-Store results under `audits/cloud/<case-id>/data-exposure.md`:
+When a file packet is useful, store results under `tmp/cloud/<case-id>/data-exposure.md`:
 
 - Provider, target scope, and resource IDs.
 - Data asset: bucket, container, object prefix, database, table, snapshot, backup, image, log sink, secret, key, queue, topic, or derived artifact.

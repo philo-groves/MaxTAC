@@ -9,7 +9,7 @@ Use this skill when the security question is whether the shipped artifact matche
 
 ## Diff Packet
 
-Store results under `audits/supply-chain/<case-id>/source-artifact-diff.md`:
+Store results under `proof/supply-chain/<case-id>/source-artifact-diff.md`:
 
 - Source anchor: repository URL, commit SHA, tag object ID, submodules, generated-code commit, release branch, or source archive.
 - Artifact anchor: package coordinates, version, registry URL, digest, image manifest digest, release asset URL, signature, attestation, SBOM, or installer hash.
@@ -23,7 +23,7 @@ Store results under `audits/supply-chain/<case-id>/source-artifact-diff.md`:
 Use `artifact-diff.py` for deterministic directory or archive diffs before writing the final packet. It supports directories and common package archives such as zip, wheel, jar, nupkg, tar, and tar.gz:
 
 ```text
-python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-source-artifact-diff/scripts/artifact-diff.py diff --left <known-good-dir-or-archive> --right <suspicious-dir-or-archive> --output audits/supply-chain/<case-id>/artifact-diff.json --markdown audits/supply-chain/<case-id>/artifact-diff.md --case-id <case-id>
+python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-source-artifact-diff/scripts/artifact-diff.py diff --left <known-good-dir-or-archive> --right <suspicious-dir-or-archive> --output proof/supply-chain/<case-id>/artifact-diff.json --markdown proof/supply-chain/<case-id>/artifact-diff.md --case-id <case-id>
 ```
 
 Treat the helper output as an index. Review changed executable files, generated code, permissions, symlinks, nested archives, and metadata manually before assigning security relevance.

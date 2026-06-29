@@ -9,7 +9,7 @@ Use this skill when the security question is whether a cloud principal can obtai
 
 ## IAM Boundary Packet
 
-Store results under `audits/cloud/<case-id>/iam-boundary.md`:
+When a file packet is useful, store results under `tmp/cloud/<case-id>/iam-boundary.md`:
 
 - Provider and target scope.
 - Starting principal: user, role, service principal, managed identity, service account, workload identity, federated subject, CI/CD identity, or runtime identity.

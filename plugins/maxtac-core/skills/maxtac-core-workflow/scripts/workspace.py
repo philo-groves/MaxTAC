@@ -32,8 +32,6 @@ WORKSPACE_FILES = {
 }
 WORKSPACE_DIRS = {
     "research": "scalable markdown research library",
-    "debates": "debater subagent results",
-    "audits": "auditor subagent results",
     "proof": "proof-of-vulnerability development",
     "fuzz": "fuzzing inputs, scripts, and artifacts",
     "tmp": "temporary files that can be deleted between sessions",
@@ -94,16 +92,12 @@ ATTENTION_DOMINANCE_RATIO = 0.7
 ATTENTION_MIN_RESEARCH_FILES = 8
 ATTENTION_TOP_LEVEL_DIRS = (
     "research",
-    "audits",
-    "debates",
     "proof",
     "fuzz",
     "tmp",
     "reporting",
 )
 ATTENTION_EVIDENCE_TOP_LEVEL_DIRS = {
-    "audits",
-    "debates",
     "proof",
     "fuzz",
     "tmp",

@@ -57,15 +57,14 @@ def enrich_prompt(prompt_file: Path, root: Path) -> None:
     prompt_path_input = workspace_path(root, prompt_file, "Prompt file")
     raw_prompt = read_text(prompt_path_input).rstrip()
     debate_id = generated_id("debate")
-    debate_dir = root / "debates" / debate_id
-    debate_dir.mkdir(parents=True, exist_ok=False)
-
-    prompt_path = debate_dir / "prompt.md"
+    helper_path = Path(__file__).resolve()
+    ballot_path = f"tmp/ballot-{debate_id}-<subagent-name>.json"
     goal_objective = (
         "Evaluate the single binary debate proposition from the supplied evidence and persist one well-supported "
-        f"ballot to {debate_dir}. Negative end outcome: if the proposition cannot be judged from the supplied or "
-        "directly referenced evidence within a bounded pass, stop broadening scope and persist a ballot with low "
-        "confidence, explicit blockers, and the side defined by the proposition as not-proven; when unclear, choose no."
+        f"ballot to {workspace_db.DB_FILE}. Negative end outcome: if the proposition cannot be judged from the "
+        "supplied or directly referenced evidence within a bounded pass, stop broadening scope and persist a ballot "
+        "with low confidence, explicit blockers, and the side defined by the proposition as not-proven; when unclear, "
+        "choose no."
     )
     goal_call = json.dumps({"objective": goal_objective})
     enriched = f"""FIRST ACTION REQUIRED: activate a Codex goal before doing any debate work.
@@ -95,9 +94,14 @@ Bounds: review only the debate prompt, supplied evidence, directly referenced fi
 ## MaxTAC Debate Persistence Instructions
 
 Debate ID: `{debate_id}`
-Debate directory: `{debate_dir}`
 
-Persist your ballot before completing the subagent run. Choose a stable subagent name for yourself, then write your ballot to `ballot-<subagent-name>.json` in the debate directory. Use this exact JSON structure:
+Persist your ballot to `{workspace_db.DB_FILE}` before completing the subagent run. Choose a stable subagent name for yourself, write the ballot JSON to `{ballot_path}`, then record it with:
+
+```text
+python "{helper_path}" --root "{root}" --debate {debate_id} --record-ballot {ballot_path}
+```
+
+Use this exact JSON structure:
 
 ```json
 {{
@@ -114,8 +118,7 @@ Persist your ballot before completing the subagent run. Choose a stable subagent
 
 The `goal_activation` value must be `create_goal`, `/goal`, or `unavailable`. The `choice` value must be either `yes` or `no`. The `confidence` value must be an integer from 0 to 100. Use `blockers` for blockers or concerns about the debate topic, otherwise use null.
 """
-    prompt_path.write_text(enriched, encoding="utf-8")
-    workspace_db.sync_debates(root, debate_id)
+    workspace_db.create_debate(root, debate_id, enriched)
     print(enriched, end="")
 
 
@@ -145,55 +148,11 @@ def ballot_value(ballot: dict[str, Any], key: str, default: str = "") -> str:
     return str(value)
 
 
-def compute_tally(debate_id: str, debate_dir: Path, ballots: list[tuple[Path, dict[str, Any]]]) -> dict[str, Any]:
-    counts: dict[str, int] = {"yes": 0, "no": 0}
-    confidence_totals: dict[str, int] = {"yes": 0, "no": 0}
-    normalized_ballots: list[dict[str, Any]] = []
-    for path, ballot in ballots:
-        choice = ballot_value(ballot, "choice").lower()
-        confidence = int(ballot["confidence"])
-        counts[choice] += 1
-        confidence_totals[choice] += confidence
-        normalized_ballots.append(
-            {
-                "file": str(path),
-                "subagent": ballot_value(ballot, "subagent", path.stem.removeprefix("ballot-")),
-                "goal_activation": ballot_value(ballot, "goal_activation", "unknown"),
-                "choice": choice,
-                "confidence": confidence,
-                "reasoning": ballot_value(ballot, "reasoning"),
-                "evidence": ballot_value(ballot, "evidence"),
-                "blockers": ballot.get("blockers"),
-            }
-        )
-
-    if counts["yes"] > counts["no"]:
-        winner = "yes"
-    elif counts["no"] > counts["yes"]:
-        winner = "no"
-    else:
-        winner = "tie"
-
-    return {
-        "debate_id": debate_id,
-        "debate_dir": str(debate_dir),
-        "ballots": len(ballots),
-        "counts": counts,
-        "average_confidence": {
-            choice: (confidence_totals[choice] / counts[choice] if counts[choice] else 0)
-            for choice in ("yes", "no")
-        },
-        "winner": winner,
-        "ballot_files": [str(path) for path, _ in ballots],
-        "ballot_details": normalized_ballots,
-    }
-
-
 def render_tally_markdown(result: dict[str, Any]) -> str:
     lines = [
         f"# Debate Tally: {result['debate_id']}",
         "",
-        f"- Debate directory: `{result['debate_dir']}`",
+        f"- Storage: `{workspace_db.DB_FILE}`",
         f"- Ballots: {result['ballots']}",
         f"- Winner: {result['winner']}",
         f"- Yes: {result['counts'].get('yes', 0)}",
@@ -207,7 +166,7 @@ def render_tally_markdown(result: dict[str, Any]) -> str:
             [
                 f"## {ballot['subagent']}",
                 "",
-                f"- Ballot file: `{ballot['file']}`",
+                f"- Ballot record: `{ballot.get('file', 'sqlite')}`",
                 f"- Goal activation: {ballot['goal_activation']}",
                 f"- Choice: {ballot['choice']}",
                 f"- Confidence: {ballot['confidence']}",
@@ -255,36 +214,28 @@ def render_summary_markdown(result: dict[str, Any]) -> str:
             "",
             "## Parent Review",
             "",
-            "Review this generated summary against the ballot details in `tally.md` before using the result for a ledger state transition.",
+            "Review this generated summary against the ballot details from `debate-helper.py --show` before using the result for a ledger state transition.",
         ]
     )
     return "\n".join(lines).rstrip() + "\n"
 
 
+def record_ballot(debate_id: str, ballot_file: Path, root: Path) -> None:
+    ballot_path = workspace_path(root, ballot_file, "Ballot file")
+    payload = load_ballot(ballot_path, debate_id)
+    result = workspace_db.record_debate_ballot(root, debate_id, payload)
+    print(render_debate_row(result))
+
+
 def tally(debate_id: str, root: Path) -> None:
-    debate_dir = root / "debates" / debate_id
-    if not debate_dir.exists():
-        raise SystemExit(f"Debate not found: {debate_id}")
+    result = workspace_db.tally_debate(root, debate_id)
+    tally_text = render_tally_markdown(result)
+    summary_text = render_summary_markdown(result)
+    result = workspace_db.store_debate_text(root, debate_id, tally_text=tally_text, summary_text=summary_text)
 
-    ballot_paths = sorted(debate_dir.glob("ballot-*.json"))
-    if not ballot_paths:
-        raise SystemExit(f"No ballots found for debate: {debate_id}")
-
-    ballots = [(path, load_ballot(path, debate_id)) for path in ballot_paths]
-    result = compute_tally(debate_id, debate_dir, ballots)
-    tally_json_path = debate_dir / "tally.json"
-    tally_path = debate_dir / "tally.md"
-    summary_path = debate_dir / "summary.md"
-    tally_json_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    tally_path.write_text(render_tally_markdown(result), encoding="utf-8")
-    summary_path.write_text(render_summary_markdown(result), encoding="utf-8")
-    workspace_db.sync_debates(root, debate_id)
-
-    print(render_summary_markdown(result), end="")
+    print(summary_text, end="")
     print()
-    print(f"Wrote tally JSON: {tally_json_path}")
-    print(f"Wrote tally review: {tally_path}")
-    print(f"Wrote debate summary: {summary_path}")
+    print(f"Stored debate tally in {workspace_db.DB_FILE}: {debate_id}")
 
 
 def one_line(value: Any, limit: int = 140) -> str:
@@ -313,10 +264,7 @@ def print_debate_detail(payload: dict[str, Any]) -> None:
     counts = payload.get("counts") or {}
     average = payload.get("average_confidence") or {}
     print(f"Debate: {payload.get('debate_id')}")
-    print(f"- directory: {payload.get('debate_dir', '')}")
-    print(f"- prompt: {payload.get('prompt_path', '')}")
-    print(f"- tally: {payload.get('tally_path', '') or 'missing'}")
-    print(f"- summary: {payload.get('summary_path', '') or 'missing'}")
+    print(f"- storage: {workspace_db.DB_FILE}")
     print(f"- winner: {payload.get('winner', 'none')}")
     print(f"- ballots: {payload.get('ballots', 0)}")
     print(f"- yes: {counts.get('yes', 0)} (avg confidence {float(average.get('yes', 0)):.1f})")
@@ -338,6 +286,10 @@ def print_debate_detail(payload: dict[str, Any]) -> None:
         print("### Reasoning")
         print(str(ballot.get("reasoning", "")).rstrip())
         print()
+    if payload.get("summary_text"):
+        print("## Summary")
+        print(str(payload.get("summary_text", "")).rstrip())
+        print()
 
 
 def base_parser() -> argparse.ArgumentParser:
@@ -346,11 +298,12 @@ def base_parser() -> argparse.ArgumentParser:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--prompt-file", type=Path, help="Enrich a persisted debate prompt")
     group.add_argument("--debate", help="Debate ID to review")
-    group.add_argument("--sync", action="store_true", help="Sync all debate artifacts into workspace.sqlite")
+    group.add_argument("--sync", action="store_true", help="Refresh debate search records in workspace.sqlite")
     group.add_argument("--list", action="store_true", help="List synced debate tallies")
     group.add_argument("--show", metavar="DEBATE_ID", help="Show synced debate details and ballot reasoning")
     group.add_argument("--search", metavar="TEXT", help="Semantic search debate prompts, tallies, and ballots")
-    parser.add_argument("--tally", action="store_true", help="Validate ballots and write tally.json, tally.md, and summary.md")
+    parser.add_argument("--tally", action="store_true", help="Validate recorded ballots and store tally text in workspace.sqlite")
+    parser.add_argument("--record-ballot", type=Path, help="Record a ballot JSON file into workspace.sqlite")
     parser.add_argument("--limit", type=int, default=10, help="Maximum rows for list or search output")
     return parser
 
@@ -360,24 +313,30 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.prompt_file:
-        if args.tally:
-            raise SystemExit("--tally can only be used with --debate")
+        if args.tally or args.record_ballot:
+            raise SystemExit("--tally and --record-ballot can only be used with --debate")
         enrich_prompt(args.prompt_file, root_path(args.root))
         return
 
     if args.debate:
-        if not args.tally:
-            raise SystemExit("--debate requires --tally")
-        tally(args.debate, root_path(args.root))
+        if args.tally and args.record_ballot:
+            raise SystemExit("--debate accepts --tally or --record-ballot, not both")
+        if not args.tally and not args.record_ballot:
+            raise SystemExit("--debate requires --tally or --record-ballot")
+        root = root_path(args.root)
+        if args.record_ballot:
+            record_ballot(args.debate, args.record_ballot, root)
+        else:
+            tally(args.debate, root)
         return
 
-    if args.tally:
-        raise SystemExit("--tally can only be used with --debate")
+    if args.tally or args.record_ballot:
+        raise SystemExit("--tally and --record-ballot can only be used with --debate")
 
     root = root_path(args.root)
     if args.sync:
         payloads = workspace_db.sync_debates(root)
-        print(f"Synced {len(payloads)} debate(s) into {workspace_db.DB_FILE}")
+        print(f"Refreshed {len(payloads)} debate record(s) in {workspace_db.DB_FILE}")
     elif args.list:
         for payload in workspace_db.list_debates(root)[: max(1, args.limit)]:
             print(render_debate_row(payload))
@@ -393,10 +352,8 @@ def main() -> None:
             return
         for score, payload in rows:
             print(f"{score:.6f} {render_debate_row(payload)}")
-            if payload.get("summary_path"):
-                print(f"  summary={payload.get('summary_path')}")
-            else:
-                print(f"  prompt={payload.get('prompt_path', '')}")
+            if payload.get("summary_text"):
+                print(f"  summary={one_line(payload.get('summary_text'))}")
 
 
 if __name__ == "__main__":

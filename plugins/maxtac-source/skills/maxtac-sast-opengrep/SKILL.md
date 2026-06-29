@@ -45,7 +45,7 @@ Treat OpenGrep results as leads until the relevant path and guard behavior are m
 
 ## Persistence
 
-Treat OpenGrep rules, JSON results, SARIF, raw match lists, and generated packets as artifacts. Store them under the relevant subsystem's `artifacts/opengrep/`, an audit directory, or `tmp/` while iterating. Do not create a bare `research/<subsystem>/opengrep/` directory unless OpenGrep itself is the modeled system.
+Treat OpenGrep rules, JSON results, SARIF, raw match lists, and generated packets as artifacts. Store them under the relevant subsystem's `artifacts/opengrep/` or `tmp/` while iterating. Do not create a bare `research/<subsystem>/opengrep/` directory unless OpenGrep itself is the modeled system.
 
 If a search produces reusable knowledge, rewrite the conclusion into the stable subsystem research note: what boundary was searched, what invariant the rule encodes, what was confirmed or ruled out, and where the raw rule/result artifacts live. Future sessions should not need to read raw OpenGrep output to understand the system.
 
