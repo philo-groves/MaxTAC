@@ -1,0 +1,48 @@
+{
+  "name": "maxtac-cloud",
+  "version": "0.1.0",
+  "author": {
+    "name": "Philo Groves"
+  },
+  "repository": "https://github.com/philo-groves/MaxTAC",
+  "license": "MIT",
+  "skills": "./skills/",
+  "description": "AWS, Azure, and GCP vulnerability research workflows for MaxTAC.",
+  "keywords": [
+    "codex",
+    "maxtac",
+    "security",
+    "cloud",
+    "aws",
+    "azure",
+    "gcp",
+    "iam",
+    "kubernetes",
+    "serverless",
+    "storage",
+    "metadata"
+  ],
+  "interface": {
+    "displayName": "MaxTAC for Cloud",
+    "shortDescription": "AWS, Azure, and GCP cloud vulnerability research.",
+    "longDescription": "MaxTAC for Cloud adds AWS, Azure, and GCP surface triage, IAM boundary research, cloud data exposure workflows, runtime metadata and workload-identity boundary analysis, and cloud-specific auditor routing.",
+    "defaultPrompt": [
+      "Use MaxTAC for Cloud to map this AWS, Azure, or GCP attack surface.",
+      "Use MaxTAC for Cloud to evaluate this cloud IAM or workload-identity boundary.",
+      "Use MaxTAC for Cloud to prepare a non-destructive proof packet for this cloud vulnerability."
+    ],
+    "developerName": "Philo Groves",
+    "category": "Security",
+    "websiteURL": "https://github.com/philo-groves/MaxTAC",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  },
+  "mcpServers": "./.mcp.json"
+}

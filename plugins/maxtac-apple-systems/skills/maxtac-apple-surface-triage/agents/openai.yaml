@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Apple Surface Triage"
+  short_description: "Apple target, boundary, and bypass-direction triage"
+  default_prompt: "Use $maxtac-apple-surface-triage to map this Apple target and route it to proof, IPSW, mitigation, or auditor workflows."

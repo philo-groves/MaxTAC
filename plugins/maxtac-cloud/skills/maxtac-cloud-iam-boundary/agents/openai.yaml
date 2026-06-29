@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Cloud IAM Boundary"
+  short_description: "Cloud IAM, RBAC, federation, and impersonation proof"
+  default_prompt: "Use $maxtac-cloud-iam-boundary to prove or disprove this AWS, Azure, or GCP identity boundary crossing."

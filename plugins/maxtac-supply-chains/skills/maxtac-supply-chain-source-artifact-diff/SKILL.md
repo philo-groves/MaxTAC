@@ -18,10 +18,20 @@ Store results under `audits/supply-chain/<case-id>/source-artifact-diff.md`:
 - Security relevance: executable path, install/build/runtime trigger, credential access, network egress, policy bypass, artifact substitution, or consumer impact.
 - Verdict: expected generated output, benign packaging difference, suspicious mismatch, confirmed artifact tampering, or needs reproduction.
 
+## Artifact Diff Helper
+
+Use `artifact-diff.py` for deterministic directory or archive diffs before writing the final packet. It supports directories and common package archives such as zip, wheel, jar, nupkg, tar, and tar.gz:
+
+```text
+python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-source-artifact-diff/scripts/artifact-diff.py diff --left <known-good-dir-or-archive> --right <suspicious-dir-or-archive> --output audits/supply-chain/<case-id>/artifact-diff.json --markdown audits/supply-chain/<case-id>/artifact-diff.md --case-id <case-id>
+```
+
+Treat the helper output as an index. Review changed executable files, generated code, permissions, symlinks, nested archives, and metadata manually before assigning security relevance.
+
 ## Workflow
 
 1. Preserve immutable identifiers: source commit/tag object, package digest, registry metadata, image digest, signature certificate, attestation subject digest, SBOM digest, and retrieval timestamp.
-2. Normalize file lists before diffing. Compare paths, modes, symlinks, shebangs, generated artifacts, archives nested inside archives, and binary metadata.
+2. Normalize file lists before diffing. Compare paths, modes, symlinks, shebangs, generated artifacts, archives nested inside archives, and binary metadata. Use `artifact-diff.py` when a reproducible local diff is useful.
 3. Diff the nearest known-good artifact against the suspicious artifact before diffing source. This separates normal packaging churn from compromise indicators.
 4. Diff source tag to artifact. Treat generated files as suspicious until the generator, input, and build command are identified.
 5. Verify provenance and signatures. Check whether the attestation subject digest matches the artifact, whether the builder identity is expected, and whether the signature is attached to the exact digest being consumed.

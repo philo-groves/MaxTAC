@@ -153,6 +153,7 @@ Next, identify which installed domain pack owns the target method:
 - Source/SAST: source repositories, existing decompiler output, static reachability, guard dominance, and OpenGrep evidence.
 - Binary: native binaries, firmware payloads, reverse engineering, crash replay, native instrumentation, and systems fuzzing.
 - Web: web applications, APIs, sessions, browser state, tenants, and SaaS workflows.
+- Cloud: AWS, Azure, GCP, IAM, storage, data plane, runtime metadata, workload identity, managed Kubernetes, and cloud network boundaries.
 - Supply Chains: dependency graphs, package managers, CI/CD, artifact provenance, signing, containers, and release pipelines.
 - Android: APK/DEX/resource reverse engineering, Android components, ADB/logcat/JDWP/Frida evidence, IPC, WebView, storage, and permissions.
 - Apple Systems or Microsoft Systems: program-specific proof and mitigation rules.
@@ -165,7 +166,7 @@ Go to this phase after the Prepare phase or when additional vulnerability discov
 #### Surface Triage
 Use the installed domain pack that matches the target. Produce a compact triage packet or evidence note that names the target slice, actor, trust boundary, controlled inputs, security invariant, suspect guard or sink, evidence already collected, and suggested auditor filters.
 
-When source code or existing decompiler output is available, the Source pack can produce SAST, control-flow, and OpenGrep packets. When the target is web, supply-chain, binary, Android, Apple, or Microsoft-specific, use that pack's triage guidance before spawning auditors.
+When source code or existing decompiler output is available, the Source pack can produce SAST, control-flow, and OpenGrep packets. When the target is web, cloud, supply-chain, binary, Android, Apple, or Microsoft-specific, use that pack's triage guidance before spawning auditors.
 
 #### Hypothesize
 Analyze previously conducted recon, threat modeling, research, and surface triage to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.

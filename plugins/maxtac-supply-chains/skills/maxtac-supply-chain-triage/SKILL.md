@@ -1,6 +1,6 @@
 ---
 name: maxtac-supply-chain-triage
-description: "Use this skill when supply-chain research needs initial routing across dependency, package-manager, build, CI/CD, artifact provenance, signing, registry, container, Kubernetes, release-pipeline, compromise-hunting, or OSS proof-gating workflows."
+description: "Use this skill when supply-chain research needs initial routing across dependency, package-manager, build, CI/CD, artifact provenance, signing, registry, container artifact, release-pipeline, compromise-hunting, or OSS proof-gating workflows."
 ---
 
 # MaxTAC Supply Chain Triage
@@ -14,12 +14,13 @@ Use this skill as the entrypoint for dependency and release-path vulnerability r
 - Do not report dependency presence alone as a vulnerability. Tie it to reachability, exploitability, poisoning risk, credential exposure, policy bypass, or release integrity impact.
 - Use `maxtac-source` when code review, OpenGrep, or call-graph evidence is needed.
 - Use `maxtac-web` when the supply-chain path depends on a web console, webhook, OAuth app, package registry API, or SaaS workflow.
+- Use `maxtac-cloud` when the surviving path depends on cloud IAM, workload identity, managed Kubernetes identity, runtime metadata, cloud storage, or cloud deployment authority.
 
 ## Skill Routing
 
 - Use `maxtac-supply-chain-compromise-hunt` when the question is "was this package, release, dependency, container, maintainer account, or build path compromised?"
 - Use `maxtac-supply-chain-source-artifact-diff` when a shipped package, image, installer, binary, wheel, jar, gem, crate, or release asset must be compared against source and provenance.
-- Use `maxtac-supply-chain-cicd-release-takeover` when untrusted code, workflow configuration, caches, artifacts, OIDC, runners, or CI tokens may reach publishing or deployment authority.
+- Use `maxtac-supply-chain-cicd-release-takeover` when untrusted code, workflow configuration, caches, artifacts, OIDC, runners, or CI tokens may reach publishing or deployment authority. Hand off to Cloud when the proof depends on AWS/Azure/GCP permissions after the CI/CD boundary is crossed.
 - Use `maxtac-supply-chain-oss-proof-gate` before reporting OSS or dependency findings, especially when the target program requires real product impact, dependency-owner notification, or proof that a compromise path affects an in-scope consumer.
 
 ## Triage Workflow
@@ -49,7 +50,7 @@ Use this skill as the entrypoint for dependency and release-path vulnerability r
 - Suspect dependency, workflow, or provenance gap:
 - Evidence collected:
 - Evidence still needed:
-- Suggested tools: Source/SAST / Web / Auditors
+- Suggested tools: Source/SAST / Web / Cloud / Auditors
 - Suggested auditor filters:
 - Candidate hypothesis:
 - Recommended next skill:
@@ -58,4 +59,4 @@ Use this skill as the entrypoint for dependency and release-path vulnerability r
 
 ## Auditor Routing
 
-Use the Supply Chains pack's auditor MCP tools when available. Good starting filters include `supply-chain`, `cicd`, `package-manager`, `dependency-confusion`, `container`, `kubernetes`, `cloud`, `iam`, `secrets`, `registry`, `lockfile`, `signature`, and `attestation`.
+Use the Supply Chains pack's auditor MCP tools when available. Good starting filters include `supply-chain`, `cicd`, `package-manager`, `dependency-confusion`, `container`, `registry`, `lockfile`, `signature`, `attestation`, `provenance`, `release`, and `oss`. Use Cloud auditor filters for cloud IAM, managed Kubernetes, runtime metadata, or cloud data-plane questions.

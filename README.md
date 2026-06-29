@@ -16,6 +16,7 @@ Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber p
 | MaxTAC for Source | `plugins/maxtac-source` | You need static triage, source diff/repo scan closure, external finding intake, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
 | MaxTAC for Binary | `plugins/maxtac-binary` | You need native binary RE, Ghidra, radare2, debugger evidence, crash replay, instrumentation, or systems fuzzing. |
 | MaxTAC for Web | `plugins/maxtac-web` | You need web/API/session/tenant triage, browser debugging, or stateful API fuzzing. |
+| MaxTAC for Cloud | `plugins/maxtac-cloud` | You need AWS, Azure, or GCP IAM, storage, data-plane, runtime metadata, workload identity, managed Kubernetes, or cloud network boundary research. |
 | MaxTAC for Supply Chains | `plugins/maxtac-supply-chains` | You need package compromise hunting, source-to-artifact diffing, CI/CD release takeover analysis, OSS proof gating, dependency, provenance, registry, container, or release-pipeline triage. |
 | MaxTAC for Android | `plugins/maxtac-android` | You need APK/DEX/resource RE, Android component triage, ADB/logcat/JDWP/Frida runtime evidence, or Android-specific auditors. |
 | MaxTAC for Apple Systems | `plugins/maxtac-apple-systems` | You need ASB Commpage/TCC proof packets, advanced IPSW patch-diff research, Apple mitigation-bypass workflows, or Apple-specific auditors. |
@@ -27,8 +28,9 @@ Virtualization and general environment-management guidance is intentionally excl
 
 - Source repository: Core + Source + the relevant domain pack.
 - Web or SaaS target: Core + Web, optionally Source when code is available.
+- Cloud target: Core + Cloud, optionally Web, Source, or Supply Chains depending on the entrypoint.
 - Native/binary target: Core + Binary, optionally Source after decompiler output exists and needs static packet work.
-- Supply-chain target: Core + Supply Chains, optionally Source or Web depending on the affected path.
+- Supply-chain target: Core + Supply Chains, optionally Source, Web, or Cloud depending on the affected path.
 - Android target: Core + Android, optionally Source when code is available or Binary when native libraries dominate the evidence path.
 - Apple systems target: Core + Apple Systems, plus Binary or Source when the evidence path needs RE or code analysis.
 - Microsoft systems target: Core + Microsoft Systems, plus Binary or Source when the evidence path needs RE or code analysis.
@@ -57,6 +59,7 @@ Core keeps only a tiny fallback auditor catalog. Domain packs expose their own a
 
 - Web: `web_auditor_list`, `web_auditor_filter`, `web_auditor_show`
 - Binary: `binary_auditor_list`, `binary_auditor_filter`, `binary_auditor_show`
+- Cloud: `cloud_auditor_list`, `cloud_auditor_filter`, `cloud_auditor_show`
 - Supply Chains: `supply_chain_auditor_list`, `supply_chain_auditor_filter`, `supply_chain_auditor_show`
 - Android: `android_auditor_list`, `android_auditor_filter`, `android_auditor_show`
 - Apple: `apple_auditor_list`, `apple_auditor_filter`, `apple_auditor_show`

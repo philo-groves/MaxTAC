@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Windows Surface Triage"
+  short_description: "Windows identity, IPC, service, driver, and sandbox triage"
+  default_prompt: "Use $maxtac-windows-surface-triage to map this Windows target and route it to proof, mitigation, binary, source, or auditor workflows."

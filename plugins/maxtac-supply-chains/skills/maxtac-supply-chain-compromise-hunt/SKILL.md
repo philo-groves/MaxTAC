@@ -19,6 +19,18 @@ Store findings under `audits/supply-chain/<case-id>/compromise-hunt.md`:
 - Positive evidence, counterevidence, and remaining proof gaps.
 - Impact path: code execution, credential theft, source theft, artifact poisoning, deployment takeover, signing abuse, data exfiltration, persistence, or lateral movement.
 
+## Evidence Freeze Helper
+
+Use `package-freeze.py` when a case needs a durable manifest of package metadata, release assets, lockfiles, SBOMs, signatures, attestations, registry responses, or hashes:
+
+```text
+python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-compromise-hunt/scripts/package-freeze.py create --case-id <case-id> --target "<package-or-release>" --ecosystem <ecosystem> --coordinates <name> --version <version> --artifact-url <url>
+python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-compromise-hunt/scripts/package-freeze.py add-artifact --manifest audits/supply-chain/<case-id>/freeze/manifest.json --path <local-artifact> --category package
+python plugins/maxtac-supply-chains/skills/maxtac-supply-chain-compromise-hunt/scripts/package-freeze.py lint --manifest audits/supply-chain/<case-id>/freeze/manifest.json
+```
+
+Store the manifest with the hunt packet and cite its SHA-256 values in reports.
+
 ## High-Signal Leads
 
 Prioritize leads with multiple independent signals:
@@ -32,7 +44,7 @@ Prioritize leads with multiple independent signals:
 
 ## Analysis Workflow
 
-1. Freeze evidence. Record URLs, package metadata JSON, release asset hashes, tag object IDs, image digests, lockfiles, workflow files, SBOMs, signatures, attestations, and timestamps before running anything.
+1. Freeze evidence. Record URLs, package metadata JSON, release asset hashes, tag object IDs, image digests, lockfiles, workflow files, SBOMs, signatures, attestations, and timestamps before running anything. Use `package-freeze.py` when a local manifest improves reproducibility.
 2. Diff the suspicious version against the nearest known-good version and against the claimed source tag. Use `maxtac-supply-chain-source-artifact-diff` when source-to-artifact integrity matters.
 3. Classify execution surfaces: install scripts, build scripts, test hooks, import-time code, native extensions, container entrypoints, CI actions, GitHub composite steps, Dockerfile layers, release scripts, and runtime plugins.
 4. Trace data access: environment variables, credential files, npm/PyPI/GitHub/GCP/AWS/Azure tokens, SSH keys, package manager config, cloud metadata, source tree, home directory, and CI workspace.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Cloud Runtime Boundary"
+  short_description: "Runtime metadata, workload identity, and cloud network boundaries"
+  default_prompt: "Use $maxtac-cloud-runtime-boundary to evaluate this cloud runtime, metadata, workload-identity, or network boundary."

@@ -21,6 +21,7 @@ Use this pack with MaxTAC Core when the target is a web app, API, browser-mediat
 ## Typical Pairings
 
 - Web + Source when implementation code, route handlers, or API services are available.
+- Web + Cloud when SSRF, cloud-hosted APIs, control-plane consoles, OAuth/OIDC federation, signed URLs, or cloud metadata paths matter.
 - Web + Supply Chains when the path depends on package registries, webhooks, OAuth apps, SaaS CI/CD, or release consoles.
 - Web + Android or Apple Systems when mobile apps rely on webviews, APIs, account flows, or browser-mediated proof.
 
@@ -36,4 +37,4 @@ Web workflows commonly produce:
 
 ## Boundary
 
-This pack does not own source-code static analysis, binary reverse engineering, package compromise hunting, or program-specific platform proof. Pair with the relevant pack for those paths.
+This pack does not own source-code static analysis, binary reverse engineering, cloud IAM/runtime proof, package compromise hunting, or program-specific platform proof. Pair with the relevant pack for those paths.

@@ -53,9 +53,21 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | --- | --- | --- |
 | Package-manager native tools (`npm`, `pnpm`, `yarn`, `pip`, `uv`, `poetry`, `go`, `cargo`, `mvn`, `gradle`, `nuget`, `gem`) | Lockfile, dependency, script, registry, package metadata, packed artifact, and provenance inspection. | Supply Chains |
 | SBOM, advisory, and malware scanners (`syft`, `grype`, `osv-scanner`, ecosystem audit tools) | Dependency inventory, advisory context, reachability support, compromise leads, and report artifacts. | Supply Chains |
-| CI/CD CLIs and logs (`gh`, cloud CLIs, runner logs) | Workflow, runner, secret, approval, OIDC, cache, artifact handoff, release, and deployment evidence. | Supply Chains |
+| CI/CD CLIs and logs (`gh`, runner logs) | Workflow, runner, secret, approval, OIDC, cache, artifact handoff, release, and deployment evidence. | Supply Chains |
 | Signing and attestation tools (`cosign`, `slsa-verifier`, `gitsign`, ecosystem provenance tools) | Release integrity, signature, builder identity, SLSA/provenance, and policy evidence. | Supply Chains |
 | Container and registry tools (`docker`, `podman`, `skopeo`, `crane`, `oras`) | Image digest, layer diff, build context, base image, registry metadata, and artifact integrity evidence. | Supply Chains |
+
+## Cloud
+
+| Tool | Used for | Pack |
+| --- | --- | --- |
+| AWS CLI (`aws`) | IAM, STS, S3, KMS, CloudTrail, Access Analyzer, Config, EKS, Lambda, ECS, EC2, and resource evidence. | Cloud |
+| Azure CLI (`az`) and Microsoft Graph tooling | Tenant, subscription, RBAC, Entra app, service principal, managed identity, Key Vault, Storage, AKS, Activity Log, and resource evidence. | Cloud |
+| Google Cloud CLI (`gcloud`, `gsutil`, `bq`) | Project, folder, IAM, service account, Cloud Storage, BigQuery, KMS, GKE, Cloud Run, audit log, and organization-policy evidence. | Cloud |
+| JSON/YAML helpers (`jq`, `yq`) | Policy, audit log, IaC, and CLI transcript normalization. | Cloud |
+| Cloud inventory and posture tools (`steampipe`, `prowler`, `ScoutSuite`) | Optional inventory, policy context, and lead generation before manual proof. | Cloud |
+| Kubernetes tools (`kubectl`, `helm`) | EKS, AKS, GKE workload identity, RBAC, token, namespace, admission, and pod evidence. | Cloud |
+| IaC and policy tools (`terraform`, `terragrunt`, `opa`, `conftest`) | Cloud resource intent, policy-as-code, deployment authority, and drift analysis. | Cloud |
 
 ## Android
 
@@ -80,5 +92,5 @@ Install only the tools needed by the active plugin packs and current target. Cor
 
 1. Install Core first.
 2. Add Source for source-heavy targets.
-3. Add exactly one primary domain pack: Web, Binary, Supply Chains, or Android.
+3. Add exactly one primary domain pack: Web, Binary, Cloud, Supply Chains, or Android.
 4. Add Apple Systems or Microsoft Systems only when the program requires those proof or mitigation workflows.

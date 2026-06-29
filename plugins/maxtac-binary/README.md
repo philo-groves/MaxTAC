@@ -25,6 +25,7 @@ Use this pack with MaxTAC Core when the target is a native binary, firmware comp
 - Binary + Apple Systems for kernelcache, dyld shared cache, firmware, or ASB proof paths.
 - Binary + Android for native libraries inside APKs.
 - Binary + Microsoft Systems for Windows mitigation and MSRC proof workflows.
+- Binary + Cloud when agents, appliances, native extensions, or cloud-hosted binaries affect runtime or identity boundaries.
 - Binary + Supply Chains for native release artifacts, installers, or binary package integrity.
 
 ## Output Artifacts
@@ -38,4 +39,4 @@ Binary workflows commonly produce:
 
 ## Boundary
 
-This pack avoids web, source-only, package registry, Android platform, Apple ASB, and Microsoft MSRC-specific policy guidance unless paired with those packs.
+This pack avoids web, source-only, cloud control-plane, package registry, Android platform, Apple ASB, and Microsoft MSRC-specific policy guidance unless paired with those packs.

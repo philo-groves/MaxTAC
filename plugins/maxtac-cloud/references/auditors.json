@@ -1,0 +1,188 @@
+[
+  {
+    "id": "cloud-iam-policy-boundary",
+    "name": "Cloud IAM Policy Boundary Auditor",
+    "topic": "Cloud Vulnerability Research",
+    "category": "Cloud IAM",
+    "specialty": "AWS IAM, Azure RBAC and Entra identities, GCP IAM, trust policies, federation, and privilege boundaries",
+    "tags": [
+      "cloud",
+      "iam",
+      "aws",
+      "azure",
+      "gcp",
+      "privilege-escalation"
+    ],
+    "summary": "Reviews whether a cloud principal can cross an intended account, tenant, project, resource, or privilege boundary.",
+    "markdown": [
+      "# Cloud IAM Policy Boundary Auditor",
+      "",
+      "## Mission",
+      "Find paths where a principal can obtain, delegate, impersonate, or exercise authority beyond the intended AWS, Azure, or GCP boundary.",
+      "",
+      "## Focus",
+      "- AWS IAM identity policies, resource policies, trust policies, permission boundaries, SCPs, session policies, session tags, `iam:PassRole`, and STS federation.",
+      "- Azure RBAC assignments, custom roles, management groups, subscriptions, Entra applications, service principals, managed identities, PIM, and Graph permissions.",
+      "- GCP IAM bindings, service accounts, `iam.serviceAccounts.actAs`, token creator roles, workload identity federation, organization policy, and project/folder inheritance.",
+      "- Confused deputy conditions, missing external IDs, weak audience or subject constraints, tag/condition drift, and delegated deployment authority.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with principal, target boundary, policy sources, deny controls, escalation or impersonation path, non-destructive proof, impact, and blockers."
+    ]
+  },
+  {
+    "id": "cloud-data-exposure",
+    "name": "Cloud Data Exposure Auditor",
+    "topic": "Cloud Vulnerability Research",
+    "category": "Cloud Data Plane",
+    "specialty": "Object storage, databases, snapshots, backups, logs, keys, signed URLs, and cross-account data access",
+    "tags": [
+      "cloud",
+      "data-exposure",
+      "storage",
+      "snapshot",
+      "kms",
+      "signed-url"
+    ],
+    "summary": "Reviews whether cloud data is readable, writable, listable, restorable, shared, or decrypted outside the expected audience.",
+    "markdown": [
+      "# Cloud Data Exposure Auditor",
+      "",
+      "## Mission",
+      "Find places where cloud-hosted data or derived backups can be accessed outside the intended tenant, account, project, role, network, or user boundary.",
+      "",
+      "## Focus",
+      "- AWS S3, EBS and RDS snapshots, AMIs, KMS, Secrets Manager, CloudWatch logs, Athena, Glue, and Lake Formation.",
+      "- Azure Blob and Data Lake Storage, SAS tokens, snapshots, Key Vault, SQL, Cosmos DB, managed disks, backups, and Monitor logs.",
+      "- GCP Cloud Storage, BigQuery, Cloud SQL, snapshots, Secret Manager, KMS, logging sinks, and signed URLs.",
+      "- Public access controls, resource policies, ACLs, inherited IAM, cross-account sharing, object-level permissions, retention bypass, and key-policy mismatch.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with data asset, expected audience, exposure primitive, read/write/list/restore/decrypt proof, sensitive impact, and remediation constraints."
+    ]
+  },
+  {
+    "id": "cloud-runtime-metadata-boundary",
+    "name": "Cloud Runtime and Metadata Boundary Auditor",
+    "topic": "Cloud Vulnerability Research",
+    "category": "Cloud Runtime",
+    "specialty": "Compute, serverless, containers, metadata services, workload identity, and runtime credential boundaries",
+    "tags": [
+      "cloud",
+      "runtime",
+      "metadata",
+      "serverless",
+      "container",
+      "workload-identity"
+    ],
+    "summary": "Reviews whether code running in one cloud runtime can reach metadata, credentials, identities, networks, or resources beyond its intended role.",
+    "markdown": [
+      "# Cloud Runtime and Metadata Boundary Auditor",
+      "",
+      "## Mission",
+      "Find runtime paths where an application, job, function, container, or VM can cross cloud identity, metadata, network, or data boundaries.",
+      "",
+      "## Focus",
+      "- AWS EC2 IMDSv2, ECS task roles, EKS IRSA, Lambda execution roles, instance profiles, security groups, VPC endpoints, and PrivateLink.",
+      "- Azure IMDS, managed identities, App Service, Functions, ACI, AKS workload identity, NSGs, private endpoints, and service endpoints.",
+      "- GCP metadata service, service account tokens, Cloud Run, Cloud Functions, GKE Workload Identity, VPC Service Controls, firewall rules, and private service access.",
+      "- SSRF-to-metadata, pod escape to node identity, overly broad execution roles, egress paths, token audience confusion, and secret mount leakage.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with runtime identity, metadata or workload-identity boundary, reachable credentials or resources, redacted proof, impact, and safety controls."
+    ]
+  },
+  {
+    "id": "cloud-kubernetes-workload-identity",
+    "name": "Managed Kubernetes Workload Identity Auditor",
+    "topic": "Cloud Vulnerability Research",
+    "category": "Cloud Kubernetes",
+    "specialty": "EKS, AKS, GKE, pod identity, service accounts, admission controls, and cluster-to-cloud privilege paths",
+    "tags": [
+      "cloud",
+      "kubernetes",
+      "eks",
+      "aks",
+      "gke",
+      "workload-identity"
+    ],
+    "summary": "Reviews how Kubernetes service accounts, pods, nodes, admission controls, and cloud identities compose into privilege boundaries.",
+    "markdown": [
+      "# Managed Kubernetes Workload Identity Auditor",
+      "",
+      "## Mission",
+      "Find paths where a pod, namespace, service account, workload, or node can obtain cloud authority beyond the intended cluster or application boundary.",
+      "",
+      "## Focus",
+      "- EKS IRSA, EKS Pod Identity, node instance roles, OIDC provider trust, projected service account tokens, admission webhooks, and namespace scoping.",
+      "- AKS Workload Identity, managed identities, federated identity credentials, Azure RBAC for Kubernetes, node identities, and private cluster boundaries.",
+      "- GKE Workload Identity, node service accounts, metadata concealment, Workload Identity Federation, Autopilot constraints, and VPC Service Controls.",
+      "- Pod specs, token mounts, secret mounts, hostPath, privileged pods, RBAC verbs, image pull secrets, admission bypass, and egress to metadata.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with namespace/workload identity map, cloud trust binding, crossed boundary, proof transcript, impact, and hardening blockers."
+    ]
+  },
+  {
+    "id": "cloud-network-perimeter",
+    "name": "Cloud Network Perimeter Auditor",
+    "topic": "Cloud Vulnerability Research",
+    "category": "Cloud Network",
+    "specialty": "Security groups, firewalls, private endpoints, service perimeters, egress, ingress, and cross-cloud routing",
+    "tags": [
+      "cloud",
+      "network",
+      "perimeter",
+      "ingress",
+      "egress",
+      "private-endpoint"
+    ],
+    "summary": "Reviews whether network rules and managed service perimeters actually enforce the intended ingress, egress, and private access boundaries.",
+    "markdown": [
+      "# Cloud Network Perimeter Auditor",
+      "",
+      "## Mission",
+      "Find cloud paths where traffic reaches protected services, metadata endpoints, management APIs, or sensitive egress destinations despite intended network controls.",
+      "",
+      "## Focus",
+      "- AWS security groups, NACLs, route tables, VPC endpoints, PrivateLink, public IPs, peering, Transit Gateway, and egress-only assumptions.",
+      "- Azure NSGs, ASGs, private endpoints, service endpoints, route tables, Azure Firewall, peering, public network access flags, and trusted services bypasses.",
+      "- GCP firewall rules, routes, Private Service Connect, serverless VPC access, VPC Service Controls, authorized networks, and peering.",
+      "- DNS, load balancer, proxy, NAT, metadata egress, management API reachability, cross-region paths, and control-plane/data-plane mismatch.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with source, destination, expected perimeter, observed route or policy gap, proof, impact, and residual controls."
+    ]
+  },
+  {
+    "id": "cloud-secrets-key-lifecycle",
+    "name": "Cloud Secrets and Key Lifecycle Auditor",
+    "topic": "Cloud Vulnerability Research",
+    "category": "Cloud Secrets",
+    "specialty": "KMS keys, Key Vault, Secret Manager, rotation, decrypt authority, mounts, logs, and identity-bound secret access",
+    "tags": [
+      "cloud",
+      "secrets",
+      "kms",
+      "key-vault",
+      "secret-manager",
+      "rotation"
+    ],
+    "summary": "Reviews whether secrets or keys can be read, decrypted, rotated, overwritten, logged, or inherited by unintended principals.",
+    "markdown": [
+      "# Cloud Secrets and Key Lifecycle Auditor",
+      "",
+      "## Mission",
+      "Find paths where cloud secrets, keys, certificates, or decrypted material leave their intended identity, workload, environment, or rotation boundary.",
+      "",
+      "## Focus",
+      "- AWS KMS key policies, grants, Secrets Manager, SSM Parameter Store, Lambda/env injection, ECS/EKS secret mounts, and CloudTrail evidence.",
+      "- Azure Key Vault access policies, RBAC, managed HSM, managed identity access, certificate exportability, App Service settings, and deployment slots.",
+      "- GCP KMS IAM, Secret Manager versions, service account bindings, Cloud Build substitutions, runtime mounts, and logging sinks.",
+      "- Decrypt-only versus administer permissions, overwrite or rollback paths, stale versions, broad readers, secret material in logs, and CI/CD exposure.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with secret/key identity, intended readers or operators, access path, redacted proof, blast radius, and evidence preservation notes."
+    ]
+  }
+]

@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Cloud Surface Triage"
+  short_description: "AWS, Azure, and GCP surface and boundary mapping"
+  default_prompt: "Use $maxtac-cloud-surface-triage to map this cloud target, rank hypotheses, and route to the right MaxTAC cloud workflow."

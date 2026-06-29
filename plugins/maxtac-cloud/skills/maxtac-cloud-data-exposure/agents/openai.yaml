@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Cloud Data Exposure"
+  short_description: "Cloud storage, database, backup, key, and signed-access proof"
+  default_prompt: "Use $maxtac-cloud-data-exposure to prove or disprove this cloud data exposure path with minimal data collection."

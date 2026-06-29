@@ -1,13 +1,13 @@
 {
   "name": "maxtac-microsoft-systems",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "Philo Groves"
   },
   "repository": "https://github.com/philo-groves/MaxTAC",
   "license": "MIT",
   "skills": "./skills/",
-  "description": "Microsoft systems and MSRC proof workflows for MaxTAC research.",
+  "description": "Microsoft and Windows surface triage plus MSRC proof workflows for MaxTAC research.",
   "keywords": [
     "codex",
     "maxtac",
@@ -16,14 +16,16 @@
     "msrc",
     "windows",
     "lpac",
-    "mitigations"
+    "mitigations",
+    "surface-triage"
   ],
   "interface": {
     "displayName": "MaxTAC for Microsoft Systems",
-    "shortDescription": "MSRC LPAC proof and Windows mitigation workflows.",
-    "longDescription": "MaxTAC for Microsoft Systems adds MSRC LPAC proof guidance, Windows mitigation reasoning, and Microsoft/Windows-specific auditor routing.",
+    "shortDescription": "Windows surface triage, MSRC LPAC proof, and mitigation workflows.",
+    "longDescription": "MaxTAC for Microsoft Systems adds Windows surface triage, MSRC LPAC proof guidance, Windows mitigation reasoning, and Microsoft/Windows-specific auditor routing.",
     "defaultPrompt": [
       "Use MaxTAC for Microsoft Systems to prepare this MSRC proof.",
+      "Use MaxTAC for Microsoft Systems to triage this Windows target surface.",
       "Use MaxTAC for Microsoft Systems to reason about this Windows mitigation blocker."
     ],
     "developerName": "Philo Groves",

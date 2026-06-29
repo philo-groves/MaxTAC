@@ -1,13 +1,13 @@
 {
   "name": "maxtac-apple-systems",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "Philo Groves"
   },
   "repository": "https://github.com/philo-groves/MaxTAC",
   "license": "MIT",
   "skills": "./skills/",
-  "description": "Apple systems and Apple Security Bounty program workflows for MaxTAC research.",
+  "description": "Apple systems surface triage and Apple Security Bounty program workflows for MaxTAC research.",
   "keywords": [
     "codex",
     "maxtac",
@@ -18,14 +18,16 @@
     "firmware",
     "mitigations",
     "bypass",
-    "commpage"
+    "commpage",
+    "surface-triage"
   ],
   "interface": {
     "displayName": "MaxTAC for Apple Systems",
-    "shortDescription": "Apple ASB proof, IPSW research, and mitigation-bypass workflows.",
-    "longDescription": "MaxTAC for Apple Systems adds Apple Security Bounty Commpage/TCC proof packets, advanced IPSW provenance and patch-diff research, Apple mitigation-bypass workflows, and Apple-specific auditor routing.",
+    "shortDescription": "Apple surface triage, ASB proof, IPSW research, and mitigation-bypass workflows.",
+    "longDescription": "MaxTAC for Apple Systems adds Apple platform surface triage, Apple Security Bounty Commpage/TCC proof packets, advanced IPSW provenance and patch-diff research, Apple mitigation-bypass workflows, and Apple-specific auditor routing.",
     "defaultPrompt": [
       "Use MaxTAC for Apple Systems to prepare this ASB proof packet.",
+      "Use MaxTAC for Apple Systems to triage this Apple target surface.",
       "Use MaxTAC for Apple Systems to research this Apple mitigation bypass."
     ],
     "developerName": "Philo Groves",

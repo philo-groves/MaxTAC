@@ -22,6 +22,7 @@ Use this pack with MaxTAC Core when the target is an Android application, Androi
 - Android + Source when JADX output or available source needs static triage.
 - Android + Binary when native libraries dominate the evidence path.
 - Android + Web when WebView, OAuth, API, account, or browser-mediated workflows matter.
+- Android + Cloud when mobile proof depends on cloud identity, signed URLs, backend cloud storage, or cloud-hosted runtime boundaries.
 - Android + Supply Chains when APK provenance, build pipelines, signing, dependencies, or release artifacts are central.
 
 ## Output Artifacts
@@ -36,4 +37,4 @@ Android workflows commonly produce:
 
 ## Boundary
 
-This pack focuses on Android-specific research. Use Source for broad static code closure, Binary for native RE/fuzzing, Web for API/browser flows, and Supply Chains for build or release provenance.
+This pack focuses on Android-specific research. Use Source for broad static code closure, Binary for native RE/fuzzing, Web for API/browser flows, Cloud for cloud identity or storage proof, and Supply Chains for build or release provenance.

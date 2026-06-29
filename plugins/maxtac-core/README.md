@@ -24,6 +24,7 @@ Install this pack for every MaxTAC engagement, then add only the domain packs ne
 - Core + Source for source-code review, diff scans, intake, CFG, and OpenGrep evidence.
 - Core + Binary for reverse engineering, native debugging, crash replay, and systems fuzzing.
 - Core + Web for web, API, session, tenant, and browser-state research.
+- Core + Cloud for AWS, Azure, GCP, IAM, storage, runtime metadata, workload identity, and cloud network boundary research.
 - Core + Supply Chains for packages, CI/CD, provenance, signing, containers, and release paths.
 - Core + program packs such as Android, Apple Systems, or Microsoft Systems when the program requires specialized proof workflows.
 
@@ -40,4 +41,4 @@ Core expects research artifacts such as:
 
 ## Boundary
 
-Core does not contain source, binary, web, supply-chain, Android, Apple, or Microsoft-specific exploitation guidance. Use domain packs for target-specific research direction.
+Core does not contain source, binary, web, cloud, supply-chain, Android, Apple, or Microsoft-specific exploitation guidance. Use domain packs for target-specific research direction.

@@ -7,7 +7,7 @@
   "repository": "https://github.com/philo-groves/MaxTAC",
   "license": "MIT",
   "skills": "./skills/",
-  "description": "Supply-chain, package, CI/CD, provenance, container, and release-pipeline research pack for MaxTAC.",
+  "description": "Supply-chain, package, CI/CD, provenance, artifact-integrity, and release-pipeline research pack for MaxTAC.",
   "keywords": [
     "codex",
     "maxtac",
@@ -24,7 +24,7 @@
   "interface": {
     "displayName": "MaxTAC for Supply Chains",
     "shortDescription": "Supply-chain compromise and release-path research.",
-    "longDescription": "MaxTAC for Supply Chains adds package compromise hunting, source-to-artifact diffing, CI/CD release-takeover analysis, OSS proof gating, dependency and registry triage, provenance, signing, container, and release-pipeline auditor routing.",
+    "longDescription": "MaxTAC for Supply Chains adds package compromise hunting, source-to-artifact diffing, evidence-freeze and artifact-diff helpers, CI/CD release-takeover analysis, OSS proof gating, dependency and registry triage, provenance, signing, container artifact, and release-pipeline auditor routing.",
     "defaultPrompt": [
       "Use MaxTAC for Supply Chains to hunt this suspected package or release compromise.",
       "Use MaxTAC for Supply Chains to gate this OSS or dependency finding before reporting.",

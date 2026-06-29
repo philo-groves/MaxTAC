@@ -1,6 +1,6 @@
 # MaxTAC for Supply Chains
 
-MaxTAC for Supply Chains adds package compromise hunting, source-to-artifact diffing, CI/CD release-takeover analysis, OSS proof gating, dependency and registry triage, provenance, signing, container, and release-pipeline workflows.
+MaxTAC for Supply Chains adds package compromise hunting, source-to-artifact diffing, artifact capture helpers, CI/CD release-takeover analysis, OSS proof gating, dependency and registry triage, provenance, signing, container artifact, and release-pipeline workflows.
 
 Use this pack with MaxTAC Core when the research question involves how source, dependencies, workflows, credentials, packages, images, or build artifacts become trusted releases or deployments.
 
@@ -24,6 +24,7 @@ Use this pack with MaxTAC Core when the research question involves how source, d
 
 - Supply Chains + Source when reachability depends on source code.
 - Supply Chains + Web when registry APIs, OAuth apps, SaaS consoles, or webhook flows matter.
+- Supply Chains + Cloud when CI/CD OIDC, cloud deployment roles, managed Kubernetes identities, registries, or cloud runtime trust paths matter.
 - Supply Chains + Binary when installers, native packages, release binaries, or containers need binary inspection.
 - Supply Chains + program packs when Android, Apple, or Microsoft proof rules govern the shipped artifact.
 
@@ -33,8 +34,10 @@ Supply-chain workflows commonly produce:
 
 - `audits/supply-chain/<case-id>/` packets for compromise hunts, source-artifact diffs, CI/CD takeover analysis, and OSS proof gates.
 - Package metadata, lockfiles, registry responses, SBOMs, signatures, attestations, image digests, release asset hashes, and workflow logs.
+- Evidence freeze manifests created with `package-freeze.py`.
+- Directory or archive diff packets created with `artifact-diff.py`.
 - Proof-gate packets created with `oss_gate.py`.
 
 ## Boundary
 
-Do not report dependency presence, scanner output, suspicious indicators, or public advisories as new findings without affected-consumer impact and proof. Use Source, Binary, or Web when the next step needs code reachability, reverse engineering, or web workflow evidence.
+Do not report dependency presence, scanner output, suspicious indicators, or public advisories as new findings without affected-consumer impact and proof. Use Source, Binary, Web, or Cloud when the next step needs code reachability, reverse engineering, web workflow evidence, or cloud identity/runtime proof.

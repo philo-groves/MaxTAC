@@ -26,6 +26,7 @@ Use this pack with MaxTAC Core when the target includes source code, generated c
 - Source + Binary when decompiler output becomes the static evidence layer.
 - Source + Android when JADX output or Android source needs static triage.
 - Source + Web when backend routes, handlers, or API implementation code are available.
+- Source + Cloud when infrastructure-as-code, policy code, cloud service handlers, or deployment scripts determine the boundary.
 - Source + Supply Chains when package or CI/CD questions depend on source-level reachability.
 
 ## Output Artifacts
@@ -39,4 +40,4 @@ Source workflows commonly write:
 
 ## Boundary
 
-This pack does not own binary lifting, debugger work, firmware extraction, browser instrumentation, or package registry investigation. Pair it with the relevant domain pack when those surfaces are needed.
+This pack does not own binary lifting, debugger work, firmware extraction, browser instrumentation, cloud control-plane proof, or package registry investigation. Pair it with the relevant domain pack when those surfaces are needed.
