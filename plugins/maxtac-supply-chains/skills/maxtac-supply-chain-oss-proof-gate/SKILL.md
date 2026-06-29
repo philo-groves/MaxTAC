@@ -1,13 +1,13 @@
 ---
 name: maxtac-supply-chain-oss-proof-gate
-description: "Use this skill when MaxTAC Supply Chains needs OSS, dependency, package, or supply-chain finding proof gating before reporting, including Google Bug Hunters OSS-style scope, dependency-owner, and real-world impact checks."
+description: "Use this skill when MaxTAC Supply Chains needs OSS, dependency, package, or supply-chain finding proof gating before reporting, including OSS-style scope, dependency-owner, and real-world impact checks."
 ---
 
 # MaxTAC OSS Proof Gate
 
 Use this skill before reporting OSS, dependency, package, registry, CI/CD, or supply-chain findings. It converts a promising hypothesis into a scope and proof decision: reportable, needs product impact, third-party first, duplicate or known issue, not a security issue, or still needs evidence.
 
-This skill is inspired by modern OSS VRP gating, including Google Bug Hunters' OSS rules and 2026 emphasis on filtering low-quality reports for real-world impact. Always read the current program rules for the target before making a final scope claim.
+This skill is inspired by modern OSS VRP gating, including OSS rules and 2026 emphasis on filtering low-quality reports for real-world impact. Always read the current program rules for the target before making a final scope claim.
 
 ## Helper
 
@@ -39,9 +39,9 @@ Every packet must answer:
 - Exclusions checked: dependency presence only, stale CVE only, speculative malware, local-only developer misconfiguration, unsupported version, test/demo path, no affected consumer, or no realistic attacker path.
 - Decision: reportable, needs product-impact proof, third-party dependency owner first, not actionable, duplicate or known issue, or needs review.
 
-## Google-Style OSS Gating
+## OSS Gating
 
-When a target follows a Google Bug Hunters OSS-style policy, apply these checks before report drafting:
+When a target follows an OSS-style policy, apply these checks before report drafting:
 
 - Verify the project or package is public OSS and within the named program scope. Do not assume every dependency of an in-scope project is itself in scope.
 - For third-party dependencies, determine whether the program expects notification or fixing upstream before submitting downstream impact. Preserve upstream issue/advisory links and dates.
