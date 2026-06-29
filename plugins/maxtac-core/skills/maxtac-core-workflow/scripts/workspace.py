@@ -33,6 +33,7 @@ WORKSPACE_DIRS = {
     "proof": "proof-of-vulnerability development",
     "fuzz": "fuzzing inputs, scripts, and artifacts",
     "tmp": "temporary files that can be deleted between sessions",
+    "contracts": "canonical result contracts and coverage bundles",
     "reporting": "submission-ready reports and evidence indexes",
 }
 LEDGER_FILES = {

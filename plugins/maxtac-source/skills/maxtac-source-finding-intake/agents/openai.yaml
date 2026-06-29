@@ -1,0 +1,5 @@
+interface:
+  display_name: "MaxTAC Source Finding Intake"
+  short_description: "Normalize and triage external findings"
+  default_prompt: "Use $maxtac-source-finding-intake to normalize external security findings for MaxTAC triage."
+

@@ -14,9 +14,12 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | Tool | Used for | Pack |
 | --- | --- | --- |
 | ripgrep (`rg`) | Fast source search during surface triage and path collection. | Source |
+| Git | Diff, branch, commit, and repository worklist generation for Source Scan. | Source |
 | OpenGrep (`opengrep`) | Rule authoring, pattern matching, taint-style source-to-sink checks, result packets. | Source |
 | Compiler, AST, language-server, static-analysis, code-index, or route-map tools | CFG/call-graph facts, guard dominance, route maps, reachability evidence. | Source |
 | DOT or Mermaid-compatible graph output | Persisted control-flow, call-graph, state-machine, or ownership evidence. | Source |
+| SARIF, JSON scanner exports, advisory or ticket exports | External finding intake and backlog triage normalization. | Source |
+| GitHub CLI or authorized connector export | Optional retrieval of code scanning, Dependabot, advisory, or private report content before local intake normalization. | Source |
 
 ## Binary
 

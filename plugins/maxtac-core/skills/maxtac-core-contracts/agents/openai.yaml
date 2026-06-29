@@ -1,0 +1,5 @@
+interface:
+  display_name: "MaxTAC Core Contracts"
+  short_description: "Canonical MaxTAC result bundles"
+  default_prompt: "Use $maxtac-core-contracts to create, validate, or finalize a MaxTAC result contract."
+

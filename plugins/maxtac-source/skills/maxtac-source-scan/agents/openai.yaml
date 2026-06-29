@@ -1,0 +1,5 @@
+interface:
+  display_name: "MaxTAC Source Scan"
+  short_description: "Diff and repo source scan closure"
+  default_prompt: "Use $maxtac-source-scan to run a MaxTAC source scan with worklists and coverage receipts."
+

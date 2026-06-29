@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maxtac.local/schemas/result-bundle.schema.json",
+  "title": "MaxTAC canonical result bundle",
+  "type": "object",
+  "required": ["document_type", "schema_version", "result_id", "target", "scope", "findings", "coverage"],
+  "properties": {
+    "document_type": { "const": "maxtac.result_bundle" },
+    "schema_version": { "const": "1.0" },
+    "result_id": { "type": "string", "minLength": 1 },
+    "target": {
+      "type": "object",
+      "required": ["name", "kind"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string" },
+        "source": { "type": "string" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": ["include_paths", "exclude_paths", "summary", "limitations"],
+      "properties": {
+        "include_paths": { "type": "array", "items": { "type": "string" } },
+        "exclude_paths": { "type": "array", "items": { "type": "string" } },
+        "summary": { "type": "string" },
+        "limitations": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "state", "title", "severity", "confidence", "category", "summary", "affected_locations", "evidence"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "type": { "enum": ["primitive", "chain", "candidate", "external"] },
+          "state": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "severity": { "enum": ["critical", "high", "medium", "low", "informational"] },
+          "confidence": { "enum": ["high", "medium", "low"] },
+          "category": { "type": "string", "minLength": 1 },
+          "summary": { "type": "string", "minLength": 1 },
+          "affected_locations": { "type": "array" },
+          "evidence": { "type": "array" },
+          "validation": { "type": "string" },
+          "attack_path": { "type": "string" },
+          "remediation": { "type": "string" }
+        }
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "surface", "risk_area", "disposition", "receipt_refs", "notes"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "surface": { "type": "string", "minLength": 1 },
+          "risk_area": { "type": "string", "minLength": 1 },
+          "disposition": {
+            "enum": ["reported", "no_issue_found", "rejected", "not_applicable", "needs_follow_up", "deferred"]
+          },
+          "receipt_refs": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

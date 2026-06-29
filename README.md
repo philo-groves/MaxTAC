@@ -12,8 +12,8 @@ Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber p
 
 | Pack | Path | Use when |
 | --- | --- | --- |
-| MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, ledgers, reporting flow, and goal-bounded auditor/debater orchestration. |
-| MaxTAC for Source | `plugins/maxtac-source` | You need static triage, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
+| MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, ledgers, canonical result contracts, reporting flow, and goal-bounded auditor/debater orchestration. |
+| MaxTAC for Source | `plugins/maxtac-source` | You need static triage, source diff/repo scan closure, external finding intake, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
 | MaxTAC for Binary | `plugins/maxtac-binary` | You need native binary RE, Ghidra, radare2, debugger evidence, crash replay, instrumentation, or systems fuzzing. |
 | MaxTAC for Web | `plugins/maxtac-web` | You need web/API/session/tenant triage, browser debugging, or stateful API fuzzing. |
 | MaxTAC for Supply Chains | `plugins/maxtac-supply-chains` | You need dependency, package, CI/CD, provenance, signing, registry, container, or release-pipeline triage. |
@@ -47,6 +47,7 @@ debates/           # verifier debate results
 audits/            # auditor results
 proof/             # proof-of-vulnerability development
 fuzz/              # fuzzing inputs, scripts, and artifacts
+contracts/         # canonical result bundles and generated reports
 tmp/               # temporary files
 ```
 

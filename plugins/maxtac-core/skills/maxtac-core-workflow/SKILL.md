@@ -20,6 +20,7 @@ debates/           # debater subagent results
 audits/            # auditor subagent results
 proof/             # proof-of-vulnerability (PoV) development
 fuzz/              # fuzzing inputs, scripts, and artifacts
+contracts/         # canonical result bundles and deterministic report projections
 tmp/               # temporary files that can be deleted between sessions
 ```
 
@@ -220,5 +221,7 @@ After executing any chain PoV, identify the stable subsystem markdown file(s) fo
 Go to this phase after Chain Proof produces at least one proofed chain with accepted evidence.
 
 Run `workspace_report_ready` or `python3 <skill-dir>/scripts/workspace.py report-ready` before drafting or finalizing a submission report. If the helper reports missing proof, scope, ledger, or phase evidence, return to the phase that can produce the missing artifact.
+
+For bounded reviews, source scans, or handoffs, use `maxtac-core-contracts` to create and validate a canonical result bundle under `contracts/` before drafting prose. The contract should preserve findings, evidence references, coverage decisions, limitations, and deterministic report output.
 
 Write submission-ready reports under `<workspace-root>/reporting/`. Reports should be based on proofed chains, not standalone primitives. Include the validated chain summary, attacker reachability, exploitability, affected versions or targets, reproduction steps, observed impact, proof artifacts, limitations, and any program-specific evidence requirements.
