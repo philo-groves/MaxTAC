@@ -16,15 +16,19 @@
     "cicd",
     "sbom",
     "provenance",
-    "container-security"
+    "container-security",
+    "package-compromise",
+    "artifact-integrity",
+    "oss-vrp"
   ],
   "interface": {
     "displayName": "MaxTAC for Supply Chains",
-    "shortDescription": "Supply-chain and release-path research.",
-    "longDescription": "MaxTAC for Supply Chains adds dependency, package-manager, CI/CD, artifact provenance, signing, container, registry, and release-pipeline triage plus supply-chain auditor routing.",
+    "shortDescription": "Supply-chain compromise and release-path research.",
+    "longDescription": "MaxTAC for Supply Chains adds package compromise hunting, source-to-artifact diffing, CI/CD release-takeover analysis, OSS proof gating, dependency and registry triage, provenance, signing, container, and release-pipeline auditor routing.",
     "defaultPrompt": [
-      "Use MaxTAC for Supply Chains to triage this build or release path.",
-      "Map this package or CI/CD trust boundary with MaxTAC."
+      "Use MaxTAC for Supply Chains to hunt this suspected package or release compromise.",
+      "Use MaxTAC for Supply Chains to gate this OSS or dependency finding before reporting.",
+      "Map this package, artifact, or CI/CD release boundary with MaxTAC."
     ],
     "developerName": "Philo Groves",
     "category": "Security",

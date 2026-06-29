@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC OSS Proof Gate"
+  short_description: "Gate OSS and dependency findings before report"
+  default_prompt: "Use $maxtac-supply-chain-oss-proof-gate to decide whether this OSS, dependency, package, or supply-chain finding has reportable proof."

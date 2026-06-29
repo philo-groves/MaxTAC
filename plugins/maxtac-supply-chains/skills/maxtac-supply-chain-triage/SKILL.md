@@ -1,11 +1,11 @@
 ---
 name: maxtac-supply-chain-triage
-description: "Use this skill when supply-chain research needs dependency, package-manager, build, CI/CD, artifact provenance, signing, container, Kubernetes, registry, or release-pipeline triage."
+description: "Use this skill when supply-chain research needs initial routing across dependency, package-manager, build, CI/CD, artifact provenance, signing, registry, container, Kubernetes, release-pipeline, compromise-hunting, or OSS proof-gating workflows."
 ---
 
 # MaxTAC Supply Chain Triage
 
-Use this skill for dependency and release-path vulnerability research. The goal is to map how source becomes a shipped artifact, what trust assumptions bind each handoff, and where an attacker can influence code, configuration, credentials, packages, images, or metadata.
+Use this skill as the entrypoint for dependency and release-path vulnerability research. The goal is to map how source becomes a shipped artifact, what trust assumptions bind each handoff, and which focused Supply Chains skill should own the next pass.
 
 ## Operating Rules
 
@@ -15,13 +15,21 @@ Use this skill for dependency and release-path vulnerability research. The goal 
 - Use `maxtac-source` when code review, OpenGrep, or call-graph evidence is needed.
 - Use `maxtac-web` when the supply-chain path depends on a web console, webhook, OAuth app, package registry API, or SaaS workflow.
 
+## Skill Routing
+
+- Use `maxtac-supply-chain-compromise-hunt` when the question is "was this package, release, dependency, container, maintainer account, or build path compromised?"
+- Use `maxtac-supply-chain-source-artifact-diff` when a shipped package, image, installer, binary, wheel, jar, gem, crate, or release asset must be compared against source and provenance.
+- Use `maxtac-supply-chain-cicd-release-takeover` when untrusted code, workflow configuration, caches, artifacts, OIDC, runners, or CI tokens may reach publishing or deployment authority.
+- Use `maxtac-supply-chain-oss-proof-gate` before reporting OSS or dependency findings, especially when the target program requires real product impact, dependency-owner notification, or proof that a compromise path affects an in-scope consumer.
+
 ## Triage Workflow
 
 1. Identify the shipped artifact and consumer: package name, image digest, release tag, installer, extension, service, or deployment.
 2. Map build inputs: source repositories, submodules, generated code, package managers, lockfiles, base images, toolchains, CI actions, runner images, secrets, and environment variables.
 3. Map trust boundaries: maintainer identity, registry namespace, package scope, CI runner isolation, artifact signing, attestation policy, review/approval gates, deploy keys, and cloud IAM permissions.
-4. Check attacker influence: dependency confusion, typosquatting, compromised maintainer, mutable tags, cache poisoning, script execution, workflow injection, untrusted PR execution, artifact substitution, and secret exfiltration.
-5. Preserve negative evidence: pinned digests, lockfile integrity, hermetic builds, verified signatures, least-privilege runners, protected branches, review gates, and isolated credentials.
+4. Check attacker influence: dependency confusion, typosquatting, compromised maintainer, mutable tags, cache poisoning, script execution, workflow injection, untrusted PR execution, artifact substitution, credential exfiltration, and release signing abuse.
+5. Preserve negative evidence: pinned digests, lockfile integrity, hermetic builds, verified signatures, least-privilege runners, protected branches, review gates, isolated credentials, dependency-source mapping, and provenance enforcement.
+6. Route to the focused skill that best matches the surviving hypothesis.
 
 ## Supply Chain Packet
 
@@ -44,6 +52,7 @@ Use this skill for dependency and release-path vulnerability research. The goal 
 - Suggested tools: Source/SAST / Web / Auditors
 - Suggested auditor filters:
 - Candidate hypothesis:
+- Recommended next skill:
 - Confidence: low / medium / high
 ```
 

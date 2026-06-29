@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Source Artifact Diff"
+  short_description: "Compare source, packages, images, and provenance"
+  default_prompt: "Use $maxtac-supply-chain-source-artifact-diff to compare this shipped artifact against source, provenance, signatures, and expected build output."

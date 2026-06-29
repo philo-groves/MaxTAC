@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC CI/CD Release Takeover"
+  short_description: "Analyze workflow-to-release compromise paths"
+  default_prompt: "Use $maxtac-supply-chain-cicd-release-takeover to trace whether untrusted CI input can reach trusted release, signing, publishing, or deployment authority."

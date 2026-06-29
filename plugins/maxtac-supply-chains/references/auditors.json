@@ -1,5 +1,122 @@
 [
   {
+    "id": "malicious-package-compromise",
+    "name": "Malicious Package and Release Compromise Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Supply Chain and Build Security",
+    "specialty": "Malicious packages, maintainer compromise, registry events, suspicious releases, artifact swaps, and staged payload behavior",
+    "tags": [
+      "supply-chain",
+      "package-compromise",
+      "malware",
+      "registry",
+      "release"
+    ],
+    "summary": "Reviews package, version, maintainer, registry, and artifact anomalies to distinguish compromise indicators from reportable affected-consumer impact.",
+    "markdown": [
+      "# Malicious Package and Release Compromise Auditor",
+      "",
+      "## Mission",
+      "Find actual or likely supply-chain compromise where attacker-controlled code, metadata, credentials, or artifacts can affect an in-scope consumer.",
+      "",
+      "## Focus",
+      "- Suspicious package versions, maintainer churn, registry namespace transfers, yanks, replaced release assets, tag movement, and provenance changes.",
+      "- Source/package mismatch, install hooks, native blobs, obfuscation, network egress, credential reads, CI-only payloads, and staged execution triggers.",
+      "- Affected consumer paths through developer workstations, CI, build farms, release jobs, production runtime, installers, extensions, or containers.",
+      "- Whether evidence proves compromise, needs isolated dynamic analysis, or only shows low-confidence indicators.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with compromise hypothesis, artifact anchors, indicators, affected consumer path, positive and negative evidence, safe-handling notes, and proof gaps."
+    ]
+  },
+  {
+    "id": "source-artifact-integrity",
+    "name": "Source-to-Artifact Integrity Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Supply Chain and Build Security",
+    "specialty": "Source/package diffs, build reproducibility, generated artifacts, signatures, attestations, SBOMs, and release asset integrity",
+    "tags": [
+      "artifact-integrity",
+      "provenance",
+      "signature",
+      "sbom",
+      "supply-chain"
+    ],
+    "summary": "Compares shipped artifacts against source anchors and build provenance to detect tampering, unreproducible payloads, and security-relevant packaging drift.",
+    "markdown": [
+      "# Source-to-Artifact Integrity Auditor",
+      "",
+      "## Mission",
+      "Find source-to-release gaps where the shipped package, image, installer, binary, or release asset does not match the intended source or trusted build path.",
+      "",
+      "## Focus",
+      "- Source commits, tag object IDs, package digests, image digests, release asset hashes, signatures, attestations, SBOMs, and builder identity.",
+      "- Added files, generated outputs, minified bundles, native blobs, nested archives, permission changes, symlinks, install scripts, and dependency drift.",
+      "- Whether mismatches are expected packaging output, benign generated files, suspicious artifacts, or confirmed release tampering.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with source anchor, artifact anchor, normalized diff, provenance verdict, security-relevant deltas, evidence, and recommended follow-up."
+    ]
+  },
+  {
+    "id": "cicd-release-takeover",
+    "name": "CI/CD Release Takeover Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Supply Chain and Build Security",
+    "specialty": "Untrusted CI events reaching publish, signing, deployment, package release, cloud OIDC, runner, cache, or artifact promotion authority",
+    "tags": [
+      "cicd",
+      "release",
+      "oidc",
+      "runner",
+      "artifact"
+    ],
+    "summary": "Traces low-trust workflow input to high-trust release, signing, package publishing, deployment, or credential authority.",
+    "markdown": [
+      "# CI/CD Release Takeover Auditor",
+      "",
+      "## Mission",
+      "Find workflow and release-process flaws where untrusted input can influence trusted artifacts, secrets, publish tokens, signing keys, OIDC roles, or deployments.",
+      "",
+      "## Focus",
+      "- `pull_request_target`, `workflow_run`, issue-comment triggers, reusable workflows, unpinned actions, mutable Docker actions, and broad token permissions.",
+      "- Artifact upload/download handoffs, cache poisoning, self-hosted runner trust zones, OIDC subject/audience constraints, environment approvals, and release scripts.",
+      "- Whether CI code execution reaches release authority, credential theft, artifact poisoning, signing abuse, cloud deployment, or package publication.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with event-to-authority graph, attacker-controlled input, privileged consumer, exploit sequence, broken controls, impact, and blockers."
+    ]
+  },
+  {
+    "id": "oss-proof-gate",
+    "name": "OSS Supply Chain Proof Gate Auditor",
+    "topic": "Vulnerability Research",
+    "category": "Program Scope and Proof Quality",
+    "specialty": "OSS VRP scope, dependency-owner routing, affected-consumer proof, real-world impact, duplicate advisory checks, and reportability gating",
+    "tags": [
+      "oss",
+      "proof",
+      "scope",
+      "dependency",
+      "supply-chain"
+    ],
+    "summary": "Reviews whether an OSS, dependency, package, or supply-chain claim has enough scope and proof quality to report.",
+    "markdown": [
+      "# OSS Supply Chain Proof Gate Auditor",
+      "",
+      "## Mission",
+      "Gate OSS and dependency findings before reporting by separating affected-consumer impact from dependency presence, known advisories, speculative compromise, and out-of-scope upstream issues.",
+      "",
+      "## Focus",
+      "- Program scope, project ownership, first-party versus third-party dependency relationship, upstream notification status, and supported versions.",
+      "- Attacker control, affected consumer path, real-world impact, positive proof, negative controls, duplicate or known advisory status, and policy exclusions.",
+      "- Whether the finding is reportable, needs product-impact proof, belongs upstream first, is not actionable, or needs further review.",
+      "",
+      "## Output",
+      "Persist `assessment.md` with scope basis, affected consumer, proof quality, exclusions checked, decision, and report-blocking gaps."
+    ]
+  },
+  {
     "id": "cicd-pipeline-supply-chain",
     "name": "CI/CD Pipeline Supply Chain Auditor",
     "topic": "Vulnerability Research",

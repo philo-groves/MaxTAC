@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Supply Chain Compromise Hunt"
+  short_description: "Hunt suspicious packages and release artifacts"
+  default_prompt: "Use $maxtac-supply-chain-compromise-hunt to investigate this suspected package, dependency, artifact, registry, or release compromise."

@@ -51,11 +51,11 @@ Install only the tools needed by the active plugin packs and current target. Cor
 
 | Tool family | Used for | Pack |
 | --- | --- | --- |
-| Package-manager native tools | Lockfile, dependency, script, registry, and provenance inspection. | Supply Chains |
-| SBOM and dependency scanners | Dependency inventory, reachability support, and report artifacts. | Supply Chains |
-| CI/CD CLIs and logs | Workflow, runner, secret, approval, and artifact handoff evidence. | Supply Chains |
-| Signing and attestation tools | Release integrity, signature, provenance, and policy evidence. | Supply Chains |
-| Container and registry tools | Image digest, layer, build context, base image, and registry metadata evidence. | Supply Chains |
+| Package-manager native tools (`npm`, `pnpm`, `yarn`, `pip`, `uv`, `poetry`, `go`, `cargo`, `mvn`, `gradle`, `nuget`, `gem`) | Lockfile, dependency, script, registry, package metadata, packed artifact, and provenance inspection. | Supply Chains |
+| SBOM, advisory, and malware scanners (`syft`, `grype`, `osv-scanner`, ecosystem audit tools) | Dependency inventory, advisory context, reachability support, compromise leads, and report artifacts. | Supply Chains |
+| CI/CD CLIs and logs (`gh`, cloud CLIs, runner logs) | Workflow, runner, secret, approval, OIDC, cache, artifact handoff, release, and deployment evidence. | Supply Chains |
+| Signing and attestation tools (`cosign`, `slsa-verifier`, `gitsign`, ecosystem provenance tools) | Release integrity, signature, builder identity, SLSA/provenance, and policy evidence. | Supply Chains |
+| Container and registry tools (`docker`, `podman`, `skopeo`, `crane`, `oras`) | Image digest, layer diff, build context, base image, registry metadata, and artifact integrity evidence. | Supply Chains |
 
 ## Android
 
