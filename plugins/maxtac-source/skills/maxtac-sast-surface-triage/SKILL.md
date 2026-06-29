@@ -13,6 +13,7 @@ Use this skill as the first static-analysis pass for a target slice. The goal is
 - Keep the output small enough to paste into an auditor prompt or research note.
 - Capture why a path matters: actor, trust boundary, controlled fields, protected asset, and security invariant.
 - Prefer 2-4 strong hypotheses over many shallow guesses.
+- Use `maxtac-source-codebase-memory` first when codebase-memory-mcp is available and architecture, route, symbol, or call-path orientation would reduce broad file exploration.
 - Use `maxtac-sast-opengrep` for repeatable source-to-sink searches and `maxtac-sast-control-flow-graph` when reachability, guard ordering, state transitions, locks, or cleanup paths matter.
 - Use `maxtac-core-subagents` after triage to route each hypothesis to a targeted, goal-bounded auditor.
 - Do not create or promote findings from triage alone. Triage produces candidate hypotheses and evidence plans.
@@ -164,6 +165,7 @@ Produce this compact packet before spawning auditors or writing rules:
 
 - Use `maxtac-sast-opengrep` when a hypothesis needs repeatable searches across many files, taint-like source-to-sink checks, constant or symbolic propagation, or rule tests.
 - Use `maxtac-sast-control-flow-graph` when a hypothesis depends on path feasibility, guard dominance, call chains, callbacks, lock order, cleanup paths, or multi-function state transitions.
+- Use `maxtac-source-codebase-memory` when codebase-memory-mcp can provide architecture summaries, symbol discovery, route maps, call paths, ADRs, or diff impact before narrowing the packet.
 - Use Android JADX for APK/DEX/resource decompiler output, or Binary RE skills such as Ghidra and Radare2 for native binaries, firmware payloads, binary-level xrefs, and call graphs.
 - Use DAST skills when the triage path needs runtime confirmation, fuzzing, debugging, or a controlled proof environment.
 - Use `maxtac-core-subagents` when linted packets are clear enough for a targeted, goal-bounded auditor to assess a bug class or mitigation boundary. Prefer an auditor prompt produced by `packet.py prompt` so surface, CFG, and OpenGrep evidence stay structured, then wrap it with the subagent helper before spawning.

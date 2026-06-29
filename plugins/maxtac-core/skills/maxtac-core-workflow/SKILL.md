@@ -53,6 +53,8 @@ Before persisting any markdown, classify it:
 
 Markdown under `artifacts/` is the exception. If a markdown file contains conclusions, triage reasoning, reusable negative evidence, or a subsystem model, rewrite those facts into a sibling research-library note and leave the artifact as a source link. A future reader should be able to learn the system by reading `research/**/*.md` outside `artifacts/`, then inspect artifacts only for proof and provenance.
 
+Optional code-intelligence systems such as codebase-memory-mcp can accelerate orientation, call-path tracing, ADR lookup, and diff-impact mapping. Treat their output as artifact evidence or a discovery cache. The MaxTAC `research/` library remains the durable security memory; rewrite any reusable architecture, trust-boundary, invariant, or negative result into `research/` instead of relying on an external graph or ADR store.
+
 ### Submodule Structure
 
 The base module exists at `research/`, containing a hierarchy of system-focused submodules. Submodules should follow durable ownership boundaries such as product area, subsystem, component family, protocol, policy engine, kernel area, or parser family. They should not be named after a single session, date, build number, tool, or hypothesis unless the subject itself is inherently version-specific.
@@ -150,7 +152,7 @@ Determine if a stable subsystem submodule relevant to this session activity alre
 
 Next, identify which installed domain pack owns the target method:
 
-- Source/SAST: source repositories, existing decompiler output, static reachability, guard dominance, and OpenGrep evidence.
+- Source/SAST: source repositories, existing decompiler output, optional codebase-memory graph queries, static reachability, guard dominance, and OpenGrep evidence.
 - Binary: native binaries, firmware payloads, reverse engineering, crash replay, native instrumentation, and systems fuzzing.
 - Web: web applications, APIs, sessions, browser state, tenants, and SaaS workflows.
 - Cloud: AWS, Azure, GCP, IAM, storage, data plane, runtime metadata, workload identity, managed Kubernetes, and cloud network boundaries.

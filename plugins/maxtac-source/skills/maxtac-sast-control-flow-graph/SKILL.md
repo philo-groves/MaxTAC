@@ -12,6 +12,7 @@ Use this skill when a security hypothesis cannot be answered by reading one func
 - Build graphs around a question, not around the entire program.
 - Include only nodes needed to reason about entrypoints, guards, state changes, calls, sinks, error paths, callbacks, locks, and cleanup.
 - Prefer real compiler, language-server, decompiler, or analysis-tool facts over hand-drawn guesses.
+- Use `maxtac-source-codebase-memory` when available to seed caller/callee, route, symbol, or diff-impact facts before reducing the final security graph.
 - Preserve the commands, scripts, or manual steps used to derive graph facts when the graph supports a finding.
 - Treat generated graphs as evidence aids. Still verify important edges by reading source code, generated code, or decompiler output.
 
@@ -40,7 +41,7 @@ Use this skill when a security hypothesis cannot be answered by reading one func
 
 3. Collect facts.
    - Start with `rg` to find entrypoints, sinks, guard functions, state fields, callbacks, and tests.
-   - Use language-aware tools when available: compiler AST dumps, language servers, static analyzers, OpenGrep, code indexes, or framework route maps.
+   - Use language-aware tools when available: codebase-memory-mcp, compiler AST dumps, language servers, static analyzers, OpenGrep, code indexes, or framework route maps.
    - For binaries or apps without source, use the owning domain pack first: Android for JADX APK/DEX/resource output, or Binary for Ghidra/Radare2 xrefs, call graphs, decompiled functions, switch tables, and data references.
    - For native binaries, use Ghidra or Radare2 for xrefs, basic blocks, decompiler output, and callgraph exports.
 

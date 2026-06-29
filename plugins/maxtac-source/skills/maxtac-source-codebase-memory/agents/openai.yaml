@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Source Codebase Memory"
+  short_description: "Optional code graph memory for source triage"
+  default_prompt: "Use $maxtac-source-codebase-memory to index or query codebase-memory-mcp before source triage."

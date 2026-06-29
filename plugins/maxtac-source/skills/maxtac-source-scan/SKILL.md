@@ -33,7 +33,7 @@ contracts/<scan-id>/result.json
    - Use `mode scoped` for selected directories or packages.
 2. Create a matching Core result contract with `maxtac-core-contracts`.
 3. Review every row in `worklist.jsonl`.
-   - Use `maxtac-sast-surface-triage`, `maxtac-sast-control-flow-graph`, `maxtac-sast-opengrep`, and domain auditors as needed.
+   - Use `maxtac-source-codebase-memory`, `maxtac-sast-surface-triage`, `maxtac-sast-control-flow-graph`, `maxtac-sast-opengrep`, and domain auditors as needed.
    - Add supporting files only when they are needed to understand a row's security behavior.
 4. For each row, write a receipt with `receipt`.
 5. Add reportable findings and reviewed surfaces to the Core result contract.
