@@ -12,9 +12,10 @@ The following files and directories are managed under the base directory of the 
 
 ```
 program-info.md    # authorized scope and exclusions
-workspace.sqlite   # findings, debate tallies, audit index, and search memory
+workspace.sqlite   # findings, model assertions, debate tallies, audit index, and search memory
 reporting/         # submission-ready reports and evidence indexes
 research/          # scalable markdown research library
+models/            # machine-readable security models and invariant dictionaries
 proof/             # proof-of-vulnerability (PoV) development
 fuzz/              # fuzzing inputs, scripts, and artifacts
 contracts/         # canonical result bundles and deterministic report projections
@@ -26,13 +27,13 @@ tmp/               # temporary files that can be deleted between sessions
 Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations instead of hand-creating the standard files and directories:
 
 - `init`: create the canonical workspace directories, seed `program-info.md`, initialize empty finding ledgers, and record the starting phase.
-- `status`: summarize workspace health, ledger counts, oversized research markdown, research hygiene, attention-lock warnings, phase state, and report readiness.
+- `status`: summarize workspace health, model counts, ledger counts, oversized research markdown, research hygiene, attention-lock warnings, phase state, and report readiness.
 - `phase`: show or update the current workflow phase. The canonical forward path is `prepare` -> `scan` -> `validation` -> `primitive-proof` -> `chain-proof` -> `reporting`; the helper also allows documented returns to earlier phases when evidence invalidates a path. Repeating the current phase with `--note` records a timestamped phase renewal.
 - `new-submodule`: create a durable research submodule under `research/`, with an `artifacts/` directory for raw evidence and optional subsystem markdown from `references/subsystem.template.md`.
 - `split-large-markdown`: split a markdown file over the large-file threshold into a submodule. Retain the source by default; delete it only with `--verified --delete-source` after confirming the transcription.
 - `report-ready`: check whether a proofed chain has the minimum workspace evidence needed to move into reporting.
 
-The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script and is stored in `<workspace-root>/workspace.sqlite`. The same database also indexes debate tallies and audit assessments so agents can search prior votes, conclusions, blockers, and artifacts before repeating work.
+The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script and is stored in `<workspace-root>/workspace.sqlite`. The same database also indexes model assertions, debate tallies, and audit assessments so agents can search known invariants, prior votes, conclusions, blockers, and artifacts before repeating work.
 
 Use `scripts/workspace.py` as the canonical Core workspace helper. Domain or program-specific packs may expose MCP wrappers for their own workflows, but Core does not require them.
 
@@ -43,6 +44,8 @@ MaxTAC is designed as a modular research workspace meant to scale for scopes of 
 
 Treat `research/` as a permanent, cross-session security book about the target program or system. Its markdown should read like durable chapters: architecture, entrypoints, trust boundaries, invariants, subsystem behavior, confirmed negative knowledge, and links to supporting evidence. It is not a session transcript, scratchpad, tool-output dump, or per-hypothesis storage bin.
 
+Treat `models/` as the machine-readable sibling to the research library. Use `maxtac-core-modeling` to create `models/<model-id>/model.json`, project `invariants.md`, `obligations.md`, and `graph.mmd`, and index model assertions into `workspace.sqlite`. The research library explains the system in prose; the model preserves entities, relations, invariants, formulas, assumptions, unknowns, contradictions, status, confidence, and evidence references in a form that can be queried and handed to auditors.
+
 Before persisting any markdown, classify it:
 
 - **Research library markdown**: synthesized knowledge a future session should read to understand the system. Put it in the narrowest stable subsystem submodule under `research/`.
@@ -50,7 +53,7 @@ Before persisting any markdown, classify it:
 
 Markdown under `artifacts/` is the exception. If a markdown file contains conclusions, triage reasoning, reusable negative evidence, or a subsystem model, rewrite those facts into a sibling research-library note and leave the artifact as a source link. A future reader should be able to learn the system by reading `research/**/*.md` outside `artifacts/`, then inspect artifacts only for proof and provenance.
 
-Optional code-intelligence systems such as codebase-memory-mcp can accelerate orientation, call-path tracing, ADR lookup, and diff-impact mapping. Treat their output as artifact evidence or a discovery cache. The MaxTAC `research/` library remains the durable security memory; rewrite any reusable architecture, trust-boundary, invariant, or negative result into `research/` instead of relying on an external graph or ADR store.
+Optional code-intelligence systems such as codebase-memory-mcp can accelerate orientation, call-path tracing, ADR lookup, and diff-impact mapping. Treat their output as artifact evidence or a discovery cache. The MaxTAC `research/` library and `models/` bundles remain the durable security memory; rewrite reusable architecture, trust-boundary, invariant, or negative result into `research/`, and add structured entities, relations, invariants, formulas, assumptions, unknowns, or contradictions to `models/` when the knowledge should drive future auditor prompts.
 
 ### Submodule Structure
 
@@ -144,6 +147,16 @@ Assume the first run is active if `<workspace-root>/program-info.md` does not ex
 
 Use `<skill-dir>/references/program-info.template.md` relative to this skill as a template and fill in the missing sections. Key information should come from the user, the installed domain/program pack, or the current official program source.
 
+#### Modeling Setup
+Use `maxtac-core-modeling` during Prepare when the target has nontrivial architecture, identity, trust, state, or policy behavior. Create or refresh a model under `models/<model-id>/` before spawning broad auditors. At minimum, capture:
+
+- major actors, principals, components, services, resources, assets, entrypoints, guards, sinks, states, and trust boundaries;
+- relations that explain identity, authorization, data movement, state transitions, delegation, or trust;
+- security invariants and first-order-logic-style formulas where they clarify the rule;
+- assumptions, unknowns, and contradictions that could change vulnerability conclusions.
+
+Do not force tiny one-off tasks into a model, but if a session depends on "what must always be true" about a system, create the model before Scan.
+
 #### Target Setup
 Determine if a stable subsystem submodule relevant to this session activity already exists, and if not, create one. Use the associated submodule for durable security research: documenting architecture, trust boundaries, invariants, and cross-session knowledge as markdown, while placing raw supporting files in `artifacts/`. Avoid recreating similar submodules as it may cause duplicate work, but create child submodules when the research moves to a distinct subsystem.
 
@@ -167,8 +180,10 @@ Use the installed domain pack that matches the target. Produce a compact triage 
 
 When source code or existing decompiler output is available, the Source pack can produce SAST, control-flow, and OpenGrep packets. When the target is web, cloud, supply-chain, binary, Android, Apple, or Microsoft-specific, use that pack's triage guidance before spawning auditors.
 
+Before spawning auditors for a modeled subsystem, search `models/` with `maxtac-core-modeling`. Export a model-backed auditor prompt when known invariants, formulas, assumptions, or unknowns materially affect the audit. If triage discovers reusable architecture or a new invariant, update the model after the packet is stable.
+
 #### Hypothesize
-Analyze previously conducted recon, threat modeling, research, and surface triage to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version.
+Analyze previously conducted recon, threat modeling, research, models, and surface triage to come up with at least one new primitive or chain hypothesis. Pay close attention to multi-function, multi-file, multi-system security considerations. Magnetize toward code danger zones and security boundaries. Avoid duplicating previous hypotheses on the same software version. Treat candidate invariant violations as hypotheses, not findings.
 
 #### Spawn Auditors
 Before spawning a new auditor, search existing audit memory with `audit-helper.py --audit-search "<hypothesis boundary component>"`. If a prior assessment already covers the same boundary, reuse it, write a narrowed delta prompt, or update the ledger/research library instead of repeating the audit.
@@ -178,7 +193,7 @@ For each remaining hypothesis, spawn one or more targeted, goal-bounded auditor 
 #### Update Findings
 Based on audit results, use `maxtac-core-ledger` guidance to create or update findings. In most cases, audits result in findings in a `discovered` or `confident` state. Sometimes, an audit will surface evidence that demotes an existing finding to a `de-escalated` or `limited` state.
 
-During scan, do not write unvalidated vulnerability claims into the research library as facts. Do update research markdown for stable system knowledge learned during the branch, especially architecture, reachability gates, authorization invariants, and negative results that will prevent future duplicate work. Keep speculative packets, broad match sets, and raw branch notes in `workspace.sqlite`, `tmp/`, or `artifacts/` until they are rewritten into book-like subsystem notes.
+During scan, do not write unvalidated vulnerability claims into the research library or model as facts. Do update research markdown and model assertions for stable system knowledge learned during the branch, especially architecture, reachability gates, authorization invariants, state transitions, contradictions, assumptions, unknowns, and negative results that will prevent future duplicate work. Keep speculative packets, broad match sets, and raw branch notes in `workspace.sqlite`, `tmp/`, or `artifacts/` until they are rewritten into book-like subsystem notes and structured model entries.
 
 ### 3. Validation
 Go to this phase after the Scan phase or when additional pre-proofing validation is required.
@@ -190,7 +205,7 @@ For each new finding or pre-proofing requirement, spawn three goal-bounded subag
 If at least two subagents vote invalid, go to the Scan phase where more auditing may be conducted, or the finding may be `de-escalated`. If at least two subagents vote valid, the finding is promoted to `validated` using `maxtac-core-ledger` guidance and update the research (see next section). Before any promotion action, search the finding ledger to determine if the finding already exists, and if it does, use `maxtac-core-ledger` guidance to mark the `duplicate` state. If the finding is original, move to the Proof phase.
 
 #### Update Research
-After promoting any finding to `validated`, evidence from its audit(s) is incorporated into the research workspace. Determine whether a stable subsystem submodule and markdown file already exists; if not, create them. Do not copy audit information directly; instead, rewrite the information into fluent library prose and link to exact audit or artifact evidence.
+After promoting any finding to `validated`, evidence from its audit(s) is incorporated into the research workspace. Determine whether a stable subsystem submodule and markdown file already exists; if not, create them. Do not copy audit information directly; instead, rewrite the information into fluent library prose and link to exact audit or artifact evidence. If the finding confirms, refutes, or violates a modeled invariant, update the relevant model assertion status and evidence with `maxtac-core-modeling`.
 
 ### 4. Primitive Proof
 Go to this phase after the Validation phase completes with at least one valid non-duplicate finding.
@@ -202,7 +217,7 @@ Construct and execute an isolated proof-of-vulnerability (PoV) primitive that pl
 If at least two subagents vote invalid, revise the PoV or use `maxtac-core-ledger` guidance to de-escalate the primitive as debunked or out-of-scope. Confirmed primitives are marked as proofed according to `maxtac-core-ledger` guidance, even if they are not reachable or exploitable. If a primitive cannot be proven nor debunked, it is marked as `limited`.
 
 #### Update Research
-After executing any primitive PoV, identify the stable subsystem markdown for the related system. These file system resources were likely already created during the Validation phase flow; however, if there was a deletion or mistake, they may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positive results, do not overwrite information that may be important later; append a concise library update and link to proof artifacts.
+After executing any primitive PoV, identify the stable subsystem markdown for the related system. These file system resources were likely already created during the Validation phase flow; however, if there was a deletion or mistake, they may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positive results, do not overwrite information that may be important later; append a concise library update and link to proof artifacts. Update modeled preconditions, invariants, assumptions, and contradictions so later chain planning can search the proven facts.
 
 #### Chain Planning
 For each proven primitive, first analyze whether the primitive is exploitable and reachable as a standalone chain. If so, no further scanning is needed; a validated chain may be created based on the single primitive, then go to the Chain Proof phase. If the primitive is not reachable or exploitable on its own, use creative thinking to generate at least two chains and their hypotheses. If all chain primitives are already proven, go to the Chain Proof phase; otherwise, go to the Scan phase to audit the chain gaps.
@@ -217,7 +232,7 @@ For each validated chain, create and execute a realistic end-to-end proof-of-vul
 If at least two subagents vote invalid, revise the PoV or use `maxtac-core-ledger` guidance to de-escalate the chain. If at least two subagents vote the PoV as valid, promote it to `proofed`. After marking a PoV as `proofed`, write a submission-ready report which includes it.
 
 #### Update Research
-After executing any chain PoV, identify the stable subsystem markdown file(s) for every related subsystem. Since chains combine primitives, research may span multiple submodules or markdown files. These resources were likely created during the Validation or Primitive Proof phase flows; however, if there was a deletion or mistake, they may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positive results, append concise library updates and link to proof artifacts without burying the chain inside a session-named folder.
+After executing any chain PoV, identify the stable subsystem markdown file(s) for every related subsystem. Since chains combine primitives, research may span multiple submodules or markdown files. These resources were likely created during the Validation or Primitive Proof phase flows; however, if there was a deletion or mistake, they may be recreated. For negative results, rewrite stale or invalid information to prevent confusing search results. For positive results, append concise library updates and link to proof artifacts without burying the chain inside a session-named folder. If a chain proves an invariant violation, keep the invariant ID visible in the ledger evidence, proof notes, and any result contract.
 
 ### 6. Reporting
 Go to this phase after Chain Proof produces at least one proofed chain with accepted evidence.

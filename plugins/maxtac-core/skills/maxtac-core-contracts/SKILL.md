@@ -50,6 +50,13 @@ Add a finding:
 python <skill-dir>/scripts/contract.py add-finding <result.json> --title "Missing authorization on export" --type chain --state proofed --severity high --confidence medium --category "Authorization bypass" --location "root_control:src/export.py:88" --evidence "proof/export-pov.md" --summary "..."
 ```
 
+Attach a model or invariant reference to a result or finding:
+
+```text
+python <skill-dir>/scripts/contract.py add-model-ref <result.json> --kind invariant --model-id export-api --assertion-id INV-0001 --note "Finding violates the tenant export invariant."
+python <skill-dir>/scripts/contract.py add-model-ref <result.json> --finding-id M-0004 --kind invariant --model-id export-api --assertion-id INV-0001
+```
+
 Add or close a coverage surface:
 
 ```text
@@ -70,6 +77,7 @@ python <skill-dir>/scripts/contract.py finalize <result.json>
 - `state`: preserve MaxTAC states such as `discovered`, `confident`, `validated`, `proofed`, `duplicate`, `limited`, and `de-escalated`.
 - `affected_locations`: use `label:path:lines` for command input, for example `sink:src/archive.py:142-151`.
 - `evidence`: point at workspace-relative audit, proof, fuzzing, source-scan, or artifact paths.
+- `model_refs`: point at `maxtac-core-modeling` model IDs and assertion IDs when a finding, coverage decision, or bounded result depends on a modeled entity, relation, invariant, formula, assumption, unknown, or contradiction.
 - `coverage.receipt_refs`: point at artifacts that prove the reviewed surface was covered or explicitly deferred.
 
 Read `schemas/result-bundle.schema.json` only when exact schema shape matters.
@@ -80,3 +88,4 @@ Read `schemas/result-bundle.schema.json` only when exact schema shape matters.
 - Do not silently drop reviewed-but-rejected surfaces. Record them as coverage.
 - Do not put raw tool logs in `result.json`; store logs as artifacts and reference them.
 - Do not author `report.md` by hand when a canonical `result.json` exists. Update the contract and regenerate the report.
+- Do not use model references as evidence by themselves. They preserve context and invariant IDs; proof still needs audit, validation, proof, or coverage artifacts.

@@ -1,27 +1,30 @@
 {
   "name": "maxtac-core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "Philo Groves"
   },
   "repository": "https://github.com/philo-groves/MaxTAC",
   "license": "MIT",
   "skills": "./skills/",
-  "description": "Core MaxTAC workflow, workspace, ledger, canonical result contracts, reporting, and goal-bounded subagent orchestration.",
+  "description": "Core MaxTAC workflow, workspace, security modeling, invariant dictionaries, ledger, canonical result contracts, reporting, and goal-bounded subagent orchestration.",
   "keywords": [
     "codex",
     "maxtac",
     "security",
     "trusted-access-for-cyber",
     "workflow",
+    "security-modeling",
+    "invariants",
     "vulnerability-research"
   ],
   "interface": {
     "displayName": "MaxTAC Core",
-    "shortDescription": "Core MaxTAC research workflow and ledgers.",
-    "longDescription": "MaxTAC Core coordinates authorized vulnerability research without loading domain-specific source, binary, web, supply-chain, Android, Apple, or Microsoft guidance. It manages the research workspace, durable research library, primitive and chain ledgers, canonical result contracts, goal-bounded auditor/debater prompts, validation, proof, and reporting flow.",
+    "shortDescription": "Core workflow, models, contracts, and ledgers.",
+    "longDescription": "MaxTAC Core coordinates authorized vulnerability research without loading domain-specific source, binary, web, supply-chain, Android, Apple, or Microsoft guidance. It manages the research workspace, durable research library, security models, invariant dictionaries, first-order-logic-style assertions, primitive and chain ledgers, canonical result contracts, goal-bounded auditor/debater prompts, validation, proof, and reporting flow.",
     "defaultPrompt": [
       "Use MaxTAC Core to initialize this authorized research workspace.",
+      "Use MaxTAC Core to create or update a security model and invariant dictionary for this target.",
       "Use MaxTAC Core to update findings and plan the next validation step.",
       "Use MaxTAC Core to create a canonical result contract for this review."
     ],

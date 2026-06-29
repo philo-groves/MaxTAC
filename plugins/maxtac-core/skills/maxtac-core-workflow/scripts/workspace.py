@@ -28,10 +28,11 @@ import workspace_db  # noqa: E402
 STATE_FILE = ".maxtac-workspace.json"
 WORKSPACE_FILES = {
     "program-info.md": "authorized scope and exclusions",
-    workspace_db.DB_FILE: "SQLite findings, debate tallies, audit index, and search memory",
+    workspace_db.DB_FILE: "SQLite findings, model assertions, debate tallies, audit index, and search memory",
 }
 WORKSPACE_DIRS = {
     "research": "scalable markdown research library",
+    "models": "machine-readable security models and invariant dictionaries",
     "proof": "proof-of-vulnerability development",
     "fuzz": "fuzzing inputs, scripts, and artifacts",
     "tmp": "temporary files that can be deleted between sessions",
@@ -92,6 +93,7 @@ ATTENTION_DOMINANCE_RATIO = 0.7
 ATTENTION_MIN_RESEARCH_FILES = 8
 ATTENTION_TOP_LEVEL_DIRS = (
     "research",
+    "models",
     "proof",
     "fuzz",
     "tmp",
@@ -111,6 +113,7 @@ ATTENTION_TRACKED_SUFFIXES = {
     ".log",
     ".m",
     ".md",
+    ".mmd",
     ".mm",
     ".opengrep",
     ".plist",
@@ -315,6 +318,7 @@ def workspace_memory_counts(root: Path) -> dict[str, Any] | None:
         return None
     try:
         return {
+            "models": workspace_db.count_models(root),
             "debates": workspace_db.count_debates(root),
             "audits": workspace_db.count_audits(root),
         }
@@ -848,7 +852,7 @@ def cmd_status(args: argparse.Namespace) -> None:
     elif memory.get("error"):
         print(f"Workspace memory: error: {memory['error']}")
     else:
-        print(f"Workspace memory: debates={memory['debates']}, audits={memory['audits']}")
+        print(f"Workspace memory: models={memory['models']}, debates={memory['debates']}, audits={memory['audits']}")
 
     large = large_markdown_files(root, args.max_lines)
     if large:

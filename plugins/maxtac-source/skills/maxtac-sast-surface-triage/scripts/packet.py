@@ -17,6 +17,7 @@ class PacketSpec:
     packet_type: str
     heading: str
     fields: tuple[str, ...]
+    optional_fields: tuple[str, ...] = ()
     enums: dict[str, tuple[str, ...]] | None = None
 
 
@@ -40,6 +41,7 @@ SPECS = {
             "Candidate hypothesis",
             "Confidence",
         ),
+        optional_fields=("Model refs",),
         enums={"Confidence": ("low", "medium", "high")},
     ),
     "cfg": PacketSpec(
@@ -58,6 +60,7 @@ SPECS = {
             "Uncertain edges",
             "Security conclusion",
         ),
+        optional_fields=("Model refs",),
     ),
     "opengrep": PacketSpec(
         packet_type="opengrep",
@@ -74,6 +77,7 @@ SPECS = {
             "Remaining uncertainty",
             "Suggested auditor filters",
         ),
+        optional_fields=("Model refs",),
     ),
 }
 
@@ -119,7 +123,7 @@ def spec_for(packet_type: str) -> PacketSpec:
 
 
 def field_map(spec: PacketSpec) -> dict[str, str]:
-    return {normalize(field): field for field in spec.fields}
+    return {normalize(field): field for field in (*spec.fields, *spec.optional_fields)}
 
 
 def detect_packet_type(text: str) -> tuple[str | None, list[str]]:
@@ -194,7 +198,7 @@ def is_blank(value: str | None) -> bool:
 def render_packet(spec: PacketSpec, values: dict[str, str] | None = None) -> str:
     values = values or {}
     lines = [f"## {spec.heading}", ""]
-    for field in spec.fields:
+    for field in (*spec.fields, *spec.optional_fields):
         value = values.get(field, "")
         if "\n" in value:
             first, *rest = value.splitlines()
@@ -339,6 +343,7 @@ def render_auditor_prompt(results: list[dict[str, Any]], args: argparse.Namespac
             "## Ground Rules",
             "",
             "- Treat these packets as structured triage and evidence, not as finding promotion.",
+            "- Treat model refs as context pointers, not proof; confirm any candidate or stale assertion before relying on it.",
             "- Do not mark a primitive or chain as validated, proofed, or reportable from packet prose alone.",
             "- Verify actor control, reachability, guard behavior, and security impact directly against code or tool evidence.",
             "- Separate confirmed facts from assumptions, uncertain edges, and recommended follow-up.",

@@ -26,6 +26,7 @@ CONFIDENCES = ("high", "medium", "low")
 FINDING_TYPES = ("primitive", "chain", "candidate", "external")
 DISPOSITIONS = ("reported", "no_issue_found", "rejected", "not_applicable", "needs_follow_up", "deferred")
 STATES = ("discovered", "confident", "validated", "proofed", "duplicate", "limited", "de-escalated")
+MODEL_REF_KINDS = ("model", "entity", "relation", "invariant", "formula", "assumption", "unknown", "contradiction")
 
 
 def now() -> str:
@@ -74,6 +75,48 @@ def parse_repeated(values: list[str] | None) -> list[str]:
     return result
 
 
+def parse_model_ref(value: str) -> dict[str, str]:
+    parts = [part.strip() for part in value.split(":")]
+    if len(parts) == 3:
+        kind, model_id, assertion_id = parts
+    elif len(parts) == 2:
+        kind, model_id, assertion_id = "model", parts[0], parts[1]
+    elif len(parts) == 1:
+        kind, model_id, assertion_id = "model", parts[0], ""
+    else:
+        raise SystemExit(f"invalid model ref: {value}")
+    if kind not in MODEL_REF_KINDS:
+        raise SystemExit(f"model ref kind must be one of {', '.join(MODEL_REF_KINDS)}: {value}")
+    if not model_id:
+        raise SystemExit(f"model ref is missing model id: {value}")
+    return {"kind": kind, "model_id": model_id, "assertion_id": assertion_id, "note": ""}
+
+
+def parse_model_refs(values: list[str] | None) -> list[dict[str, str]]:
+    return [parse_model_ref(value) for value in values or []]
+
+
+def validate_model_refs(value: Any, where: str, errors: list[str]) -> None:
+    if value is None:
+        return
+    if not isinstance(value, list):
+        errors.append(f"{where} must be an array")
+        return
+    for index, item in enumerate(value):
+        item_where = f"{where}[{index}]"
+        if not isinstance(item, dict):
+            errors.append(f"{item_where} must be an object")
+            continue
+        if item.get("kind") not in MODEL_REF_KINDS:
+            errors.append(f"{item_where}.kind must be one of {', '.join(MODEL_REF_KINDS)}")
+        if not str(item.get("model_id", "")).strip():
+            errors.append(f"{item_where}.model_id is required")
+        if not isinstance(item.get("assertion_id", ""), str):
+            errors.append(f"{item_where}.assertion_id must be a string")
+        if not isinstance(item.get("note", ""), str):
+            errors.append(f"{item_where}.note must be a string")
+
+
 def base_result(args: argparse.Namespace) -> dict[str, Any]:
     result_id = slug(args.result_id)
     return {
@@ -96,6 +139,7 @@ def base_result(args: argparse.Namespace) -> dict[str, Any]:
         },
         "findings": [],
         "coverage": [],
+        "model_refs": [],
     }
 
 
@@ -154,6 +198,7 @@ def validate_result(payload: dict[str, Any]) -> list[str]:
                 errors.append(f"{where}.affected_locations must be an array")
             if not isinstance(finding.get("evidence"), list):
                 errors.append(f"{where}.evidence must be an array")
+            validate_model_refs(finding.get("model_refs"), f"{where}.model_refs", errors)
     coverage = payload.get("coverage")
     if not isinstance(coverage, list):
         errors.append("coverage must be an array")
@@ -177,6 +222,7 @@ def validate_result(payload: dict[str, Any]) -> list[str]:
                     errors.append(f"{where}.{key} is required")
             if not isinstance(surface.get("receipt_refs"), list):
                 errors.append(f"{where}.receipt_refs must be an array")
+    validate_model_refs(payload.get("model_refs"), "model_refs", errors)
     return errors
 
 
@@ -226,6 +272,7 @@ def cmd_from_ledger(args: argparse.Namespace) -> None:
                     "validation": "",
                     "attack_path": "",
                     "remediation": "",
+                    "model_refs": [],
                     "ledger_state": item,
                 }
             )
@@ -254,6 +301,7 @@ def cmd_add_finding(args: argparse.Namespace) -> None:
         "validation": args.validation or "",
         "attack_path": args.attack_path or "",
         "remediation": args.remediation or "",
+        "model_refs": parse_model_refs(args.model_ref),
     }
     payload["findings"].append(finding)
     payload["updated_at"] = now()
@@ -292,6 +340,33 @@ def cmd_add_surface(args: argparse.Namespace) -> None:
     print(surface["id"])
 
 
+def cmd_add_model_ref(args: argparse.Namespace) -> None:
+    path = Path(args.result_json)
+    payload = read_json(path)
+    model_ref = {
+        "kind": args.kind,
+        "model_id": args.model_id,
+        "assertion_id": args.assertion_id or "",
+        "note": args.note or "",
+    }
+    if args.finding_id:
+        for finding in payload.setdefault("findings", []):
+            if finding.get("id") == args.finding_id:
+                finding.setdefault("model_refs", []).append(model_ref)
+                break
+        else:
+            raise SystemExit(f"finding not found: {args.finding_id}")
+    else:
+        payload.setdefault("model_refs", []).append(model_ref)
+    payload["updated_at"] = now()
+    errors = validate_result(payload)
+    if errors:
+        raise SystemExit("\n".join(errors))
+    write_json(path, payload)
+    target = f"finding {args.finding_id}" if args.finding_id else "result"
+    print(f"added model ref to {target}")
+
+
 def cmd_validate(args: argparse.Namespace) -> None:
     path = Path(args.result_json)
     errors = validate_result(read_json(path))
@@ -321,6 +396,12 @@ def render_report(payload: dict[str, Any]) -> str:
         lines.append(f"- Summary: {scope['summary']}")
     for limitation in scope.get("limitations", []):
         lines.append(f"- Limitation: {limitation}")
+    if payload.get("model_refs"):
+        lines.append("- Model references:")
+        for ref in payload["model_refs"]:
+            assertion = f":{ref.get('assertion_id')}" if ref.get("assertion_id") else ""
+            note = f" - {ref.get('note')}" if ref.get("note") else ""
+            lines.append(f"  - `{ref.get('kind')}` `{ref.get('model_id')}{assertion}`{note}")
     lines.append("")
     lines.append("## Findings")
     lines.append("")
@@ -348,6 +429,12 @@ def render_report(payload: dict[str, Any]) -> str:
             lines.append("- Evidence:")
             for evidence in finding["evidence"]:
                 lines.append(f"  - `{evidence}`")
+        if finding.get("model_refs"):
+            lines.append("- Model references:")
+            for ref in finding["model_refs"]:
+                assertion = f":{ref.get('assertion_id')}" if ref.get("assertion_id") else ""
+                note = f" - {ref.get('note')}" if ref.get("note") else ""
+                lines.append(f"  - `{ref.get('kind')}` `{ref.get('model_id')}{assertion}`{note}")
         lines.append("")
         lines.append(finding["summary"])
         for key, heading in (("validation", "Validation"), ("attack_path", "Attack Path"), ("remediation", "Remediation")):
@@ -425,6 +512,7 @@ def main() -> None:
     add_finding.add_argument("--summary", required=True)
     add_finding.add_argument("--location", action="append")
     add_finding.add_argument("--evidence", action="append")
+    add_finding.add_argument("--model-ref", action="append", help="Model reference as kind:model-id:assertion-id")
     add_finding.add_argument("--validation")
     add_finding.add_argument("--attack-path")
     add_finding.add_argument("--remediation")
@@ -439,6 +527,15 @@ def main() -> None:
     add_surface.add_argument("--receipt", action="append")
     add_surface.add_argument("--notes", required=True)
     add_surface.set_defaults(func=cmd_add_surface)
+
+    add_model_ref = subparsers.add_parser("add-model-ref", help="Attach a model or assertion reference to the result or a finding")
+    add_model_ref.add_argument("result_json")
+    add_model_ref.add_argument("--finding-id", help="Attach to a finding instead of the whole result")
+    add_model_ref.add_argument("--kind", choices=MODEL_REF_KINDS, default="model")
+    add_model_ref.add_argument("--model-id", required=True)
+    add_model_ref.add_argument("--assertion-id")
+    add_model_ref.add_argument("--note")
+    add_model_ref.set_defaults(func=cmd_add_model_ref)
 
     validate = subparsers.add_parser("validate", help="Validate a result bundle")
     validate.add_argument("result_json")

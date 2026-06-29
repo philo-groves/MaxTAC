@@ -44,6 +44,10 @@
           "summary": { "type": "string", "minLength": 1 },
           "affected_locations": { "type": "array" },
           "evidence": { "type": "array" },
+          "model_refs": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/model_ref" }
+          },
           "validation": { "type": "string" },
           "attack_path": { "type": "string" },
           "remediation": { "type": "string" }
@@ -65,6 +69,24 @@
           "receipt_refs": { "type": "array", "items": { "type": "string" } },
           "notes": { "type": "string", "minLength": 1 }
         }
+      }
+    },
+    "model_refs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/model_ref" }
+    }
+  },
+  "$defs": {
+    "model_ref": {
+      "type": "object",
+      "required": ["kind", "model_id", "assertion_id", "note"],
+      "properties": {
+        "kind": {
+          "enum": ["model", "entity", "relation", "invariant", "formula", "assumption", "unknown", "contradiction"]
+        },
+        "model_id": { "type": "string", "minLength": 1 },
+        "assertion_id": { "type": "string" },
+        "note": { "type": "string" }
       }
     }
   }

@@ -176,6 +176,33 @@ def ensure_schema(conn: sqlite3.Connection) -> bool:
           PRIMARY KEY (audit_id, path),
           FOREIGN KEY (audit_id) REFERENCES audits(audit_id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS models (
+          model_id TEXT PRIMARY KEY,
+          model_dir TEXT NOT NULL,
+          model_path TEXT NOT NULL,
+          target_name TEXT NOT NULL,
+          target_kind TEXT NOT NULL,
+          summary TEXT NOT NULL DEFAULT '',
+          updated_at TEXT NOT NULL,
+          raw_json TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS model_assertions (
+          assertion_key TEXT PRIMARY KEY,
+          model_id TEXT NOT NULL,
+          assertion_type TEXT NOT NULL,
+          item_id TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT '',
+          confidence TEXT NOT NULL DEFAULT '',
+          statement TEXT NOT NULL DEFAULT '',
+          evidence_json TEXT NOT NULL DEFAULT '[]',
+          raw_json TEXT NOT NULL,
+          FOREIGN KEY (model_id) REFERENCES models(model_id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_model_assertions_model_type ON model_assertions(model_id, assertion_type);
+        CREATE INDEX IF NOT EXISTS idx_model_assertions_status ON model_assertions(status);
         """
     )
     set_meta(conn, "schema_version", SCHEMA_VERSION)
@@ -191,6 +218,10 @@ def ensure_schema(conn: sqlite3.Connection) -> bool:
         conn.execute(
             "CREATE VIRTUAL TABLE IF NOT EXISTS audit_search USING fts5("
             "audit_id UNINDEXED, text, tokenize='porter unicode61')"
+        )
+        conn.execute(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS model_search USING fts5("
+            "model_id UNINDEXED, assertion_type UNINDEXED, item_id UNINDEXED, text, tokenize='porter unicode61')"
         )
     except sqlite3.DatabaseError:
         set_meta(conn, "fts5_enabled", "0")
@@ -974,6 +1005,260 @@ def semantic_search_audits(root: Path, query: str, limit: int, *, sync: bool = T
         if overlap:
             scored.append((float(len(overlap)), payload))
     scored.sort(key=lambda item: (item[0], item[1].get("updated_at", "")), reverse=True)
+    return scored[:limit]
+
+
+MODEL_COLLECTIONS = (
+    "entities",
+    "relations",
+    "invariants",
+    "formulas",
+    "assumptions",
+    "unknowns",
+    "contradictions",
+)
+
+
+def model_item_statement(assertion_type: str, item: dict[str, Any]) -> str:
+    if assertion_type == "entities":
+        return " ".join(
+            part
+            for part in (
+                str(item.get("kind", "")),
+                str(item.get("name", "")),
+                str(item.get("description", "")),
+            )
+            if part
+        )
+    if assertion_type == "relations":
+        return str(item.get("statement") or f"{item.get('subject', '')} {item.get('predicate', '')} {item.get('object', '')}")
+    if assertion_type == "invariants":
+        return " ".join(part for part in (str(item.get("statement", "")), str(item.get("formula", ""))) if part)
+    if assertion_type == "formulas":
+        return " ".join(part for part in (str(item.get("formula", "")), str(item.get("description", ""))) if part)
+    if assertion_type == "assumptions":
+        return str(item.get("statement", ""))
+    if assertion_type == "unknowns":
+        return str(item.get("question", ""))
+    if assertion_type == "contradictions":
+        return str(item.get("statement", ""))
+    return " ".join(text_values(item))
+
+
+def model_item_search_text(model_id: str, assertion_type: str, item: dict[str, Any]) -> str:
+    return " ".join(
+        [
+            model_id,
+            assertion_type,
+            str(item.get("id", "")),
+            str(item.get("status", "")),
+            str(item.get("confidence", "")),
+            model_item_statement(assertion_type, item),
+            " ".join(text_values(item.get("evidence", []))),
+            " ".join(text_values(item.get("tags", []))),
+            " ".join(text_values(item.get("properties", {}))),
+        ]
+    )
+
+
+def model_search_text(payload: dict[str, Any]) -> str:
+    target = payload.get("target") if isinstance(payload.get("target"), dict) else {}
+    scope = payload.get("scope") if isinstance(payload.get("scope"), dict) else {}
+    fields: list[str] = [
+        str(payload.get("model_id", "")),
+        str(target.get("name", "")),
+        str(target.get("kind", "")),
+        str(target.get("revision", "")),
+        str(target.get("source", "")),
+        str(scope.get("summary", "")),
+        " ".join(text_values(scope.get("include_paths", []))),
+        " ".join(text_values(scope.get("exclude_paths", []))),
+        " ".join(text_values(scope.get("limitations", []))),
+    ]
+    for assertion_type in MODEL_COLLECTIONS:
+        for item in payload.get(assertion_type) or []:
+            if isinstance(item, dict):
+                fields.append(model_item_search_text(str(payload.get("model_id", "")), assertion_type, item))
+    return " ".join(fields)
+
+
+def upsert_model(conn_or_root: sqlite3.Connection | Path, payload: dict[str, Any], model_path: Path) -> None:
+    if isinstance(conn_or_root, sqlite3.Connection):
+        conn = conn_or_root
+        owns_connection = False
+        root = model_path.parent.parent.parent if model_path.parent.parent.name == "models" else model_path.parent
+    else:
+        root = conn_or_root
+        initialize_workspace_db(root)
+        conn = connect(root)
+        ensure_schema(conn)
+        owns_connection = True
+    try:
+        model_id = str(payload["model_id"])
+        target = payload.get("target") if isinstance(payload.get("target"), dict) else {}
+        scope = payload.get("scope") if isinstance(payload.get("scope"), dict) else {}
+        updated_at = str(payload.get("updated_at") or utc_now())
+        relative_model_path = relative_to_root(root, model_path)
+        relative_model_dir = relative_to_root(root, model_path.parent)
+        if fts5_enabled(conn):
+            conn.execute("DELETE FROM model_search WHERE model_id = ?", (model_id,))
+        conn.execute("DELETE FROM model_assertions WHERE model_id = ?", (model_id,))
+        raw_json = json.dumps(payload, sort_keys=True)
+        conn.execute(
+            """
+            INSERT INTO models(
+              model_id, model_dir, model_path, target_name, target_kind, summary, updated_at, raw_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(model_id) DO UPDATE SET
+              model_dir=excluded.model_dir,
+              model_path=excluded.model_path,
+              target_name=excluded.target_name,
+              target_kind=excluded.target_kind,
+              summary=excluded.summary,
+              updated_at=excluded.updated_at,
+              raw_json=excluded.raw_json
+            """,
+            (
+                model_id,
+                relative_model_dir,
+                relative_model_path,
+                str(target.get("name", "")),
+                str(target.get("kind", "")),
+                str(scope.get("summary", "")),
+                updated_at,
+                raw_json,
+            ),
+        )
+        if fts5_enabled(conn):
+            conn.execute(
+                "INSERT INTO model_search(model_id, assertion_type, item_id, text) VALUES (?, ?, ?, ?)",
+                (model_id, "model", "", model_search_text(payload)),
+            )
+        for assertion_type in MODEL_COLLECTIONS:
+            for item in payload.get(assertion_type) or []:
+                if not isinstance(item, dict):
+                    continue
+                item_id = str(item.get("id", "")).strip()
+                if not item_id:
+                    continue
+                assertion_key = f"{model_id}:{assertion_type}:{item_id}"
+                statement = model_item_statement(assertion_type, item)
+                item_raw_json = json.dumps(item, sort_keys=True)
+                evidence_json = json.dumps(item.get("evidence", []), sort_keys=True)
+                conn.execute(
+                    """
+                    INSERT INTO model_assertions(
+                      assertion_key, model_id, assertion_type, item_id, status, confidence,
+                      statement, evidence_json, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        assertion_key,
+                        model_id,
+                        assertion_type,
+                        item_id,
+                        str(item.get("status", "")),
+                        str(item.get("confidence", "")),
+                        statement,
+                        evidence_json,
+                        item_raw_json,
+                    ),
+                )
+                if fts5_enabled(conn):
+                    conn.execute(
+                        "INSERT INTO model_search(model_id, assertion_type, item_id, text) VALUES (?, ?, ?, ?)",
+                        (model_id, assertion_type, item_id, model_item_search_text(model_id, assertion_type, item)),
+                    )
+        if owns_connection:
+            conn.commit()
+    finally:
+        if owns_connection:
+            conn.close()
+
+
+def list_models(root: Path) -> list[dict[str, Any]]:
+    initialize_workspace_db(root)
+    with connect(root) as conn:
+        ensure_schema(conn)
+        rows = conn.execute("SELECT raw_json FROM models ORDER BY updated_at DESC, model_id").fetchall()
+    return [json.loads(row["raw_json"]) for row in rows]
+
+
+def count_models(root: Path) -> int:
+    with connect(root) as conn:
+        ensure_schema(conn)
+        row = conn.execute("SELECT COUNT(*) AS count FROM models").fetchone()
+    return int(row["count"])
+
+
+def search_models(root: Path, query: str, limit: int) -> list[tuple[float, str, str, str, str]]:
+    initialize_workspace_db(root)
+    query_text = fts_query(query)
+    if not query_text:
+        return []
+    limit = max(1, limit)
+    with connect(root) as conn:
+        ensure_schema(conn)
+        if fts5_enabled(conn):
+            rows = conn.execute(
+                """
+                SELECT model_search.model_id AS model_id,
+                       model_search.assertion_type AS assertion_type,
+                       model_search.item_id AS item_id,
+                       COALESCE(model_assertions.statement, models.summary, model_search.text) AS statement,
+                       bm25(model_search) AS rank
+                FROM model_search
+                LEFT JOIN model_assertions
+                  ON model_search.model_id = model_assertions.model_id
+                 AND model_search.assertion_type = model_assertions.assertion_type
+                 AND model_search.item_id = model_assertions.item_id
+                LEFT JOIN models
+                  ON model_search.model_id = models.model_id
+                WHERE model_search MATCH ?
+                ORDER BY rank ASC LIMIT ?
+                """,
+                (query_text, limit),
+            ).fetchall()
+            return [
+                (
+                    round(-float(row["rank"]), 6),
+                    str(row["model_id"]),
+                    str(row["assertion_type"]),
+                    str(row["item_id"]),
+                    str(row["statement"])[:500],
+                )
+                for row in rows
+            ]
+        model_rows = conn.execute(
+            "SELECT model_id, raw_json FROM models ORDER BY updated_at DESC, model_id"
+        ).fetchall()
+        assertion_rows = conn.execute(
+            "SELECT model_id, assertion_type, item_id, statement, raw_json FROM model_assertions"
+        ).fetchall()
+
+    wanted = token_set(query)
+    scored: list[tuple[float, str, str, str, str]] = []
+    for row in model_rows:
+        payload = json.loads(row["raw_json"])
+        text = model_search_text(payload)
+        overlap = wanted & token_set(text)
+        if overlap:
+            scored.append((float(len(overlap)), str(row["model_id"]), "model", "", text[:500]))
+    for row in assertion_rows:
+        item = json.loads(row["raw_json"])
+        text = model_item_search_text(str(row["model_id"]), str(row["assertion_type"]), item)
+        overlap = wanted & token_set(text)
+        if overlap:
+            scored.append(
+                (
+                    float(len(overlap)),
+                    str(row["model_id"]),
+                    str(row["assertion_type"]),
+                    str(row["item_id"]),
+                    str(row["statement"])[:500],
+                )
+            )
+    scored.sort(key=lambda item: (item[0], item[1], item[2], item[3]), reverse=True)
     return scored[:limit]
 
 

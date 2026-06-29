@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maxtac.local/schemas/security-model.schema.json",
+  "title": "MaxTAC security model",
+  "type": "object",
+  "required": [
+    "document_type",
+    "schema_version",
+    "model_id",
+    "target",
+    "scope",
+    "entities",
+    "relations",
+    "invariants",
+    "formulas",
+    "assumptions",
+    "unknowns",
+    "contradictions"
+  ],
+  "properties": {
+    "document_type": { "const": "maxtac.security_model" },
+    "schema_version": { "const": "1.0" },
+    "model_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "target": {
+      "type": "object",
+      "required": ["name", "kind"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string" },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "required": ["summary", "include_paths", "exclude_paths", "limitations"],
+      "properties": {
+        "summary": { "type": "string" },
+        "include_paths": { "type": "array", "items": { "type": "string" } },
+        "exclude_paths": { "type": "array", "items": { "type": "string" } },
+        "limitations": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "entities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entity" }
+    },
+    "relations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/relation" }
+    },
+    "invariants": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/invariant" }
+    },
+    "formulas": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/formula" }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/assumption" }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/unknown" }
+    },
+    "contradictions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/contradiction" }
+    }
+  },
+  "$defs": {
+    "status": {
+      "enum": ["candidate", "observed", "confirmed", "refuted", "stale"]
+    },
+    "confidence": {
+      "enum": ["high", "medium", "low", "unknown"]
+    },
+    "commonAssertion": {
+      "type": "object",
+      "required": ["id", "status", "confidence", "evidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "properties": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "entity": {
+      "allOf": [
+        { "$ref": "#/$defs/commonAssertion" },
+        {
+          "type": "object",
+          "required": ["kind", "name", "description"],
+          "properties": {
+            "kind": { "type": "string", "minLength": 1 },
+            "name": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "relation": {
+      "allOf": [
+        { "$ref": "#/$defs/commonAssertion" },
+        {
+          "type": "object",
+          "required": ["subject", "predicate", "object", "statement", "description"],
+          "properties": {
+            "subject": { "type": "string", "minLength": 1 },
+            "predicate": { "type": "string", "minLength": 1 },
+            "object": { "type": "string", "minLength": 1 },
+            "statement": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "invariant": {
+      "allOf": [
+        { "$ref": "#/$defs/commonAssertion" },
+        {
+          "type": "object",
+          "required": ["statement", "scope"],
+          "properties": {
+            "statement": { "type": "string", "minLength": 1 },
+            "scope": { "type": "string", "minLength": 1 },
+            "formula": { "type": "string" },
+            "protected_asset": { "type": "string" },
+            "actor": { "type": "string" },
+            "operation": { "type": "string" },
+            "object": { "type": "string" },
+            "preconditions": { "type": "array", "items": { "type": "string" } },
+            "violated_by": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      ]
+    },
+    "formula": {
+      "allOf": [
+        { "$ref": "#/$defs/commonAssertion" },
+        {
+          "type": "object",
+          "required": ["formula", "description"],
+          "properties": {
+            "formula": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 },
+            "scope": { "type": "string" },
+            "derived_from": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      ]
+    },
+    "assumption": {
+      "allOf": [
+        { "$ref": "#/$defs/commonAssertion" },
+        {
+          "type": "object",
+          "required": ["statement", "scope"],
+          "properties": {
+            "statement": { "type": "string", "minLength": 1 },
+            "scope": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "unknown": {
+      "type": "object",
+      "required": ["id", "question", "scope", "status", "evidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "question": { "type": "string", "minLength": 1 },
+        "scope": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "owner": { "type": "string" },
+        "blocked_by": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "properties": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "contradiction": {
+      "type": "object",
+      "required": ["id", "statement", "status", "assertion_refs", "evidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "statement": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "assertion_refs": { "type": "array", "items": { "type": "string" } },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "resolution": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "properties": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

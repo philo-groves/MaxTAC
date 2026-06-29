@@ -7,6 +7,7 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | Tool | Used for |
 | --- | --- |
 | Python | Workspace helpers, ledger helpers, evidence scripts, and auditor MCP servers. |
+| Core model helper | Security model JSON, invariant dictionaries, model projections, model-backed auditor prompts, and workspace model search. |
 | Codex subagents and goals | Auditor prompts, verifier debates, and workflow orchestration. |
 
 ## Source

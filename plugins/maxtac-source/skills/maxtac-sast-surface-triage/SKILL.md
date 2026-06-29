@@ -14,6 +14,7 @@ Use this skill as the first static-analysis pass for a target slice. The goal is
 - Capture why a path matters: actor, trust boundary, controlled fields, protected asset, and security invariant.
 - Prefer 2-4 strong hypotheses over many shallow guesses.
 - Use `maxtac-source-codebase-memory` first when codebase-memory-mcp is available and architecture, route, symbol, or call-path orientation would reduce broad file exploration.
+- Use `maxtac-core-modeling` first when a Core model exists or the target slice depends on architecture, identity, trust, state, policy, or invariant context that should survive the packet.
 - Use `maxtac-sast-opengrep` for repeatable source-to-sink searches and `maxtac-sast-control-flow-graph` when reachability, guard ordering, state transitions, locks, or cleanup paths matter.
 - Use `maxtac-core-subagents` after triage to route each hypothesis to a targeted, goal-bounded auditor.
 - Do not create or promote findings from triage alone. Triage produces candidate hypotheses and evidence plans.
@@ -63,6 +64,7 @@ Use this skill as the first static-analysis pass for a target slice. The goal is
    - Check whether the invariant is enforced server-side or only in a client, caller, config, test, or documentation.
    - Find split enforcement, such as one function validating identity and another using object state later.
    - Note state transitions, one-time actions, quotas, ownership changes, role changes, privilege changes, and rollback behavior.
+   - If the invariant belongs in a durable model, create or update it with `maxtac-core-modeling` and record the model/assertion IDs in packet `Model refs`.
 
 6. Rank hypotheses.
    - Prefer hypotheses with an attacker-controlled input, a clear security boundary, a plausible missing or reordered guard, and a reachable sink or state transition.
@@ -140,6 +142,8 @@ The helper refuses to convert invalid packets unless `--allow-invalid` is passed
 
 Store generated packets in `tmp/` or the relevant subsystem's `artifacts/`. Do not let packets become the durable research library. When a packet closes a path or captures a reusable invariant, incorporate the conclusion into the corresponding system-focused markdown file and link back to the packet.
 
+If a packet depends on a Core model, put model references in the optional `Model refs` field using `model-id:assertion-id` or `kind:model-id:assertion-id`. Use `maxtac-core-modeling export-prompt` when the auditor needs more than one or two model assertions.
+
 Produce this compact packet before spawning auditors or writing rules:
 
 ```markdown
@@ -159,6 +163,7 @@ Produce this compact packet before spawning auditors or writing rules:
 - Suggested auditor filters:
 - Candidate hypothesis:
 - Confidence: low / medium / high
+- Model refs: optional `model-id:assertion-id` entries
 ```
 
 ## Tool Handoff
@@ -166,6 +171,7 @@ Produce this compact packet before spawning auditors or writing rules:
 - Use `maxtac-sast-opengrep` when a hypothesis needs repeatable searches across many files, taint-like source-to-sink checks, constant or symbolic propagation, or rule tests.
 - Use `maxtac-sast-control-flow-graph` when a hypothesis depends on path feasibility, guard dominance, call chains, callbacks, lock order, cleanup paths, or multi-function state transitions.
 - Use `maxtac-source-codebase-memory` when codebase-memory-mcp can provide architecture summaries, symbol discovery, route maps, call paths, ADRs, or diff impact before narrowing the packet.
+- Use `maxtac-core-modeling` when the packet should reuse or update a durable security model, invariant dictionary, FOL-style assertion, unknown, assumption, or contradiction.
 - Use Android JADX for APK/DEX/resource decompiler output, or Binary RE skills such as Ghidra and Radare2 for native binaries, firmware payloads, binary-level xrefs, and call graphs.
 - Use DAST skills when the triage path needs runtime confirmation, fuzzing, debugging, or a controlled proof environment.
 - Use `maxtac-core-subagents` when linted packets are clear enough for a targeted, goal-bounded auditor to assess a bug class or mitigation boundary. Prefer an auditor prompt produced by `packet.py prompt` so surface, CFG, and OpenGrep evidence stay structured, then wrap it with the subagent helper before spawning.

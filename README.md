@@ -12,7 +12,7 @@ Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber p
 
 | Pack | Path | Use when |
 | --- | --- | --- |
-| MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, ledgers, canonical result contracts, reporting flow, and goal-bounded auditor/debater orchestration. |
+| MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, security models, invariant dictionaries, ledgers, canonical result contracts, reporting flow, and goal-bounded auditor/debater orchestration. |
 | MaxTAC for Source | `plugins/maxtac-source` | You need static triage, optional codebase-memory graph orientation, source diff/repo scan closure, external finding intake, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
 | MaxTAC for Binary | `plugins/maxtac-binary` | You need native binary RE, Ghidra, radare2, debugger evidence, crash replay, instrumentation, or systems fuzzing. |
 | MaxTAC for Web | `plugins/maxtac-web` | You need web/API/session/tenant triage, browser debugging, or stateful API fuzzing. |
@@ -41,9 +41,10 @@ Core creates and manages the shared workspace contract:
 
 ```text
 program-info.md    # authorized scope and exclusions
-workspace.sqlite   # findings, debate tallies, audit index, and search memory
+workspace.sqlite   # findings, model assertions, debate tallies, audit index, and search memory
 reporting/         # submission-ready reports and evidence indexes
 research/          # durable research library
+models/            # machine-readable security models and invariant dictionaries
 proof/             # proof-of-vulnerability development
 fuzz/              # fuzzing inputs, scripts, and artifacts
 contracts/         # canonical result bundles and generated reports
