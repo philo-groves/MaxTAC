@@ -1,6 +1,6 @@
 ---
 name: maxtac-core-workflow
-description: "Use this skill when starting, organizing, or continuing an authorized MaxTAC vulnerability research session with standard directories, phases, closure profiles, thin closure decisions, subsystem notes, validation, proof, and reporting flow."
+description: "Use this skill when starting, organizing, or continuing an authorized MaxTAC vulnerability research session with standard directories, phases, closure profiles, thin closure decisions, adversarial false-negative review, subsystem notes, validation, proof, and reporting flow."
 ---
 
 # MaxTAC Core Workflow
@@ -30,11 +30,12 @@ tmp/               # temporary files that can be deleted between sessions
 Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations instead of hand-creating the standard files and directories:
 
 - `init`: create the canonical workspace directories, seed `program-info.md`, initialize empty finding ledgers, and record the starting phase.
-- `status`: summarize workspace health, model counts, ledger counts, oversized research markdown, research hygiene, attention-lock warnings, phase state, and report readiness.
+- `status`: summarize workspace health, model counts, ledger counts, false-negative reviews, oversized research markdown, research hygiene, attention-lock warnings, phase state, and report readiness.
 - `phase`: show or update the current workflow phase. The canonical forward path is `prepare` -> `scan` -> `validation` -> `primitive-proof` -> `chain-proof` -> `reporting`; the helper also allows documented returns to earlier phases when evidence invalidates a path. Repeating the current phase with `--note` records a timestamped phase renewal. Use `phase --suggest` to inspect evidence-based phase drift and `phase --auto --note ...` to repair stale phase state when the workspace clearly moved ahead.
 - `new-submodule`: create a legacy research submodule under `research/`; prefer `maxtac-core-corpus` for new durable knowledge.
 - `split-large-markdown`: split a markdown file over the large-file threshold into a submodule. Retain the source by default; delete it only with `--verified --delete-source` after confirming the transcription.
 - `report-ready`: check whether a proofed chain has the minimum workspace evidence needed to move into reporting.
+- `false-negative-review`: create a structured adversarial reopen review under `contracts/false-negative-reviews/` with a negative-evidence score, explicit gaps, and reopen actions.
 
 The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script and is stored in `<workspace-root>/workspace.sqlite`. The same database also indexes model assertions, debate tallies, and audit assessments so agents can search known invariants, prior votes, conclusions, blockers, and artifacts before repeating work.
 
@@ -108,6 +109,38 @@ Thin closure must still produce:
 Thin closure should skip separate surface packets, OpenGrep mini-reports, model entities/invariants, expanded audit prose, and long generated reports unless the target stops being tiny. Do not use thin closure for reportable findings, multi-step chains, privileged reachable behavior, contested conclusions, or reusable architecture that future auditors need as a model.
 
 Choose **full closure** for reportable findings, broad target families, chained behavior, substantial negative results that affect future architecture understanding, or anything requiring formal debate/modeling.
+
+### False-Negative Review
+
+Treat "no reportable chain found" as weaker than "no bugs exist." After a long no-finding session, before closing a broad family, or before trusting many thin closures as a program-level conclusion, run an adversarial false-negative review:
+
+```text
+python3 <skill-dir>/scripts/workspace.py false-negative-review \
+  --root <workspace-root> \
+  --review-id system-cmds-reopen \
+  --target "macOS system commands" \
+  --scope "all macOS-reachable commands reviewed in this session" \
+  --conclusion "No ASB-promotable chain survived the evidence gathered." \
+  --evidence source=contracts/source-scans/system-cmds/coverage.jsonl \
+  --evidence caller=research/artifacts/system-cmds/caller-search.md \
+  --gap patch-diff="Apple OSS tag diffing not completed" \
+  --gap chain-composition="No primitive-first chain composer pass yet"
+```
+
+The score is a negative-evidence score, not a bug absence score. Use `high` or `medium` false-negative risk as a required decision point: reopen, delegate a resurrection review, or explicitly record why the gap is accepted for this goal.
+
+The default reopen actions intentionally mirror common false-negative hiding places:
+
+- **Primitive graveyard**: review every `de-escalated` or `limited` primitive as if trying to resurrect it.
+- **Caller expansion**: search private frameworks, libSystem, launchd jobs, XPC services, scripts, and dyld-cache symbols for API or command consumers.
+- **Patch diff**: compare relevant vendor or OSS tags for quiet hardening changes.
+- **Chain composer**: start from primitives and chain breaks, not command families.
+- **Invariant receipts**: verify exact guard, sink, authority boundary, trusted caller set, bypass assumptions, binary gaps, proof obligations, and refutation conditions.
+- **Fuzzing/harnessing**: add targeted harnesses for parser-heavy or input-normalization surfaces before accepting source-only negatives.
+
+When a false-negative review changes confidence, link the review from the corpus closure note, any related contract `closure_evidence`, and ledger milestones for reopened or still-closed candidates.
+
+Read `schemas/false-negative-review.schema.json` only when exact machine-readable review shape matters.
 
 ### Attention Cadence
 

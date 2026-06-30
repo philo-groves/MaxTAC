@@ -1,4 +1,4 @@
 interface:
   display_name: "MaxTAC Source Scan"
-  short_description: "Source scans and thin exact-path closure"
+  short_description: "Source scans and negative evidence"
   default_prompt: "Use $maxtac-source-scan to run a MaxTAC source scan or thin exact-path closure with coverage receipts."

@@ -141,7 +141,15 @@
             "operation": { "type": "string" },
             "object": { "type": "string" },
             "preconditions": { "type": "array", "items": { "type": "string" } },
-            "violated_by": { "type": "array", "items": { "type": "string" } }
+            "violated_by": { "type": "array", "items": { "type": "string" } },
+            "guard": { "type": "string" },
+            "sink": { "type": "string" },
+            "authority_boundary": { "type": "string" },
+            "trusted_callers": { "type": "array", "items": { "type": "string" } },
+            "proof_obligations": { "type": "array", "items": { "type": "string" } },
+            "bypass_assumptions": { "type": "array", "items": { "type": "string" } },
+            "binary_gaps": { "type": "array", "items": { "type": "string" } },
+            "refutation_conditions": { "type": "array", "items": { "type": "string" } }
           }
         }
       ]

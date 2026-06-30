@@ -1,4 +1,4 @@
 interface:
   display_name: "MaxTAC Core Contracts"
-  short_description: "Result bundles and thin closure"
+  short_description: "Result bundles and closure evidence"
   default_prompt: "Use $maxtac-core-contracts to create, validate, finalize, or create a thin-closure MaxTAC result contract."

@@ -1,6 +1,6 @@
 # MaxTAC Core
 
-MaxTAC Core is the required base pack for MaxTAC research. It owns the research workflow, workspace structure, faceted research corpus, security models, invariant dictionaries, finding ledgers, thin/full closure profiles, result contracts, report projection, and goal-bounded auditor or verifier orchestration.
+MaxTAC Core is the required base pack for MaxTAC research. It owns the research workflow, workspace structure, faceted research corpus, security models, invariant dictionaries and receipts, finding ledgers, thin/full closure profiles, false-negative review, result contracts, report projection, and goal-bounded auditor or verifier orchestration.
 
 Install this pack for every MaxTAC engagement, then add only the domain packs needed by the target.
 
@@ -8,7 +8,8 @@ Install this pack for every MaxTAC engagement, then add only the domain packs ne
 
 - Starting or continuing an authorized MaxTAC vulnerability research session.
 - Writing, importing, searching, linking, and orienting durable research notes through a faceted corpus instead of hand-grown directory trees.
-- Building and querying durable security models, invariant dictionaries, first-order-logic-style assertions, assumptions, unknowns, and contradictions.
+- Building and querying durable security models, invariant dictionaries, invariant receipts, first-order-logic-style assertions, assumptions, unknowns, and contradictions.
+- Scoring negative evidence and planning adversarial reopen passes after long no-finding sessions.
 - Tracking primitives, chains, validation state, proof state, duplicates, and de-escalations.
 - Creating canonical result bundles with coverage, findings, evidence, limitations, and deterministic report output.
 - Closing tiny non-reportable targets with thin result bundles, proof evidence, and reopen criteria instead of a full artifact train.
@@ -17,9 +18,9 @@ Install this pack for every MaxTAC engagement, then add only the domain packs ne
 
 ## Skills
 
-- `maxtac-core-workflow`: standard MaxTAC phases, workspace layout, validation, proof, and reporting flow.
+- `maxtac-core-workflow`: standard MaxTAC phases, workspace layout, validation, proof, false-negative review, and reporting flow.
 - `maxtac-core-corpus`: faceted research corpus notes, tags, graph edges, generated views, import, search, lint, and anti-tunnel orientation packs.
-- `maxtac-core-modeling`: security models, invariant dictionaries, architecture relations, first-order-logic-style assertions, assumptions, unknowns, contradictions, and model-backed auditor handoffs.
+- `maxtac-core-modeling`: security models, invariant dictionaries, invariant receipts, architecture relations, first-order-logic-style assertions, assumptions, unknowns, contradictions, and model-backed auditor handoffs.
 - `maxtac-core-ledger`: finding state tracking, deduplication, promotion, de-escalation, and report linkage.
 - `maxtac-core-subagents`: goal-bounded auditor and verifier-debate subagent guidance, SQLite-backed auditor registry lookup, and prompt enrichment with corpus/model context.
 - `maxtac-core-contracts`: machine-readable result contracts, thin closure bundles, coverage closure, schemas, and report projection.
@@ -44,7 +45,7 @@ Core expects research artifacts such as:
 - `workspace.sqlite` primitive and chain findings, corpus documents, corpus tags, corpus graph edges, model assertions, debate tallies, audit assessments, related evidence, milestones, and workspace search memory.
 - `$CODEX_HOME/maxtac/auditors.sqlite` active-plugin auditor registry with duplicate prevention and FTS search.
 - `proof/` proof-of-vulnerability artifacts.
-- `contracts/` canonical result bundles.
+- `contracts/` canonical result bundles and false-negative reviews.
 - `reporting/` submission-ready report projections.
 
 ## Boundary

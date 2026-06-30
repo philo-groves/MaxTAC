@@ -164,6 +164,28 @@ ATTENTION_DECISION_OPTIONS = (
     "phase-shift",
     "delegate-review",
 )
+FALSE_NEGATIVE_EVIDENCE_WEIGHTS = {
+    "source": 15,
+    "caller": 15,
+    "runtime": 10,
+    "binary": 10,
+    "patch-diff": 10,
+    "fuzzing": 10,
+    "subagent": 10,
+    "model": 10,
+    "chain-composition": 10,
+}
+FALSE_NEGATIVE_REOPEN_TEMPLATES = {
+    "source": "Run an exact source/decompiler coverage pass for every closed primitive sink.",
+    "caller": "Expand caller search across private frameworks, libSystem, launchd jobs, XPC services, scripts, and dyld-cache symbols.",
+    "runtime": "Add VM/runtime probes for the authority, caller, environment, and state assumptions that closed the branch.",
+    "binary": "Search binary-only consumers and closed-source helpers for equivalent entrypoints or hidden callers.",
+    "patch-diff": "Diff relevant vendor/OSS tags for quiet hardening deltas around the primitive family.",
+    "fuzzing": "Harness parser-heavy or input-normalization surfaces before treating negative source review as strong evidence.",
+    "subagent": "Run a narrow independent reviewer prompt that tries to resurrect the closed primitive or chain break.",
+    "model": "Add invariant receipts with guard, sink, authority boundary, proof obligations, and refutation conditions.",
+    "chain-composition": "Start from de-escalated primitives and compose at least two cross-component chain hypotheses.",
+}
 
 
 def now() -> str:
@@ -867,6 +889,198 @@ def print_attention(result: dict[str, Any]) -> None:
         print("- warnings: none")
 
 
+def false_negative_reviews_dir(root: Path) -> Path:
+    return root / "contracts" / "false-negative-reviews"
+
+
+def parse_category_values(values: list[str] | None, *, label: str) -> dict[str, list[str]]:
+    result: dict[str, list[str]] = {}
+    allowed = set(FALSE_NEGATIVE_EVIDENCE_WEIGHTS)
+    for value in values or []:
+        if "=" not in value:
+            raise SystemExit(f"{label} must be CATEGORY=VALUE: {value}")
+        category, raw = value.split("=", 1)
+        category = category.strip().lower().replace("_", "-")
+        item = raw.strip()
+        if category not in allowed:
+            choices = ", ".join(sorted(allowed))
+            raise SystemExit(f"unknown {label} category `{category}`. Expected one of: {choices}")
+        if not item:
+            raise SystemExit(f"{label} value is empty for category `{category}`")
+        bucket = result.setdefault(category, [])
+        if item not in bucket:
+            bucket.append(item)
+    return result
+
+
+def false_negative_score(evidence: dict[str, list[str]]) -> int:
+    score = sum(weight for category, weight in FALSE_NEGATIVE_EVIDENCE_WEIGHTS.items() if evidence.get(category))
+    return min(100, score)
+
+
+def false_negative_risk(score: int) -> str:
+    if score >= 80:
+        return "low"
+    if score >= 55:
+        return "medium"
+    return "high"
+
+
+def false_negative_confidence(score: int) -> str:
+    if score >= 80:
+        return "decent for evidence gathered"
+    if score >= 55:
+        return "limited"
+    return "weak"
+
+
+def default_reopen_actions(evidence: dict[str, list[str]], gaps: dict[str, list[str]]) -> list[str]:
+    actions: list[str] = []
+    for category, template in FALSE_NEGATIVE_REOPEN_TEMPLATES.items():
+        if not evidence.get(category):
+            gap_text = "; ".join(gaps.get(category) or [])
+            suffix = f" Gap: {gap_text}" if gap_text else ""
+            actions.append(f"{category}: {template}{suffix}")
+    return actions
+
+
+def render_false_negative_review(payload: dict[str, Any]) -> str:
+    lines = [
+        f"# False-Negative Review: {payload['target']}",
+        "",
+        f"- Review: `{payload['review_id']}`",
+        f"- Created: {payload['created_at']}",
+        f"- Scope: {payload['scope']}",
+        f"- Conclusion tested: {payload['conclusion']}",
+        f"- Negative-evidence score: `{payload['score']}/100`",
+        f"- False-negative risk: `{payload['false_negative_risk']}`",
+        f"- Confidence: {payload['confidence']}",
+        "",
+        "## Evidence Coverage",
+        "",
+    ]
+    evidence = payload.get("evidence") or {}
+    gaps = payload.get("gaps") or {}
+    for category, weight in FALSE_NEGATIVE_EVIDENCE_WEIGHTS.items():
+        refs = evidence.get(category) or []
+        gap_items = gaps.get(category) or []
+        if refs:
+            lines.append(f"- `{category}` +{weight}: " + ", ".join(f"`{ref}`" for ref in refs))
+        elif gap_items:
+            lines.append(f"- `{category}` +0 gap: {'; '.join(gap_items)}")
+        else:
+            lines.append(f"- `{category}` +0 missing")
+    reviewed = payload.get("reviewed_refs") or {}
+    if any(reviewed.get(key) for key in reviewed):
+        lines.extend(["", "## Reviewed References", ""])
+        for key, values in reviewed.items():
+            for value in values:
+                lines.append(f"- `{key}`: {value}")
+    lines.extend(["", "## Reopen Actions", ""])
+    actions = payload.get("reopen_actions") or []
+    if actions:
+        for action in actions:
+            lines.append(f"- {action}")
+    else:
+        lines.append("- No mandatory reopen actions recorded.")
+    lines.extend(
+        [
+            "",
+            "## Interpretation",
+            "",
+            "This review supports only the claim that no reportable chain survived the recorded evidence. "
+            "It does not assert that no bugs exist.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def load_false_negative_reviews(root: Path) -> list[dict[str, Any]]:
+    reviews: list[dict[str, Any]] = []
+    for path in sorted(false_negative_reviews_dir(root).glob("*/review.json")):
+        try:
+            payload = read_json(path)
+        except SystemExit:
+            continue
+        payload["_path"] = relative_to(path, root)
+        reviews.append(payload)
+    return reviews
+
+
+def false_negative_summary(root: Path) -> dict[str, Any]:
+    reviews = load_false_negative_reviews(root)
+    counts: Counter[str] = Counter(str(item.get("false_negative_risk", "unknown")) for item in reviews)
+    latest = max((str(item.get("created_at", "")) for item in reviews), default="")
+    return {
+        "count": len(reviews),
+        "risk_counts": dict(sorted(counts.items())),
+        "latest_created_at": latest,
+        "reviews": [
+            {
+                "review_id": item.get("review_id"),
+                "target": item.get("target"),
+                "score": item.get("score"),
+                "false_negative_risk": item.get("false_negative_risk"),
+                "path": item.get("_path"),
+            }
+            for item in reviews
+        ],
+    }
+
+
+def cmd_false_negative_review(args: argparse.Namespace) -> None:
+    root = root_path(args.root)
+    review_id = slugify(args.review_id or args.target, "false-negative-review")
+    review_dir = false_negative_reviews_dir(root) / review_id
+    review_json = review_dir / "review.json"
+    if review_json.exists() and not args.force:
+        raise SystemExit(f"false-negative review already exists: {relative_to(review_json, root)}")
+    evidence = parse_category_values(args.evidence, label="evidence")
+    gaps = parse_category_values(args.gap, label="gap")
+    score = false_negative_score(evidence)
+    risk = false_negative_risk(score)
+    explicit_actions = [(value or "").strip() for value in args.reopen_action or [] if (value or "").strip()]
+    actions = explicit_actions or default_reopen_actions(evidence, gaps)
+    payload = {
+        "document_type": "maxtac.false_negative_review",
+        "schema_version": "1.0",
+        "review_id": review_id,
+        "created_at": now(),
+        "updated_at": now(),
+        "target": args.target,
+        "scope": args.scope,
+        "conclusion": args.conclusion,
+        "score": score,
+        "false_negative_risk": risk,
+        "confidence": false_negative_confidence(score),
+        "evidence": evidence,
+        "gaps": gaps,
+        "reviewed_refs": {
+            "primitive": args.primitive or [],
+            "chain": args.chain or [],
+            "closure": args.closure or [],
+            "model": args.model_ref or [],
+            "corpus": args.corpus_ref or [],
+        },
+        "reopen_actions": actions,
+    }
+    write_json(review_json, payload)
+    report_path = review_dir / "review.md"
+    report_path.write_text(render_false_negative_review(payload), encoding="utf-8")
+    if args.json:
+        print(json.dumps(payload, indent=2))
+        return
+    print(f"False-negative review: {relative_to(review_json, root)}")
+    print(f"- score: {score}/100")
+    print(f"- risk: {risk}")
+    print(f"- confidence: {payload['confidence']}")
+    if actions:
+        print("- reopen actions:")
+        for action in actions:
+            print(f"  - {action}")
+
+
 def cmd_init(args: argparse.Namespace) -> None:
     root = root_path(args.root)
     phase = normalize_phase(args.phase)
@@ -904,6 +1118,7 @@ def cmd_status(args: argparse.Namespace) -> None:
     state = load_state(root)
     attention = attention_report(root, args.attention_window_minutes, args.attention_file_count)
     memory = workspace_memory_counts(root)
+    fn_summary = false_negative_summary(root)
     phase_status = phase_guidance(root, state, memory)
     artifact_records = artifact_markdown_records(root)
     unreferenced_artifacts = [record for record in artifact_records if not record["referenced_by"]]
@@ -925,6 +1140,7 @@ def cmd_status(args: argparse.Namespace) -> None:
                 "markdown_outside_corpus": [],
             },
             "attention": attention,
+            "false_negative_reviews": fn_summary,
             "report_ready": report_readiness(root, args.chain),
         }
         for filename in WORKSPACE_FILES:
@@ -1009,6 +1225,19 @@ def cmd_status(args: argparse.Namespace) -> None:
             f"corpus_edges={memory['corpus_edges']}, "
             f"models={memory['models']}, debates={memory['debates']}, audits={memory['audits']}"
         )
+
+    if fn_summary["count"]:
+        counts = ", ".join(f"{risk}={count}" for risk, count in fn_summary["risk_counts"].items())
+        latest = fn_summary["latest_created_at"] or "unknown"
+        print(f"False-negative reviews: {fn_summary['count']} ({counts}; latest={latest})")
+        for review in fn_summary["reviews"][-5:]:
+            print(
+                f"- {review['review_id']}: target={review['target']} "
+                f"score={review['score']} risk={review['false_negative_risk']} "
+                f"({review['path']})"
+            )
+    else:
+        print("False-negative reviews: none")
 
     large = large_markdown_files(root, args.max_lines)
     if large:
@@ -1496,6 +1725,36 @@ def base_parser() -> argparse.ArgumentParser:
     report.add_argument("--require-report-file", action="store_true")
     report.add_argument("--json", action="store_true")
     report.set_defaults(func=cmd_report_ready)
+
+    fn_review = subparsers.add_parser(
+        "false-negative-review",
+        help="Score negative evidence and create an adversarial reopen checklist",
+    )
+    add_root_arg(fn_review)
+    fn_review.add_argument("--review-id")
+    fn_review.add_argument("--target", required=True)
+    fn_review.add_argument("--scope", required=True)
+    fn_review.add_argument("--conclusion", required=True)
+    fn_review.add_argument(
+        "--evidence",
+        action="append",
+        help="Evidence category and reference as CATEGORY=REF. Categories: "
+        + ", ".join(sorted(FALSE_NEGATIVE_EVIDENCE_WEIGHTS)),
+    )
+    fn_review.add_argument(
+        "--gap",
+        action="append",
+        help="Known missing evidence as CATEGORY=REASON. Categories match --evidence.",
+    )
+    fn_review.add_argument("--primitive", action="append", help="Reviewed primitive ledger ref")
+    fn_review.add_argument("--chain", action="append", help="Reviewed chain ledger ref")
+    fn_review.add_argument("--closure", action="append", help="Reviewed closure/result contract ref")
+    fn_review.add_argument("--model-ref", action="append", help="Reviewed model or invariant ref")
+    fn_review.add_argument("--corpus-ref", action="append", help="Reviewed corpus note ref")
+    fn_review.add_argument("--reopen-action", action="append", help="Override default reopen action list")
+    fn_review.add_argument("--force", action="store_true")
+    fn_review.add_argument("--json", action="store_true")
+    fn_review.set_defaults(func=cmd_false_negative_review)
 
     return parser
 

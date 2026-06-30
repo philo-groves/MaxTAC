@@ -66,6 +66,14 @@ PREFIXES = {
     "unknowns": "UNK",
     "contradictions": "CON",
 }
+INVARIANT_RECEIPT_TEXT_FIELDS = ("guard", "sink", "authority_boundary")
+INVARIANT_RECEIPT_LIST_FIELDS = (
+    "trusted_callers",
+    "proof_obligations",
+    "bypass_assumptions",
+    "binary_gaps",
+    "refutation_conditions",
+)
 
 
 def now() -> str:
@@ -332,6 +340,17 @@ def validate_model(payload: dict[str, Any]) -> tuple[list[str], list[str]]:
                 formula = str(item.get("formula", "")).strip()
                 if formula and not balanced_parentheses(formula):
                     errors.append(f"{where}.formula has unbalanced parentheses")
+                for key in INVARIANT_RECEIPT_LIST_FIELDS:
+                    if key in item and not isinstance(item.get(key), list):
+                        errors.append(f"{where}.{key} must be an array")
+                if item.get("status") in {"observed", "confirmed"}:
+                    for key in INVARIANT_RECEIPT_TEXT_FIELDS:
+                        if not str(item.get(key, "")).strip():
+                            warnings.append(f"{where}.{key} is missing for an observed/confirmed invariant")
+                    for key in ("proof_obligations", "refutation_conditions"):
+                        values = item.get(key) or []
+                        if not any(str(value).strip() for value in values):
+                            warnings.append(f"{where}.{key} is missing for an observed/confirmed invariant")
                 for ref in item.get("violated_by") or []:
                     if str(ref).strip() and str(ref).strip() not in ids:
                         warnings.append(f"{where}.violated_by references unknown assertion id: {ref}")
@@ -476,6 +495,14 @@ def cmd_add_invariant(args: argparse.Namespace) -> None:
             "object": args.object or "",
             "preconditions": parse_repeated(args.precondition),
             "violated_by": parse_repeated(args.violated_by),
+            "guard": args.guard or "",
+            "sink": args.sink or "",
+            "authority_boundary": args.authority_boundary or "",
+            "trusted_callers": parse_repeated(args.trusted_caller),
+            "proof_obligations": parse_repeated(args.proof_obligation),
+            "bypass_assumptions": parse_repeated(args.bypass_assumption),
+            "binary_gaps": parse_repeated(args.binary_gap),
+            "refutation_conditions": parse_repeated(args.refutation_condition),
         }
     )
     action = replace_or_append(items, item, replace=args.replace)
@@ -635,6 +662,27 @@ def evidence_text(values: list[str]) -> str:
     return ", ".join(f"`{value}`" for value in values) if values else ""
 
 
+def compact_list(values: list[str] | None) -> str:
+    values = [str(value).strip() for value in values or [] if str(value).strip()]
+    return "; ".join(values)
+
+
+def invariant_receipt_text(item: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for label, key in (
+        ("Guard", "guard"),
+        ("Sink", "sink"),
+        ("Boundary", "authority_boundary"),
+        ("Trusted callers", "trusted_callers"),
+        ("Binary gaps", "binary_gaps"),
+    ):
+        value = item.get(key)
+        text = compact_list(value) if isinstance(value, list) else str(value or "").strip()
+        if text:
+            parts.append(f"{label}: {text}")
+    return "<br>".join(part.replace("|", "\\|") for part in parts)
+
+
 def render_invariants(payload: dict[str, Any]) -> str:
     lines = [
         f"# Invariant Dictionary: {payload['model_id']}",
@@ -649,14 +697,21 @@ def render_invariants(payload: dict[str, Any]) -> str:
         lines.append("No invariants recorded.")
         lines.append("")
         return "\n".join(lines)
-    lines.extend(["| ID | Status | Confidence | Scope | Invariant | Evidence |", "| --- | --- | --- | --- | --- | --- |"])
+    lines.extend(
+        [
+            "| ID | Status | Confidence | Scope | Invariant | Receipt | Refutation | Evidence |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- |",
+        ]
+    )
     for item in invariants:
         formula = f"<br>`{item.get('formula')}`" if item.get("formula") else ""
         statement = str(item.get("statement", "")).replace("|", "\\|")
         scope = str(item.get("scope", "")).replace("|", "\\|")
+        receipt = invariant_receipt_text(item)
+        refutation = compact_list(item.get("refutation_conditions") or []).replace("|", "\\|")
         lines.append(
             f"| `{item.get('id')}` | `{item.get('status')}` | `{item.get('confidence')}` | "
-            f"{scope} | {statement}{formula} | {evidence_text(item.get('evidence') or [])} |"
+            f"{scope} | {statement}{formula} | {receipt} | {refutation} | {evidence_text(item.get('evidence') or [])} |"
         )
     lines.append("")
     return "\n".join(lines)
@@ -678,6 +733,28 @@ def render_obligations(payload: dict[str, Any]) -> str:
             lines.append(f"  Blocked by: {', '.join(item.get('blocked_by') or [])}")
         if item.get("evidence"):
             lines.append(f"  Evidence: {evidence_text(item.get('evidence') or [])}")
+    lines.extend(["", "## Invariant Proof Obligations", ""])
+    invariants = payload.get("invariants") or []
+    obligation_count = 0
+    for item in invariants:
+        details: list[str] = []
+        for label, key in (
+            ("Proof obligations", "proof_obligations"),
+            ("Trusted callers", "trusted_callers"),
+            ("Bypass assumptions", "bypass_assumptions"),
+            ("Binary gaps", "binary_gaps"),
+            ("Refutation conditions", "refutation_conditions"),
+        ):
+            text = compact_list(item.get(key) or [])
+            if text:
+                details.append(f"{label}: {text}")
+        if details:
+            obligation_count += 1
+            lines.append(f"- `{item.get('id')}` {item.get('statement')}")
+            for detail in details:
+                lines.append(f"  {detail}")
+    if not obligation_count:
+        lines.append("No invariant proof obligations recorded.")
     lines.extend(["", "## Assumptions", ""])
     assumptions = payload.get("assumptions") or []
     if not assumptions:
@@ -797,6 +874,12 @@ def render_prompt(payload: dict[str, Any], focus: str | None) -> str:
         lines.append(f"- `{item.get('id')}` `{item.get('status')}` `{item.get('confidence')}` {item.get('statement')}")
         if item.get("formula"):
             lines.append(f"  Formula: `{item.get('formula')}`")
+        receipt = invariant_receipt_text(item).replace("<br>", "; ")
+        if receipt:
+            lines.append(f"  Receipt: {receipt}")
+        refutation = compact_list(item.get("refutation_conditions") or [])
+        if refutation:
+            lines.append(f"  Refutation: {refutation}")
     lines.extend(["", "## Candidate Or Stale Assertions", ""])
     candidate_count = 0
     for name in ("relations", "invariants", "formulas", "assumptions"):
@@ -961,6 +1044,14 @@ def base_parser() -> argparse.ArgumentParser:
     invariant.add_argument("--object")
     invariant.add_argument("--precondition", action="append")
     invariant.add_argument("--violated-by", action="append")
+    invariant.add_argument("--guard", help="Exact guard or policy check that enforces this invariant")
+    invariant.add_argument("--sink", help="Exact sink or operation protected by this invariant")
+    invariant.add_argument("--authority-boundary", help="Boundary crossed when the invariant matters")
+    invariant.add_argument("--trusted-caller", action="append", help="Known trusted caller or caller class")
+    invariant.add_argument("--proof-obligation", action="append", help="Evidence needed before relying on this invariant")
+    invariant.add_argument("--bypass-assumption", action="append", help="Assumption a bypass would need to violate")
+    invariant.add_argument("--binary-gap", action="append", help="Binary-only or closed-source gap relevant to the invariant")
+    invariant.add_argument("--refutation-condition", action="append", help="Concrete evidence that should reopen or refute this invariant")
     add_common_args(invariant)
     invariant.set_defaults(func=cmd_add_invariant)
 

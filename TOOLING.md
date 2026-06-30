@@ -8,8 +8,9 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | --- | --- |
 | Python | Workspace helpers, ledger helpers, evidence scripts, and the SQLite auditor registry. |
 | Core corpus helper | Faceted research notes, tags, graph edges, generated corpus views, import, search, lint, and anti-tunnel orientation packs. |
-| Core model helper | Security model JSON, invariant dictionaries, model projections, model-backed auditor prompts, and workspace model search. |
+| Core model helper | Security model JSON, invariant dictionaries, invariant receipts, model projections, model-backed auditor prompts, and workspace model search. |
 | Core contracts thin closure | Compact non-reportable closure bundles with coverage receipts, proof evidence, and reopen criteria for tiny exact scopes. |
+| Core false-negative review | Negative-evidence score, explicit gap register, primitive graveyard prompts, caller expansion, patch-diff, chain-composer, and invariant-receipt reopen actions. |
 | Codex subagents and goals | Auditor prompts, registry-backed auditor lookup, verifier debates, and workflow orchestration. |
 
 ## Source

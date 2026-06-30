@@ -12,8 +12,8 @@ Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber p
 
 | Pack | Path | Use when |
 | --- | --- | --- |
-| MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, faceted research corpus, security models, invariant dictionaries, ledgers, canonical result contracts, thin/full closure profiles, reporting flow, and goal-bounded auditor/debater orchestration. |
-| MaxTAC for Source | `plugins/maxtac-source` | You need static triage, optional codebase-memory graph orientation, source diff/repo scan closure, thin exact-path closure, external finding intake, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
+| MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, faceted research corpus, security models, invariant receipts, false-negative review, ledgers, canonical result contracts, thin/full closure profiles, reporting flow, and goal-bounded auditor/debater orchestration. |
+| MaxTAC for Source | `plugins/maxtac-source` | You need static triage, optional codebase-memory graph orientation, source diff/repo scan closure, thin exact-path closure, negative-evidence inputs, external finding intake, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
 | MaxTAC for Binary | `plugins/maxtac-binary` | You need native binary RE, Ghidra, radare2, debugger evidence, crash replay, instrumentation, or systems fuzzing. |
 | MaxTAC for Web | `plugins/maxtac-web` | You need web/API/session/tenant triage, browser debugging, or stateful API fuzzing. |
 | MaxTAC for Cloud | `plugins/maxtac-cloud` | You need AWS, Azure, or GCP IAM, storage, data-plane, runtime metadata, workload identity, managed Kubernetes, or cloud network boundary research. |
@@ -50,7 +50,7 @@ research/          # faceted research corpus
 models/            # machine-readable security models and invariant dictionaries
 proof/             # proof-of-vulnerability development
 fuzz/              # fuzzing inputs, scripts, and artifacts
-contracts/         # canonical result bundles and generated reports
+contracts/         # canonical result bundles, false-negative reviews, and generated reports
 tmp/               # temporary files
 ```
 

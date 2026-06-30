@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maxtac.local/schemas/false-negative-review.schema.json",
+  "title": "MaxTAC false-negative review",
+  "type": "object",
+  "required": [
+    "document_type",
+    "schema_version",
+    "review_id",
+    "created_at",
+    "updated_at",
+    "target",
+    "scope",
+    "conclusion",
+    "score",
+    "false_negative_risk",
+    "confidence",
+    "evidence",
+    "gaps",
+    "reviewed_refs",
+    "reopen_actions"
+  ],
+  "properties": {
+    "document_type": { "const": "maxtac.false_negative_review" },
+    "schema_version": { "const": "1.0" },
+    "review_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "target": { "type": "string", "minLength": 1 },
+    "scope": { "type": "string", "minLength": 1 },
+    "conclusion": { "type": "string", "minLength": 1 },
+    "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "false_negative_risk": { "enum": ["low", "medium", "high"] },
+    "confidence": { "type": "string", "minLength": 1 },
+    "evidence": { "$ref": "#/$defs/categoryMap" },
+    "gaps": { "$ref": "#/$defs/categoryMap" },
+    "reviewed_refs": {
+      "type": "object",
+      "required": ["primitive", "chain", "closure", "model", "corpus"],
+      "properties": {
+        "primitive": { "type": "array", "items": { "type": "string" } },
+        "chain": { "type": "array", "items": { "type": "string" } },
+        "closure": { "type": "array", "items": { "type": "string" } },
+        "model": { "type": "array", "items": { "type": "string" } },
+        "corpus": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "reopen_actions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "_path": { "type": "string" }
+  },
+  "$defs": {
+    "category": {
+      "enum": [
+        "source",
+        "caller",
+        "runtime",
+        "binary",
+        "patch-diff",
+        "fuzzing",
+        "subagent",
+        "model",
+        "chain-composition"
+      ]
+    },
+    "categoryMap": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/category" },
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "additionalProperties": false
+}

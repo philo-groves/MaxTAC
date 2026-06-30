@@ -1,6 +1,6 @@
 ---
 name: maxtac-core-contracts
-description: "Use this skill when MaxTAC research needs canonical machine-readable result contracts, thin closure bundles, finding schemas, coverage closure records, deterministic report projection, or conversion from primitive/chain ledgers into a sealed review bundle."
+description: "Use this skill when MaxTAC research needs canonical machine-readable result contracts, thin closure bundles, false-negative review references, finding schemas, coverage closure records, deterministic report projection, or conversion from primitive/chain ledgers into a sealed review bundle."
 ---
 
 # MaxTAC Core Contracts
@@ -32,7 +32,7 @@ Use `scripts/contract.py` instead of hand-editing `result.json` when creating, v
 5. Run `validate` before using a contract for reporting or handoff.
 6. Run `finalize` to write the deterministic `report.md` projection.
 
-For thin closure, use the `thin-closure` command instead of `init` plus `add-surface` when the target is tiny and non-reportable. Thin closure requires a rationale, at least one coverage receipt, and reopen criteria. It rejects `reported` coverage because reportable findings need the full workflow.
+For thin closure, use the `thin-closure` command instead of `init` plus `add-surface` when the target is tiny and non-reportable. Thin closure requires a rationale, at least one coverage receipt, and reopen criteria. It rejects `reported` coverage because reportable findings need the full workflow. When many thin closures or a broad negative result support a larger conclusion, run `maxtac-core-workflow false-negative-review` and add that review path as `--closure-evidence`.
 
 ## Commands
 
@@ -104,6 +104,7 @@ python3 <skill-dir>/scripts/contract.py finalize <result.json>
 - `coverage.receipt_refs`: point at artifacts that prove the reviewed surface was covered or explicitly deferred.
 - `closure.profile`: use `thin` only for compact non-reportable closures; otherwise keep `full`.
 - `closure.reopen_criteria`: concrete facts that would justify reopening the target.
+- `closure.evidence`: include false-negative review paths when a broad negative conclusion depends on caller, binary, patch-diff, fuzzing, model, subagent, or chain-composition coverage.
 - `closure.ledger_refs`: optional references to related primitive or chain ledger IDs when a candidate was updated, limited, or de-escalated.
 
 Read `schemas/result-bundle.schema.json` only when exact schema shape matters.
@@ -116,3 +117,4 @@ Read `schemas/result-bundle.schema.json` only when exact schema shape matters.
 - Do not author `report.md` by hand when a canonical `result.json` exists. Update the contract and regenerate the report.
 - Do not use model references as evidence by themselves. They preserve context and invariant IDs; proof still needs audit, validation, proof, or coverage artifacts.
 - Do not use thin closure to avoid reporting. If a coverage surface is `reported`, a primitive or chain is `validated` or `proofed`, or a reviewer disagrees on reachability, use full closure.
+- Do not let a set of thin closures imply a program-wide negative result unless a false-negative review records the evidence score and remaining reopen actions.

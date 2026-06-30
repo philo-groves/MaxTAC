@@ -67,6 +67,18 @@ python3 <skill-dir>/scripts/source_scan.py thin-close \
 
 Then create a Core thin result bundle with `maxtac-core-contracts thin-closure`, update or milestone any existing ledger candidate, and write one corpus `closure` note. Do not create separate surface packets, OpenGrep mini-reports, model entities, and expanded narrative reports unless the target stops being tiny or the conclusion becomes reportable.
 
+Thin closure means "no reportable issue survived this exact evidence," not "the target has no bugs." If many thin closures accumulate, or a long source scan finds no chain across a broad family, run Core false-negative review and feed the source receipts as `source` evidence plus any missing caller, binary, patch-diff, fuzzing, subagent, model, or chain-composition gaps:
+
+```text
+python3 <core-workflow-skill-dir>/scripts/workspace.py false-negative-review \
+  --root <workspace-root> \
+  --target "system command family" \
+  --scope "closed source-scan rows and exact helper receipts" \
+  --conclusion "No reportable chain survived the source evidence gathered." \
+  --evidence source=contracts/source-scans/<id>/coverage.jsonl \
+  --gap caller="caller expansion not complete"
+```
+
 ## Commands
 
 Initialize a diff scan:
@@ -118,6 +130,7 @@ python3 <skill-dir>/scripts/source_scan.py validate --scan-dir <scan-dir>
 ## Hard Rules
 
 - Do not claim source scan coverage until `source_scan.py validate` succeeds, or explicitly state the rows left as `needs_follow_up` or `deferred`.
+- Do not convert source coverage into a no-bugs claim. Broad negative source scans need a Core false-negative review or an explicit statement that caller, binary, patch-diff, fuzzing, model, and chain-composition evidence remains incomplete.
 - Do not close a row because a neighboring row has a cleaner finding. Close the exact row with evidence or defer it.
 - Do not broaden a diff scan into a repo-wide scan unless the user asks. Supporting files are context, not new scope.
 - Do not turn source-scan rows into durable research-library facts until they are validated or rewritten as stable negative knowledge.

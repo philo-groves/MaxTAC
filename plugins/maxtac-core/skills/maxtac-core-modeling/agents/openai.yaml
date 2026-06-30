@@ -1,4 +1,4 @@
 interface:
   display_name: "MaxTAC Core Modeling"
-  short_description: "Security models and invariant dictionaries"
-  default_prompt: "Use $maxtac-core-modeling to build or update a MaxTAC security model and invariant dictionary."
+  short_description: "Security models and invariant receipts"
+  default_prompt: "Use $maxtac-core-modeling to build or update a MaxTAC security model with invariant receipts."

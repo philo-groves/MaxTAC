@@ -12,6 +12,8 @@ Ledger updates are also part of the MaxTAC attention cadence. If a branch produc
 
 For MaxTAC thin closure, update the ledger only when a primitive or chain candidate already exists or the branch produced a reusable candidate worth tracking as `limited` or `de-escalated`. Do not create a noisy primitive row for every tiny no-issue helper. In no-finding thin closures, the result contract coverage and corpus `closure` note are the durable closure record.
 
+Before broad negative closure, run a primitive graveyard pass. List every `de-escalated` and `limited` primitive related to the target, then review it as if trying to resurrect it with new caller, patch-diff, model, fuzzing, binary, or chain-composition evidence. Add a milestone to each reviewed primitive with either the reopen evidence or the specific reason it remains closed. Do not let "caller-context" or "non-setuid" become a reusable solvent without a caller-search or authority-boundary receipt.
+
 - Workspace database: `workspace.sqlite`
 - Legacy imports: existing `primitives.json` and `chains.json` are imported into `workspace.sqlite` when the database is first created.
 - Subagent memory: the same database stores and indexes debate tallies and audit assessments for fast lookup.
@@ -56,6 +58,8 @@ python3 <skill-dir>/scripts/ledger.py summary --type chain
 ### List Findings
 ```
 python3 <skill-dir>/scripts/ledger.py list --type chain
+python3 <skill-dir>/scripts/ledger.py list --type primitive --state de-escalated
+python3 <skill-dir>/scripts/ledger.py list --type primitive --state limited
 ```
 
 ### Search Findings
