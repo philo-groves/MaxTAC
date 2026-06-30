@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./skills/maxtac-core-subagents/scripts/auditor_registry.py rebuild --quiet"
+          }
+        ]
+      }
+    ]
+  }
+}

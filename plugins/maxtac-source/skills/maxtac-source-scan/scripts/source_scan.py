@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -37,6 +38,11 @@ DISPOSITIONS = ("open", "reported", "no_issue_found", "rejected", "not_applicabl
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def slug(value: str, default: str = "scan") -> str:
+    cleaned = re.sub(r"[^a-zA-Z0-9._-]+", "-", value.strip()).strip("-._").lower()
+    return cleaned or default
 
 
 def run_git(repo: Path, args: list[str]) -> list[str]:
@@ -268,6 +274,81 @@ def cmd_receipt(args: argparse.Namespace) -> None:
     print(receipt_ref)
 
 
+def cmd_thin_close(args: argparse.Namespace) -> None:
+    root = Path(args.root).resolve()
+    repo = Path(args.target_path).resolve()
+    paths = unique(args.path or [])
+    if not paths:
+        raise SystemExit("thin-close requires at least one --path")
+    default_id = f"thin-{slug(Path(paths[0]).stem)}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    scan_id = args.scan_id or default_id
+    destination = scan_dir(root, scan_id)
+    if destination.exists() and not args.force:
+        raise SystemExit(f"scan already exists: {destination}")
+
+    rows = [
+        {
+            "row_id": f"src-{index + 1:04d}",
+            "path": path,
+            "kind": "source",
+            "origin": "thin-closure",
+        }
+        for index, path in enumerate(paths)
+    ]
+    coverage: list[dict[str, Any]] = []
+    metadata = {
+        "document_type": "maxtac.source_scan",
+        "schema_version": "1.0",
+        "scan_id": scan_id,
+        "mode": "thin-closure",
+        "target_path": str(repo),
+        "base": "",
+        "head": "",
+        "scope": paths,
+        "created_at": now(),
+        "updated_at": now(),
+        "worklist_count": len(rows),
+        "closure_profile": "thin",
+        "closure_rationale": args.note,
+    }
+    destination.mkdir(parents=True, exist_ok=True)
+    (destination / "receipts").mkdir(exist_ok=True)
+    for row in rows:
+        receipt_ref = f"receipts/{row['row_id']}.json"
+        receipt = {
+            "row_id": row["row_id"],
+            "path": row["path"],
+            "disposition": args.disposition,
+            "risk_area": args.risk_area,
+            "finding_ids": args.finding_id or [],
+            "notes": args.note,
+            "evidence": args.evidence or [],
+            "closed_at": now(),
+            "closure_profile": "thin",
+        }
+        write_json(destination / receipt_ref, receipt)
+        coverage.append(
+            {
+                "row_id": row["row_id"],
+                "path": row["path"],
+                "risk_area": args.risk_area,
+                "disposition": args.disposition,
+                "finding_ids": args.finding_id or [],
+                "receipt_ref": receipt_ref,
+                "notes": args.note,
+            }
+        )
+    write_json(destination / "metadata.json", metadata)
+    write_jsonl(destination / "worklist.jsonl", rows)
+    write_jsonl(destination / "coverage.jsonl", coverage)
+    errors = validation_errors(destination)
+    if errors:
+        raise SystemExit("\n".join(errors))
+    print(destination)
+    for row in coverage:
+        print(row["receipt_ref"])
+
+
 def coverage_counts(coverage: list[dict[str, Any]]) -> dict[str, int]:
     counts = {disposition: 0 for disposition in DISPOSITIONS}
     for row in coverage:
@@ -347,6 +428,19 @@ def main() -> None:
     receipt.add_argument("--evidence", action="append")
     receipt.add_argument("--add-supporting", action="store_true")
     receipt.set_defaults(func=cmd_receipt)
+
+    thin_close = subparsers.add_parser("thin-close", help="Create and close an exact-path thin source scan")
+    thin_close.add_argument("--root", default=".")
+    thin_close.add_argument("--target-path", default=".")
+    thin_close.add_argument("--scan-id")
+    thin_close.add_argument("--path", action="append", required=True)
+    thin_close.add_argument("--disposition", choices=DISPOSITIONS[1:], default="no_issue_found")
+    thin_close.add_argument("--risk-area", required=True)
+    thin_close.add_argument("--finding-id", action="append")
+    thin_close.add_argument("--note", required=True)
+    thin_close.add_argument("--evidence", action="append")
+    thin_close.add_argument("--force", action="store_true")
+    thin_close.set_defaults(func=cmd_thin_close)
 
     status = subparsers.add_parser("status")
     status.add_argument("--scan-dir", required=True)

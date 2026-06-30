@@ -53,4 +53,4 @@ Store results under `research/windows/<case-id>/surface-triage.md`:
 
 ## Auditor Routing
 
-Use the Microsoft pack's auditor MCP tools when available. Good starting filters include `com`, `dcom`, `rpc`, `alpc`, `broker`, `object-manager`, `named-pipe`, `symlink`, `token`, `impersonation`, `uac`, `integrity-level`, `service`, `scheduled-task`, `driver`, `ioctl`, `kernel`, `appcontainer`, `lpac`, `code-integrity`, and `wdac`.
+Use the Microsoft pack's auditor MCP tools when available. If those tools are not exposed in the current context, use Core's local fallback: `python3 <maxtac-core-subagents-skill-dir>/scripts/audit-helper.py --catalog microsoft --filter <term>`. Good starting filters include `com`, `dcom`, `rpc`, `alpc`, `broker`, `object-manager`, `named-pipe`, `symlink`, `token`, `impersonation`, `uac`, `integrity-level`, `service`, `scheduled-task`, `driver`, `ioctl`, `kernel`, `appcontainer`, `lpac`, `code-integrity`, and `wdac`.

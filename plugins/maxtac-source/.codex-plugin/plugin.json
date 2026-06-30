@@ -1,13 +1,13 @@
 {
   "name": "maxtac-source",
-  "version": "0.3.0",
+  "version": "0.3.1+codex.20260630102611",
   "author": {
     "name": "Philo Groves"
   },
   "repository": "https://github.com/philo-groves/MaxTAC",
   "license": "MIT",
   "skills": "./skills/",
-  "description": "Static analysis, optional codebase memory, source scan closure, and external finding intake workflows for source code and existing decompiler output in MaxTAC research.",
+  "description": "Static analysis, optional codebase memory, source scan closure, thin exact-path closure, and external finding intake workflows for source code and existing decompiler output in MaxTAC research.",
   "keywords": [
     "codex",
     "maxtac",
@@ -17,17 +17,19 @@
     "mcp",
     "opengrep",
     "control-flow",
+    "thin-closure",
     "source-code"
   ],
   "interface": {
     "displayName": "MaxTAC for Source",
-    "shortDescription": "SAST, codebase memory, scan closure, intake, CFG, and OpenGrep evidence.",
-    "longDescription": "MaxTAC for Source adds static surface triage, optional codebase-memory-mcp graph usage, source diff/repo scan worklists with coverage receipts, external finding intake normalization, focused control-flow evidence, and OpenGrep rule guidance for source code or existing decompiler output. It does not own reverse engineering; pair it with the domain pack that produces the code view, such as Binary or Android.",
+    "shortDescription": "SAST, codebase memory, scan closure, thin closure, intake, CFG, and OpenGrep evidence.",
+    "longDescription": "MaxTAC for Source adds static surface triage, optional codebase-memory-mcp graph usage, source diff/repo scan worklists with coverage receipts, thin exact-path source closure for tiny non-reportable targets, external finding intake normalization, focused control-flow evidence, and OpenGrep rule guidance for source code or existing decompiler output. It does not own reverse engineering; pair it with the domain pack that produces the code view, such as Binary or Android.",
     "defaultPrompt": [
       "Use MaxTAC for Source to triage this authorized source target.",
       "Use MaxTAC for Source with codebase memory to map this repository before triage.",
       "Create a focused MaxTAC Source packet for this route or subsystem.",
       "Run a MaxTAC Source scan with coverage receipts for this diff.",
+      "Create a thin MaxTAC Source closure for this one-file helper.",
       "Normalize these external security findings for MaxTAC triage."
     ],
     "developerName": "Philo Groves",

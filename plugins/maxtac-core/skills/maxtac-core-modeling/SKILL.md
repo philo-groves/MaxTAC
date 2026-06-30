@@ -37,50 +37,50 @@ Use `scripts/model.py` instead of hand-editing `model.json` when creating, valid
 Create a model:
 
 ```text
-python <skill-dir>/scripts/model.py init --root <workspace-root> --model-id <id> --target "<target>" --kind subsystem --summary "..."
+python3 <skill-dir>/scripts/model.py init --root <workspace-root> --model-id <id> --target "<target>" --kind subsystem --summary "..."
 ```
 
 Add an entity:
 
 ```text
-python <skill-dir>/scripts/model.py add-entity models/<id>/model.json --kind service --name "Export API" --description "Handles tenant data exports." --status observed --confidence medium --evidence research/export/api.md
+python3 <skill-dir>/scripts/model.py add-entity models/<id>/model.json --kind service --name "Export API" --description "Handles tenant data exports." --status observed --confidence medium --evidence research/export/api.md
 ```
 
 Add a relation:
 
 ```text
-python <skill-dir>/scripts/model.py add-relation models/<id>/model.json --subject ENT-0001 --predicate authorizes --object ENT-0003 --description "Export API checks the tenant policy guard before object reads." --status observed --confidence medium --evidence research/export/api.md
+python3 <skill-dir>/scripts/model.py add-relation models/<id>/model.json --subject ENT-0001 --predicate authorizes --object ENT-0003 --description "Export API checks the tenant policy guard before object reads." --status observed --confidence medium --evidence research/export/api.md
 ```
 
 Add an invariant:
 
 ```text
-python <skill-dir>/scripts/model.py add-invariant models/<id>/model.json --statement "Only a user in the object's tenant may export that object unless they hold the global support role." --scope "Tenant export workflow" --formula 'forall user, object. can_export(user, object) -> same_tenant(user, object) or has_role(user, "support")' --status candidate --confidence medium
+python3 <skill-dir>/scripts/model.py add-invariant models/<id>/model.json --statement "Only a user in the object's tenant may export that object unless they hold the global support role." --scope "Tenant export workflow" --formula 'forall user, object. can_export(user, object) -> same_tenant(user, object) or has_role(user, "support")' --status candidate --confidence medium
 ```
 
 Track a missing fact:
 
 ```text
-python <skill-dir>/scripts/model.py add-unknown models/<id>/model.json --question "Does webhook replay reuse the original tenant authorization decision?" --scope "Webhook retry state machine"
+python3 <skill-dir>/scripts/model.py add-unknown models/<id>/model.json --question "Does webhook replay reuse the original tenant authorization decision?" --scope "Webhook retry state machine"
 ```
 
 Validate and project:
 
 ```text
-python <skill-dir>/scripts/model.py validate models/<id>/model.json --strict
-python <skill-dir>/scripts/model.py project models/<id>/model.json
+python3 <skill-dir>/scripts/model.py validate models/<id>/model.json --strict
+python3 <skill-dir>/scripts/model.py project models/<id>/model.json
 ```
 
 Search indexed models:
 
 ```text
-python <skill-dir>/scripts/model.py search --root <workspace-root> --query "tenant export same_tenant"
+python3 <skill-dir>/scripts/model.py search --root <workspace-root> --query "tenant export same_tenant"
 ```
 
 Export a model-backed auditor prompt:
 
 ```text
-python <skill-dir>/scripts/model.py export-prompt models/<id>/model.json --focus "Check whether the export guard dominates all object reads." --output tmp/export-model-auditor-prompt.md
+python3 <skill-dir>/scripts/model.py export-prompt models/<id>/model.json --focus "Check whether the export guard dominates all object reads." --output tmp/export-model-auditor-prompt.md
 ```
 
 ## Assertion Status

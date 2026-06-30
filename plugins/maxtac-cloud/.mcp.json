@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "maxtac-cloud-auditors": {
-      "command": "python",
+      "command": "python3",
       "args": [
         "scripts/auditor_mcp.py"
       ],

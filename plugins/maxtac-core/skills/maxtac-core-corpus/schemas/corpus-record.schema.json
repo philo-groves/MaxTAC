@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maxtac.local/schemas/corpus-record.schema.json",
+  "title": "MaxTAC corpus document record",
+  "type": "object",
+  "required": [
+    "doc_id",
+    "title",
+    "kind",
+    "status",
+    "summary",
+    "body_path",
+    "tags",
+    "evidence",
+    "model_refs",
+    "created_at",
+    "updated_at",
+    "line_count",
+    "word_count"
+  ],
+  "properties": {
+    "doc_id": { "type": "string", "pattern": "^R-[0-9]{6}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "kind": {
+      "enum": [
+        "architecture",
+        "invariant",
+        "negative-result",
+        "open-question",
+        "proof-note",
+        "hypothesis",
+        "triage-summary",
+        "model-summary",
+        "closure",
+        "decision",
+        "handoff",
+        "reference"
+      ]
+    },
+    "status": {
+      "enum": ["draft", "candidate", "observed", "confirmed", "negative", "stale", "superseded", "artifact-only"]
+    },
+    "summary": { "type": "string", "minLength": 1 },
+    "body_path": { "type": "string", "minLength": 1 },
+    "tags": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/tag" }
+    },
+    "evidence": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "model_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "line_count": { "type": "integer", "minimum": 0 },
+    "word_count": { "type": "integer", "minimum": 0 }
+  },
+  "$defs": {
+    "tag": {
+      "type": "object",
+      "required": ["facet", "value", "key", "weight", "source"],
+      "properties": {
+        "facet": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 },
+        "key": { "type": "string", "minLength": 3 },
+        "weight": { "type": "number" },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

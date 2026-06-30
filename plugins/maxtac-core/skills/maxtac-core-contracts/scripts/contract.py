@@ -25,8 +25,10 @@ SEVERITIES = ("critical", "high", "medium", "low", "informational")
 CONFIDENCES = ("high", "medium", "low")
 FINDING_TYPES = ("primitive", "chain", "candidate", "external")
 DISPOSITIONS = ("reported", "no_issue_found", "rejected", "not_applicable", "needs_follow_up", "deferred")
+THIN_DISPOSITIONS = ("no_issue_found", "rejected", "not_applicable", "needs_follow_up", "deferred")
 STATES = ("discovered", "confident", "validated", "proofed", "duplicate", "limited", "de-escalated")
 MODEL_REF_KINDS = ("model", "entity", "relation", "invariant", "formula", "assumption", "unknown", "contradiction")
+CLOSURE_PROFILES = ("full", "thin")
 
 
 def now() -> str:
@@ -96,6 +98,16 @@ def parse_model_refs(values: list[str] | None) -> list[dict[str, str]]:
     return [parse_model_ref(value) for value in values or []]
 
 
+def closure_from_args(args: argparse.Namespace) -> dict[str, Any]:
+    return {
+        "profile": args.closure_profile,
+        "rationale": args.closure_rationale or "",
+        "evidence": parse_repeated(args.closure_evidence),
+        "ledger_refs": parse_repeated(args.ledger_ref),
+        "reopen_criteria": parse_repeated(args.reopen_criteria),
+    }
+
+
 def validate_model_refs(value: Any, where: str, errors: list[str]) -> None:
     if value is None:
         return
@@ -115,6 +127,41 @@ def validate_model_refs(value: Any, where: str, errors: list[str]) -> None:
             errors.append(f"{item_where}.assertion_id must be a string")
         if not isinstance(item.get("note", ""), str):
             errors.append(f"{item_where}.note must be a string")
+
+
+def validate_closure(payload: dict[str, Any], errors: list[str]) -> None:
+    closure = payload.get("closure")
+    if closure is None:
+        return
+    if not isinstance(closure, dict):
+        errors.append("closure must be an object")
+        return
+    profile = closure.get("profile", "full")
+    if profile not in CLOSURE_PROFILES:
+        errors.append(f"closure.profile must be one of {', '.join(CLOSURE_PROFILES)}")
+    for key in ("rationale",):
+        if not isinstance(closure.get(key, ""), str):
+            errors.append(f"closure.{key} must be a string")
+    for key in ("evidence", "ledger_refs", "reopen_criteria"):
+        if not isinstance(closure.get(key, []), list):
+            errors.append(f"closure.{key} must be an array")
+
+    if profile != "thin":
+        return
+    if not str(closure.get("rationale", "")).strip():
+        errors.append("thin closure requires closure.rationale")
+    if not closure.get("reopen_criteria"):
+        errors.append("thin closure requires at least one reopen criterion")
+    if not payload.get("coverage"):
+        errors.append("thin closure requires at least one coverage surface")
+    if any(surface.get("disposition") == "reported" for surface in payload.get("coverage", []) if isinstance(surface, dict)):
+        errors.append("thin closure cannot contain reported coverage; use full closure for reportable findings")
+    if any(
+        not surface.get("receipt_refs")
+        for surface in payload.get("coverage", [])
+        if isinstance(surface, dict)
+    ):
+        errors.append("thin closure coverage surfaces require receipt_refs")
 
 
 def base_result(args: argparse.Namespace) -> dict[str, Any]:
@@ -140,6 +187,7 @@ def base_result(args: argparse.Namespace) -> dict[str, Any]:
         "findings": [],
         "coverage": [],
         "model_refs": [],
+        "closure": closure_from_args(args),
     }
 
 
@@ -223,6 +271,7 @@ def validate_result(payload: dict[str, Any]) -> list[str]:
             if not isinstance(surface.get("receipt_refs"), list):
                 errors.append(f"{where}.receipt_refs must be an array")
     validate_model_refs(payload.get("model_refs"), "model_refs", errors)
+    validate_closure(payload, errors)
     return errors
 
 
@@ -340,6 +389,43 @@ def cmd_add_surface(args: argparse.Namespace) -> None:
     print(surface["id"])
 
 
+def cmd_thin_closure(args: argparse.Namespace) -> None:
+    if not str(args.summary or "").strip():
+        raise SystemExit("thin-closure requires --summary")
+    root = Path(args.root)
+    path = result_path(root, args.result_id)
+    if path.exists() and not args.force:
+        raise SystemExit(f"result already exists: {path}")
+
+    args.closure_profile = "thin"
+    args.closure_rationale = args.closure_rationale or args.summary
+    evidence = parse_repeated(args.evidence)
+    receipts = parse_repeated(args.receipt)
+    args.closure_evidence = parse_repeated([*(args.closure_evidence or []), *evidence, *receipts])
+
+    payload = base_result(args)
+    payload["coverage"].append(
+        {
+            "id": args.surface_id or next_id(payload["coverage"], "surface"),
+            "surface": args.surface,
+            "risk_area": args.risk_area,
+            "disposition": args.disposition,
+            "receipt_refs": receipts,
+            "notes": args.notes or args.summary,
+        }
+    )
+    payload["updated_at"] = now()
+    errors = validate_result(payload)
+    if errors:
+        raise SystemExit("\n".join(errors))
+    write_json(path, payload)
+    print(path)
+    if not args.no_finalize:
+        report_path = path.with_name("report.md")
+        report_path.write_text(render_report(payload), encoding="utf-8")
+        print(report_path)
+
+
 def cmd_add_model_ref(args: argparse.Namespace) -> None:
     path = Path(args.result_json)
     payload = read_json(path)
@@ -376,6 +462,9 @@ def cmd_validate(args: argparse.Namespace) -> None:
 
 
 def render_report(payload: dict[str, Any]) -> str:
+    if payload.get("closure", {}).get("profile") == "thin":
+        return render_thin_report(payload)
+
     lines: list[str] = []
     target = payload["target"]
     scope = payload["scope"]
@@ -461,6 +550,70 @@ def render_report(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def render_thin_report(payload: dict[str, Any]) -> str:
+    target = payload["target"]
+    scope = payload["scope"]
+    closure = payload.get("closure") or {}
+    lines = [
+        f"# MaxTAC Thin Closure: {target['name']}",
+        "",
+        "## Conclusion",
+        "",
+        closure.get("rationale") or scope.get("summary") or "No reportable issue was identified in this bounded closure.",
+        "",
+        "## Scope",
+        "",
+        f"- Result: `{payload['result_id']}`",
+        f"- Target kind: `{target['kind']}`",
+        f"- Include paths: {', '.join(scope.get('include_paths') or ['.'])}",
+    ]
+    if target.get("revision"):
+        lines.append(f"- Revision: `{target['revision']}`")
+    if target.get("source"):
+        lines.append(f"- Source: `{target['source']}`")
+    for limitation in scope.get("limitations", []):
+        lines.append(f"- Limitation: {limitation}")
+
+    lines.extend(["", "## Evidence", ""])
+    evidence = closure.get("evidence") or []
+    if evidence:
+        for item in evidence:
+            lines.append(f"- `{item}`")
+    else:
+        lines.append("No closure evidence recorded.")
+
+    lines.extend(["", "## Coverage", ""])
+    for surface in payload.get("coverage", []):
+        receipts = ", ".join(f"`{item}`" for item in surface.get("receipt_refs", [])) or "none"
+        lines.append(
+            f"- `{surface['disposition']}` {surface['surface']} "
+            f"({surface['risk_area']}): {surface['notes']} Receipts: {receipts}."
+        )
+    if not payload.get("coverage"):
+        lines.append("No coverage surfaces recorded.")
+
+    lines.extend(["", "## Findings", ""])
+    if not payload.get("findings"):
+        lines.append("No reportable primitive or chain was recorded.")
+    else:
+        for finding in payload["findings"]:
+            lines.append(f"- `{finding['state']}` `{finding['id']}` {finding['title']}: {finding['summary']}")
+
+    lines.extend(["", "## Reopen Criteria", ""])
+    criteria = closure.get("reopen_criteria") or []
+    if criteria:
+        for item in criteria:
+            lines.append(f"- {item}")
+    else:
+        lines.append("No reopen criteria recorded.")
+    if closure.get("ledger_refs"):
+        lines.extend(["", "## Ledger References", ""])
+        for item in closure["ledger_refs"]:
+            lines.append(f"- `{item}`")
+    lines.append("")
+    return "\n".join(lines)
+
+
 def cmd_finalize(args: argparse.Namespace) -> None:
     path = Path(args.result_json)
     payload = read_json(path)
@@ -483,6 +636,11 @@ def add_result_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--exclude", action="append")
     parser.add_argument("--summary")
     parser.add_argument("--limitation", action="append")
+    parser.add_argument("--closure-profile", choices=CLOSURE_PROFILES, default="full")
+    parser.add_argument("--closure-rationale")
+    parser.add_argument("--closure-evidence", action="append")
+    parser.add_argument("--ledger-ref", action="append", help="Related ledger reference such as primitive:M-0001")
+    parser.add_argument("--reopen-criteria", action="append")
     parser.add_argument("--force", action="store_true")
 
 
@@ -527,6 +685,18 @@ def main() -> None:
     add_surface.add_argument("--receipt", action="append")
     add_surface.add_argument("--notes", required=True)
     add_surface.set_defaults(func=cmd_add_surface)
+
+    thin_closure = subparsers.add_parser("thin-closure", help="Create a compact no-reportable-chain closure bundle")
+    add_result_args(thin_closure)
+    thin_closure.add_argument("--surface", required=True)
+    thin_closure.add_argument("--surface-id")
+    thin_closure.add_argument("--risk-area", required=True)
+    thin_closure.add_argument("--disposition", choices=THIN_DISPOSITIONS, default="no_issue_found")
+    thin_closure.add_argument("--receipt", action="append", required=True)
+    thin_closure.add_argument("--evidence", action="append")
+    thin_closure.add_argument("--notes")
+    thin_closure.add_argument("--no-finalize", action="store_true")
+    thin_closure.set_defaults(func=cmd_thin_closure)
 
     add_model_ref = subparsers.add_parser("add-model-ref", help="Attach a model or assertion reference to the result or a finding")
     add_model_ref.add_argument("result_json")

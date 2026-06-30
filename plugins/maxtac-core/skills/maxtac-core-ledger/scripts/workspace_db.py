@@ -63,6 +63,12 @@ def ensure_schema(conn: sqlite3.Connection) -> bool:
           value TEXT NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS id_counters (
+          scope TEXT PRIMARY KEY,
+          next_value INTEGER NOT NULL CHECK (next_value > 0),
+          updated_at TEXT NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS findings (
           finding_key TEXT PRIMARY KEY,
           id TEXT NOT NULL,
@@ -203,6 +209,66 @@ def ensure_schema(conn: sqlite3.Connection) -> bool:
 
         CREATE INDEX IF NOT EXISTS idx_model_assertions_model_type ON model_assertions(model_id, assertion_type);
         CREATE INDEX IF NOT EXISTS idx_model_assertions_status ON model_assertions(status);
+
+        CREATE TABLE IF NOT EXISTS corpus_documents (
+          doc_id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          status TEXT NOT NULL,
+          summary TEXT NOT NULL,
+          body_path TEXT NOT NULL,
+          line_count INTEGER NOT NULL DEFAULT 0,
+          word_count INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          raw_json TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_corpus_documents_kind_status ON corpus_documents(kind, status);
+        CREATE INDEX IF NOT EXISTS idx_corpus_documents_updated ON corpus_documents(updated_at);
+
+        CREATE TABLE IF NOT EXISTS corpus_tags (
+          tag_key TEXT PRIMARY KEY,
+          facet TEXT NOT NULL,
+          value TEXT NOT NULL,
+          description TEXT NOT NULL DEFAULT '',
+          deprecated INTEGER NOT NULL DEFAULT 0,
+          UNIQUE(facet, value)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_corpus_tags_facet_value ON corpus_tags(facet, value);
+
+        CREATE TABLE IF NOT EXISTS corpus_document_tags (
+          doc_id TEXT NOT NULL,
+          tag_key TEXT NOT NULL,
+          weight REAL NOT NULL DEFAULT 1.0,
+          source TEXT NOT NULL DEFAULT 'manual',
+          PRIMARY KEY (doc_id, tag_key),
+          FOREIGN KEY (doc_id) REFERENCES corpus_documents(doc_id) ON DELETE CASCADE,
+          FOREIGN KEY (tag_key) REFERENCES corpus_tags(tag_key) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_corpus_document_tags_tag ON corpus_document_tags(tag_key);
+
+        CREATE TABLE IF NOT EXISTS corpus_edges (
+          edge_id TEXT PRIMARY KEY,
+          src_doc_id TEXT NOT NULL,
+          predicate TEXT NOT NULL,
+          dst_doc_id TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'candidate',
+          confidence TEXT NOT NULL DEFAULT 'unknown',
+          evidence TEXT NOT NULL DEFAULT '',
+          note TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          raw_json TEXT NOT NULL,
+          FOREIGN KEY (src_doc_id) REFERENCES corpus_documents(doc_id) ON DELETE CASCADE,
+          FOREIGN KEY (dst_doc_id) REFERENCES corpus_documents(doc_id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_corpus_edges_src ON corpus_edges(src_doc_id);
+        CREATE INDEX IF NOT EXISTS idx_corpus_edges_dst ON corpus_edges(dst_doc_id);
+        CREATE INDEX IF NOT EXISTS idx_corpus_edges_predicate ON corpus_edges(predicate);
         """
     )
     set_meta(conn, "schema_version", SCHEMA_VERSION)
@@ -222,6 +288,10 @@ def ensure_schema(conn: sqlite3.Connection) -> bool:
         conn.execute(
             "CREATE VIRTUAL TABLE IF NOT EXISTS model_search USING fts5("
             "model_id UNINDEXED, assertion_type UNINDEXED, item_id UNINDEXED, text, tokenize='porter unicode61')"
+        )
+        conn.execute(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS corpus_search USING fts5("
+            "doc_id UNINDEXED, title, summary, body, tags, tokenize='porter unicode61')"
         )
     except sqlite3.DatabaseError:
         set_meta(conn, "fts5_enabled", "0")
@@ -1188,6 +1258,20 @@ def count_models(root: Path) -> int:
     with connect(root) as conn:
         ensure_schema(conn)
         row = conn.execute("SELECT COUNT(*) AS count FROM models").fetchone()
+    return int(row["count"])
+
+
+def count_corpus_documents(root: Path) -> int:
+    with connect(root) as conn:
+        ensure_schema(conn)
+        row = conn.execute("SELECT COUNT(*) AS count FROM corpus_documents").fetchone()
+    return int(row["count"])
+
+
+def count_corpus_edges(root: Path) -> int:
+    with connect(root) as conn:
+        ensure_schema(conn)
+        row = conn.execute("SELECT COUNT(*) AS count FROM corpus_edges").fetchone()
     return int(row["count"])
 
 

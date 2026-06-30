@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import json
 import secrets
+import shlex
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,11 +16,14 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
-AUDITORS_FILE = SKILL_DIR / "references" / "auditors.json"
+CORE_SKILLS_DIR = SKILL_DIR.parent
+CORPUS_SCRIPT = CORE_SKILLS_DIR / "maxtac-core-corpus" / "scripts" / "corpus.py"
+MODEL_SCRIPT = CORE_SKILLS_DIR / "maxtac-core-modeling" / "scripts" / "model.py"
 LEDGER_SCRIPTS_DIR = SKILL_DIR.parent / "maxtac-core-ledger" / "scripts"
 sys.path.insert(0, str(LEDGER_SCRIPTS_DIR))
 
 import workspace_db  # noqa: E402
+import auditor_registry  # noqa: E402
 
 
 def generated_id(prefix: str) -> str:
@@ -52,58 +57,6 @@ def workspace_path(root: Path, value: Path, label: str) -> Path:
     except ValueError as exc:
         raise SystemExit(f"{label} escapes workspace root: {resolved_path}") from exc
     return resolved_path
-
-
-def auditors_payload() -> Any:
-    if not AUDITORS_FILE.exists():
-        raise SystemExit(f"Auditor data file not found: {AUDITORS_FILE}")
-    raw = AUDITORS_FILE.read_text(encoding="utf-8").strip()
-    if not raw:
-        raise SystemExit(f"No auditors found in {AUDITORS_FILE}")
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise SystemExit(f"{AUDITORS_FILE} is not valid JSON: {exc}") from exc
-
-
-def normalize_auditor(auditor_id: str, auditor: Any) -> dict[str, Any]:
-    if isinstance(auditor, str):
-        return {"id": auditor_id, "name": auditor_id, "markdown": auditor}
-    if not isinstance(auditor, dict):
-        raise SystemExit(f"Auditor {auditor_id} must be an object or markdown string")
-    result = dict(auditor)
-    result.setdefault("id", auditor_id)
-    result.setdefault("name", result["id"])
-    return result
-
-
-def list_item_id(index: int, item: Any) -> str:
-    if isinstance(item, dict) and item.get("id"):
-        return str(item["id"])
-    return f"auditor-{index + 1}"
-
-
-def load_auditors() -> list[dict[str, Any]]:
-    payload = auditors_payload()
-    if isinstance(payload, dict):
-        if isinstance(payload.get("auditors"), list):
-            auditors = [
-                normalize_auditor(list_item_id(index, item), item)
-                for index, item in enumerate(payload["auditors"])
-            ]
-        else:
-            auditors = [normalize_auditor(str(key), value) for key, value in payload.items()]
-    elif isinstance(payload, list):
-        auditors = [
-            normalize_auditor(list_item_id(index, item), item)
-            for index, item in enumerate(payload)
-        ]
-    else:
-        raise SystemExit(f"{AUDITORS_FILE} must contain a JSON list or object")
-
-    if not auditors:
-        raise SystemExit(f"No auditors found in {AUDITORS_FILE}")
-    return sorted(auditors, key=lambda auditor: str(auditor.get("id", "")))
 
 
 def text_values(value: Any) -> list[str]:
@@ -194,7 +147,79 @@ def show_auditor(auditors: list[dict[str, Any]], auditor_id: str) -> None:
     raise SystemExit(f"Auditor not found: {auditor_id}")
 
 
-def enrich_prompt(prompt_file: Path, root: Path) -> None:
+def python_command() -> str:
+    return sys.executable or "python3"
+
+
+def shell_quote(value: str | Path) -> str:
+    return shlex.quote(str(value))
+
+
+def run_context_command(label: str, command: list[str], *, timeout: int = 45) -> str:
+    try:
+        completed = subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return f"## {label}\n\nUnavailable: {exc}\n"
+    output = (completed.stdout or "").strip()
+    stderr = (completed.stderr or "").strip()
+    if completed.returncode != 0:
+        details = stderr or output or f"exit status {completed.returncode}"
+        return f"## {label}\n\nUnavailable: {details}\n"
+    return f"## {label}\n\n{output or '(no matching records)'}\n"
+
+
+def pre_audit_context(root: Path, query: str | None) -> str:
+    if not query:
+        return (
+            "## Pre-Audit Context\n\n"
+            "No `--context-query` was supplied. The parent prompt must include corpus orientation, model context, "
+            "or a clear reason that neither applies.\n"
+        )
+    sections = [
+        f"## Pre-Audit Context\n\nContext query: `{query}`\n",
+    ]
+    if CORPUS_SCRIPT.exists():
+        sections.append(
+            run_context_command(
+                "Corpus Orientation",
+                [
+                    python_command(),
+                    str(CORPUS_SCRIPT),
+                    "orient",
+                    "--root",
+                    str(root),
+                    "--query",
+                    query,
+                    "--limit",
+                    "8",
+                ],
+            )
+        )
+    else:
+        sections.append(f"## Corpus Orientation\n\nUnavailable: helper not found at {CORPUS_SCRIPT}\n")
+    if MODEL_SCRIPT.exists():
+        sections.append(
+            run_context_command(
+                "Model Search",
+                [
+                    python_command(),
+                    str(MODEL_SCRIPT),
+                    "search",
+                    "--root",
+                    str(root),
+                    "--query",
+                    query,
+                    "--limit",
+                    "8",
+                ],
+            )
+        )
+    else:
+        sections.append(f"## Model Search\n\nUnavailable: helper not found at {MODEL_SCRIPT}\n")
+    return "\n".join(section.rstrip() for section in sections) + "\n"
+
+
+def enrich_prompt(prompt_file: Path, root: Path, *, context_query: str | None = None) -> None:
     prompt_path_input = workspace_path(root, prompt_file, "Prompt file")
     raw_prompt = read_text(prompt_path_input).rstrip()
     audit_id = generated_id("audit")
@@ -231,6 +256,10 @@ Bounds: inspect the supplied packet/evidence, directly referenced files/function
 
 ---
 
+{pre_audit_context(root, context_query)}
+
+---
+
 ## MaxTAC Audit Persistence Instructions
 
 Audit ID: `{audit_id}`
@@ -238,7 +267,7 @@ Audit ID: `{audit_id}`
 Persist the final audit assessment to `{workspace_db.DB_FILE}` before completing the subagent run. Draft the Markdown assessment at `{assessment_path}`, then record it with:
 
 ```text
-python "{helper_path}" --root "{root}" --audit {audit_id} --record-assessment {assessment_path}
+{shell_quote(python_command())} "{helper_path}" --root "{root}" --audit {audit_id} --record-assessment {assessment_path}
 ```
 
 Include a `Goal Activation` section naming `create_goal`, `/goal`, or `unavailable`; then include the vulnerability hypothesis or audit focus, method, reviewed files or components, findings, evidence, exploitability notes, blockers, and a clear conclusion. Summarize supporting evidence in the assessment and cite durable artifact paths from `research/`, `proof/`, `fuzz/`, `contracts/`, or `tmp/` when needed.
@@ -302,7 +331,10 @@ def record_assessment(audit_id: str, assessment_file: Path, root: Path) -> None:
 def base_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="MaxTAC auditor helper")
     parser.add_argument("--root", default=".", help="Workspace root; prompt files should be staged under tmp/")
+    parser.add_argument("--catalog", default="core", help="Auditor catalog for --list/--filter/--show; use --catalogs to list choices")
     group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--catalogs", action="store_true", help="List available local auditor catalogs")
+    group.add_argument("--auditor-rebuild", action="store_true", help="Rebuild the SQLite auditor registry from active plugins")
     group.add_argument("--list", action="store_true", help="List condensed auditor information")
     group.add_argument("--filter", metavar="TEXT", help="Filter auditors by text")
     group.add_argument("--show", metavar="AUDITOR_ID", help="Show full auditor markdown")
@@ -313,6 +345,7 @@ def base_parser() -> argparse.ArgumentParser:
     group.add_argument("--audit-show", metavar="AUDIT_ID", help="Show synced audit details")
     group.add_argument("--audit-search", metavar="TEXT", help="Semantic search audit prompts, assessments, and artifacts")
     parser.add_argument("--record-assessment", type=Path, help="Record an assessment Markdown file into workspace.sqlite")
+    parser.add_argument("--context-query", help="Embed corpus orientation and model search output into an enriched prompt")
     parser.add_argument("--limit", type=int, default=10, help="Maximum rows for audit list or search output")
     return parser
 
@@ -321,13 +354,30 @@ def main() -> None:
     parser = base_parser()
     args = parser.parse_args()
 
+    if args.catalogs:
+        if args.context_query:
+            raise SystemExit("--context-query can only be used with --prompt-file")
+        auditor_registry.print_catalogs()
+        return
+
+    if args.auditor_rebuild:
+        if args.context_query:
+            raise SystemExit("--context-query can only be used with --prompt-file")
+        summary = auditor_registry.rebuild_registry(active_only=True)
+        print(f"Rebuilt {summary['count']} auditor(s) into {summary['db']}")
+        for catalog, count in sorted(summary["catalogs"].items()):
+            print(f"- {catalog}: {count}")
+        return
+
     if args.prompt_file:
         if args.record_assessment:
             raise SystemExit("--record-assessment can only be used with --audit")
-        enrich_prompt(args.prompt_file, root_path(args.root))
+        enrich_prompt(args.prompt_file, root_path(args.root), context_query=args.context_query)
         return
 
     root = root_path(args.root)
+    if args.context_query:
+        raise SystemExit("--context-query can only be used with --prompt-file")
     if args.audit:
         if not args.record_assessment:
             raise SystemExit("--audit requires --record-assessment")
@@ -358,13 +408,19 @@ def main() -> None:
             print(f"{score:.6f} {render_audit_row(payload)}")
         return
 
-    auditors = load_auditors()
     if args.list:
-        list_auditors(auditors)
+        list_auditors(auditor_registry.list_auditors(catalog=args.catalog))
     elif args.filter:
-        filter_auditors(auditors, args.filter)
+        matches = auditor_registry.filter_auditors(None, args.filter, catalog=args.catalog, limit=args.limit)
+        if not matches:
+            print("No matching auditors.")
+            return
+        list_auditors(matches)
     elif args.show:
-        show_auditor(auditors, args.show)
+        auditor = auditor_registry.show_auditor(None, args.show, catalog=args.catalog)
+        if auditor is None:
+            raise SystemExit(f"Auditor not found: {args.show}")
+        print(auditor_registry.markdown_for_output(auditor), end="")
 
 
 if __name__ == "__main__":

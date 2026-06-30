@@ -12,13 +12,13 @@ Use the active Python executable for helper scripts. If `python` is not on PATH 
 
 To determine whether to spawn subagents in parallel or sequentially, run:
 ```
-python <skill-dir>/scripts/readiness-check.py --kind auditor --subagents <count>
-python <skill-dir>/scripts/readiness-check.py --kind debater --subagents <count>
+python3 <skill-dir>/scripts/readiness-check.py --kind auditor --subagents <count>
+python3 <skill-dir>/scripts/readiness-check.py --kind debater --subagents <count>
 ```
 
-Use the local helper scripts for readiness checks, prompt enrichment, and debate ballot validation. Domain packs may expose auditor catalogs through MCP tools; the parent still owns final summaries.
+Use the local helper scripts for readiness checks, prompt enrichment, debate ballot validation, and auditor selection. Domain packs publish auditor JSON catalogs; Core rebuilds a global SQLite auditor registry from the active plugin set at session start. The parent still owns final summaries.
 
-The helper scripts store audit and debate records in `<workspace-root>/workspace.sqlite`. Use the SQLite-backed helper commands for majority counting, detail lookup, and semantic duplicate-work checks.
+The helper scripts store audit and debate records in `<workspace-root>/workspace.sqlite`. Auditor catalogs are stored separately in `$CODEX_HOME/maxtac/auditors.sqlite` because they are plugin/session state, not workspace findings. Use the SQLite-backed helper commands for auditor search, majority counting, detail lookup, and semantic duplicate-work checks.
 
 The script prints `parallel` or `sequential` after checking available system resources against the requested subagent count. It reserves 4 GiB of available memory per requested subagent plus 1 GiB of headroom. Auditor subagents have an additional safety gate: if total system RAM is unknown or below 17 GiB, auditor readiness returns `sequential` regardless of available memory. Debaters and generic subagents are unaffected by the 17 GiB total-RAM gate.
 
@@ -45,28 +45,38 @@ Every audit follows the same 5-step flow.
 1. **Choose the auditor**: before creating a new audit, search existing audit memory for the hypothesis, boundary, and key component names:
 
 ```
-python <skill-dir>/scripts/audit-helper.py --root <workspace-root> --audit-search "<hypothesis boundary component>"
+python3 <skill-dir>/scripts/audit-helper.py --root <workspace-root> --audit-search "<hypothesis boundary component>"
 ```
 
-If a matching assessment already answered the question, reuse it or record a narrowed delta prompt instead of duplicating the audit. Then prefer the active domain pack's auditor MCP tools, such as Web, Binary, Cloud, Supply Chains, Android, Apple Systems, or Microsoft Systems auditor list/filter/show tools. If no domain pack provides a suitable auditor, Core includes a small fallback catalog in `<skill-dir>/references/auditors.json`. Do not read the JSON file directly; instead, run:
+If a matching assessment already answered the question, reuse it or record a narrowed delta prompt instead of duplicating the audit. Then search the SQLite auditor registry populated from the active MaxTAC plugin packs.
+
+The registry is rebuilt automatically by the Core `SessionStart` hook. If a session started before the hook was installed, or if plugins changed mid-session, rebuild it manually:
 
 ```
-python <skill-dir>/scripts/audit-helper.py --list
-python <skill-dir>/scripts/audit-helper.py --filter <filter>
-python <skill-dir>/scripts/audit-helper.py --show <auditor id>
+python3 <skill-dir>/scripts/auditor_registry.py rebuild
 ```
 
-Each of the above scripts results in one or more fallback auditors. The `--list` and `--filter` options print condensed information for a list of auditors, while the `--show` option prints the full markdown instructions for a specific auditor. When a domain triage packet suggests auditor filters, use those filters against the matching domain pack first.
+List, filter, and show auditors through the Core helper rather than reading on-disk JSON directly:
+
+```
+python3 <skill-dir>/scripts/audit-helper.py --catalogs
+python3 <skill-dir>/scripts/audit-helper.py --catalog apple --filter tcc
+python3 <skill-dir>/scripts/audit-helper.py --catalog apple --show apple-tcc-bypass
+```
+
+Use `--catalog web`, `--catalog binary`, `--catalog cloud`, `--catalog supply-chain`, `--catalog android`, `--catalog apple`, or `--catalog microsoft` for domain auditors. Use `--catalog core` for Core's small general-purpose catalog. The `--list` and `--filter` options print condensed information for a list of auditors, while `--show` prints the full markdown instructions for a specific auditor. When a domain triage packet suggests auditor filters, use those filters against the matching domain catalog in the registry.
 
 Prefer focused auditors over broad review. For example, use a specific `logic-*` auditor for authentication state, entitlement, replay, approval, tenant relationship, destructive action, AI-agent authority, or specification drift instead of asking for generic logic analysis. Use generic business logic only when the target is truly workflow-centered and no narrower logic auditor fits.
 
 2. **Write the audit prompt**: after reading the specialist usage and related markdown, write a prompt for its subject matter and the current target. Do not use the specialist markdown directly as a prompt; instead, adapt its guidance for the current context. Persist the prompt draft to `<workspace-root>/tmp/`, then run:
 
 ```
-python <skill-dir>/scripts/audit-helper.py --root <workspace-root> --prompt-file tmp/<prompt-name>.md
+python3 <skill-dir>/scripts/audit-helper.py --root <workspace-root> \
+  --prompt-file tmp/<prompt-name>.md \
+  --context-query "<hypothesis boundary component>"
 ```
 
-The above script prints an enriched prompt; enrichment prepends Codex goal instructions and appends instructions to persist the audit assessment into `workspace.sqlite`. It also creates the SQLite audit record for the generated audit ID.
+The above script prints an enriched prompt; enrichment prepends Codex goal instructions, embeds corpus orientation and model search output for the context query, and appends instructions to persist the audit assessment into `workspace.sqlite`. It also creates the SQLite audit record for the generated audit ID. If a context query is genuinely irrelevant, omit `--context-query` only after the prompt itself explains why corpus/model orientation does not apply.
 
 Include the triage packet, relevant graph evidence, OpenGrep result summaries, and exact file/function references in the prompt. Omit unrelated checklist text and avoid asking the auditor to rediscover the whole target.
 
@@ -77,7 +87,7 @@ Include the triage packet, relevant graph evidence, OpenGrep result summaries, a
 5. **Complete the audit**: after the auditor subagent finishes its work, verify `audit-helper.py --audit-show <audit-id>` returns an assessment. If not, quickly remediate by reviewing the subagent session and recording a proper assessment. Then refresh the SQLite audit index:
 
 ```
-python <skill-dir>/scripts/audit-helper.py --root <workspace-root> --audit-sync
+python3 <skill-dir>/scripts/audit-helper.py --root <workspace-root> --audit-sync
 ```
 
 Use `--audit-list`, `--audit-show <audit-id>`, or `--audit-search "<text>"` for later lookup of assessment details, artifacts, and conclusions.
@@ -91,7 +101,7 @@ Every debate follows the same 5-step flow.
 1. **Write the debate prompt**: write a prompt for the debate topic. Since each debater must rate yes or no, the prompt requires a precise binary proposition: "yes means X, no means Y." Persist the prompt draft to `<workspace-root>/tmp/`, then run:
 
 ```
-python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --prompt-file tmp/<prompt-name>.md
+python3 <skill-dir>/scripts/debate-helper.py --root <workspace-root> --prompt-file tmp/<prompt-name>.md
 ```
 
 The above script prints an enriched prompt; enrichment prepends Codex goal instructions and appends instructions to persist each debate ballot into `workspace.sqlite`. It also creates the SQLite debate record for the generated debate ID.
@@ -118,7 +128,7 @@ The above script prints an enriched prompt; enrichment prepends Codex goal instr
 5. **Tally the debate**: after all ballots are persisted, tally the debate by reviewing each ballot and writing a summary of the results, including which side won and why, supported by evidence from the ballots. To store the machine totals, ballot-by-ballot review, and parent-facing summary in `workspace.sqlite`, run:
 
 ```
-python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --debate <debate-id> --tally
+python3 <skill-dir>/scripts/debate-helper.py --root <workspace-root> --debate <debate-id> --tally
 ```
 
 The parent agent owns the final decision. Review `debate-helper.py --show <debate-id>` before using the result for a ledger state transition.
@@ -126,7 +136,7 @@ The parent agent owns the final decision. Review `debate-helper.py --show <debat
 The tally command also refreshes the SQLite debate index. Use these commands when reviewing previous votes:
 
 ```
-python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --list
-python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --show <debate-id>
-python <skill-dir>/scripts/debate-helper.py --root <workspace-root> --search "<proposition or evidence>"
+python3 <skill-dir>/scripts/debate-helper.py --root <workspace-root> --list
+python3 <skill-dir>/scripts/debate-helper.py --root <workspace-root> --show <debate-id>
+python3 <skill-dir>/scripts/debate-helper.py --root <workspace-root> --search "<proposition or evidence>"
 ```

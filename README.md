@@ -12,8 +12,8 @@ Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber p
 
 | Pack | Path | Use when |
 | --- | --- | --- |
-| MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, security models, invariant dictionaries, ledgers, canonical result contracts, reporting flow, and goal-bounded auditor/debater orchestration. |
-| MaxTAC for Source | `plugins/maxtac-source` | You need static triage, optional codebase-memory graph orientation, source diff/repo scan closure, external finding intake, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
+| MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, faceted research corpus, security models, invariant dictionaries, ledgers, canonical result contracts, thin/full closure profiles, reporting flow, and goal-bounded auditor/debater orchestration. |
+| MaxTAC for Source | `plugins/maxtac-source` | You need static triage, optional codebase-memory graph orientation, source diff/repo scan closure, thin exact-path closure, external finding intake, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
 | MaxTAC for Binary | `plugins/maxtac-binary` | You need native binary RE, Ghidra, radare2, debugger evidence, crash replay, instrumentation, or systems fuzzing. |
 | MaxTAC for Web | `plugins/maxtac-web` | You need web/API/session/tenant triage, browser debugging, or stateful API fuzzing. |
 | MaxTAC for Cloud | `plugins/maxtac-cloud` | You need AWS, Azure, or GCP IAM, storage, data-plane, runtime metadata, workload identity, managed Kubernetes, or cloud network boundary research. |
@@ -41,9 +41,12 @@ Core creates and manages the shared workspace contract:
 
 ```text
 program-info.md    # authorized scope and exclusions
-workspace.sqlite   # findings, model assertions, debate tallies, audit index, and search memory
+workspace.sqlite   # findings, corpus notes, model assertions, debate tallies, audit index, and workspace search memory
 reporting/         # submission-ready reports and evidence indexes
-research/          # durable research library
+research/          # faceted research corpus
+  notes/           # canonical compact research notes
+  views/           # generated corpus indexes and graph views
+  artifacts/       # raw corpus artifacts and imported legacy markdown
 models/            # machine-readable security models and invariant dictionaries
 proof/             # proof-of-vulnerability development
 fuzz/              # fuzzing inputs, scripts, and artifacts
@@ -51,19 +54,23 @@ contracts/         # canonical result bundles and generated reports
 tmp/               # temporary files
 ```
 
-## Auditor Catalogs
+## Auditor Registry
 
-Core keeps only a tiny fallback auditor catalog. Domain packs expose their own auditor catalogs through MCP tools:
+Core owns a global SQLite auditor registry at `$CODEX_HOME/maxtac/auditors.sqlite`. Domain packs publish `references/auditors.json`; Core's `SessionStart` hook rebuilds the registry from the active plugin set so agents have one source of truth with duplicate prevention and FTS search.
 
-- Web: `web_auditor_list`, `web_auditor_filter`, `web_auditor_show`
-- Binary: `binary_auditor_list`, `binary_auditor_filter`, `binary_auditor_show`
-- Cloud: `cloud_auditor_list`, `cloud_auditor_filter`, `cloud_auditor_show`
-- Supply Chains: `supply_chain_auditor_list`, `supply_chain_auditor_filter`, `supply_chain_auditor_show`
-- Android: `android_auditor_list`, `android_auditor_filter`, `android_auditor_show`
-- Apple: `apple_auditor_list`, `apple_auditor_filter`, `apple_auditor_show`
-- Microsoft: `microsoft_auditor_list`, `microsoft_auditor_filter`, `microsoft_auditor_show`
+Use Core's helper for every auditor lookup:
 
-Use the matching domain auditor tools before falling back to Core's generic auditor helper.
+```text
+python3 plugins/maxtac-core/skills/maxtac-core-subagents/scripts/audit-helper.py --catalogs
+python3 plugins/maxtac-core/skills/maxtac-core-subagents/scripts/audit-helper.py --catalog apple --filter tcc
+python3 plugins/maxtac-core/skills/maxtac-core-subagents/scripts/audit-helper.py --catalog apple --show apple-tcc-bypass
+```
+
+If plugins changed during a running session, refresh the registry manually:
+
+```text
+python3 plugins/maxtac-core/skills/maxtac-core-subagents/scripts/auditor_registry.py rebuild
+```
 
 ## Install
 

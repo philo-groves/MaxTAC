@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Core Corpus"
+  short_description: "Faceted corpus, closure notes, and orientation packs"
+  default_prompt: "Use $maxtac-core-corpus to add, search, link, orient, or close MaxTAC research notes without directory tunnel vision."

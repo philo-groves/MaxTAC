@@ -59,4 +59,4 @@ Use this skill as the entrypoint for dependency and release-path vulnerability r
 
 ## Auditor Routing
 
-Use the Supply Chains pack's auditor MCP tools when available. Good starting filters include `supply-chain`, `cicd`, `package-manager`, `dependency-confusion`, `container`, `registry`, `lockfile`, `signature`, `attestation`, `provenance`, `release`, and `oss`. Use Cloud auditor filters for cloud IAM, managed Kubernetes, runtime metadata, or cloud data-plane questions.
+Use the Supply Chains pack's auditor MCP tools when available. If those tools are not exposed in the current context, use Core's local fallback: `python3 <maxtac-core-subagents-skill-dir>/scripts/audit-helper.py --catalog supply-chain --filter <term>`. Good starting filters include `supply-chain`, `cicd`, `package-manager`, `dependency-confusion`, `container`, `registry`, `lockfile`, `signature`, `attestation`, `provenance`, `release`, and `oss`. Use Cloud auditor filters for cloud IAM, managed Kubernetes, runtime metadata, or cloud data-plane questions.

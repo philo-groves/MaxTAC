@@ -28,10 +28,13 @@ import workspace_db  # noqa: E402
 STATE_FILE = ".maxtac-workspace.json"
 WORKSPACE_FILES = {
     "program-info.md": "authorized scope and exclusions",
-    workspace_db.DB_FILE: "SQLite findings, model assertions, debate tallies, audit index, and search memory",
+    workspace_db.DB_FILE: "SQLite findings, corpus notes, model assertions, debate tallies, audit index, and search memory",
 }
 WORKSPACE_DIRS = {
     "research": "scalable markdown research library",
+    "research/notes": "canonical faceted corpus notes",
+    "research/views": "generated corpus indexes and graph views",
+    "research/artifacts": "raw corpus artifacts and imported legacy markdown",
     "models": "machine-readable security models and invariant dictionaries",
     "proof": "proof-of-vulnerability development",
     "fuzz": "fuzzing inputs, scripts, and artifacts",
@@ -318,12 +321,75 @@ def workspace_memory_counts(root: Path) -> dict[str, Any] | None:
         return None
     try:
         return {
+            "corpus_documents": workspace_db.count_corpus_documents(root),
+            "corpus_edges": workspace_db.count_corpus_edges(root),
             "models": workspace_db.count_models(root),
             "debates": workspace_db.count_debates(root),
             "audits": workspace_db.count_audits(root),
         }
     except Exception as exc:
         return {"error": str(exc)}
+
+
+def finding_state_counts(root: Path) -> Counter[str]:
+    counts: Counter[str] = Counter()
+    for ledger_type in LEDGER_TYPES:
+        _, ledger, error = load_ledger(root, ledger_type)
+        if error or ledger is None:
+            continue
+        for finding in ledger.get("findings", []):
+            counts[str(finding.get("state", "unknown"))] += 1
+    return counts
+
+
+def phase_rank(phase: str | None) -> int:
+    if phase in PHASES:
+        return PHASES.index(str(phase))
+    return -1
+
+
+def phase_guidance(root: Path, state: dict[str, Any] | None, memory: dict[str, Any] | None = None) -> dict[str, Any]:
+    current = str(state.get("current_phase", "prepare")) if state else None
+    memory = memory if memory is not None else workspace_memory_counts(root)
+    if not memory or memory.get("error"):
+        memory = {}
+    finding_counts = finding_state_counts(root)
+    reasons: list[str] = []
+    suggested = "prepare"
+
+    if int(memory.get("audits", 0) or 0) > 0:
+        suggested = "scan"
+        reasons.append(f"{memory.get('audits')} audit record(s) exist")
+    if any(finding_counts.get(state_name, 0) for state_name in ("discovered", "confident", "limited")):
+        suggested = "scan"
+        reasons.append("active scan-state findings exist")
+    if int(memory.get("debates", 0) or 0) > 0 or finding_counts.get("validated", 0):
+        suggested = "validation"
+        if int(memory.get("debates", 0) or 0) > 0:
+            reasons.append(f"{memory.get('debates')} debate record(s) exist")
+        if finding_counts.get("validated", 0):
+            reasons.append("validated finding(s) exist")
+    if recursive_file_count(root / "proof") > 0 or finding_counts.get("proofed", 0):
+        suggested = "primitive-proof"
+        reasons.append("proof artifacts or proofed primitive/chain state exists")
+    if finding_counts.get("proofed", 0) and load_ledger(root, "chain")[1]:
+        _, chain_ledger, chain_error = load_ledger(root, "chain")
+        if not chain_error and chain_ledger:
+            if any(finding.get("state") == "proofed" for finding in chain_ledger.get("findings", [])):
+                suggested = "chain-proof"
+                reasons.append("proofed chain finding exists")
+    report_files = sorted((root / "reporting").glob("*.md")) if (root / "reporting").is_dir() else []
+    if report_files:
+        suggested = "reporting"
+        reasons.append(f"{len(report_files)} reporting markdown file(s) exist")
+
+    stale = bool(current and phase_rank(suggested) > phase_rank(current))
+    return {
+        "current": current,
+        "suggested": suggested if stale else current,
+        "stale": stale,
+        "reasons": reasons if stale else [],
+    }
 
 
 def count_lines(path: Path) -> int:
@@ -352,6 +418,71 @@ def markdown_under_artifacts(root: Path) -> list[Path]:
     result: list[Path] = []
     for path in sorted(research.rglob("*.md")):
         if "artifacts" in path.relative_to(research).parts:
+            result.append(path)
+    return result
+
+
+def evidence_reference_keys(root: Path, value: Any) -> set[str]:
+    text = str(value or "").strip().strip("`")
+    if not text:
+        return set()
+    text = text.split("#", 1)[0]
+    normalized = text.replace("\\", "/").lstrip("./")
+    keys = {normalized}
+    path = Path(text).expanduser()
+    if path.is_absolute():
+        keys.add(relative_to(path, root))
+    else:
+        keys.add(relative_to(root / path, root))
+    return {key for key in keys if key}
+
+
+def corpus_evidence_index(root: Path) -> dict[str, set[str]]:
+    if not (root / workspace_db.DB_FILE).exists():
+        return {}
+    index: dict[str, set[str]] = {}
+    try:
+        with workspace_db.connect(root) as conn:
+            workspace_db.ensure_schema(conn)
+            rows = conn.execute("SELECT doc_id, raw_json FROM corpus_documents").fetchall()
+    except Exception:
+        return {}
+    for row in rows:
+        try:
+            payload = json.loads(row["raw_json"])
+        except json.JSONDecodeError:
+            continue
+        doc_id = str(row["doc_id"])
+        for evidence in payload.get("evidence") or []:
+            for key in evidence_reference_keys(root, evidence):
+                index.setdefault(key, set()).add(doc_id)
+    return index
+
+
+def artifact_markdown_records(root: Path) -> list[dict[str, Any]]:
+    evidence_index = corpus_evidence_index(root)
+    records: list[dict[str, Any]] = []
+    for path in markdown_under_artifacts(root):
+        rel = relative_to(path, root)
+        referenced_by = sorted(evidence_index.get(rel, set()))
+        records.append({"path": path, "relative": rel, "referenced_by": referenced_by})
+    return records
+
+
+def markdown_outside_corpus(root: Path) -> list[Path]:
+    research = root / "research"
+    if not research.exists():
+        return []
+    allowed_roots = {"notes", "views", "artifacts"}
+    result: list[Path] = []
+    for path in sorted(research.rglob("*.md")):
+        if not path.is_file():
+            continue
+        try:
+            parts = path.relative_to(research).parts
+        except ValueError:
+            continue
+        if parts and parts[0] not in allowed_roots:
             result.append(path)
     return result
 
@@ -772,18 +903,26 @@ def cmd_status(args: argparse.Namespace) -> None:
     root = root_path(args.root)
     state = load_state(root)
     attention = attention_report(root, args.attention_window_minutes, args.attention_file_count)
+    memory = workspace_memory_counts(root)
+    phase_status = phase_guidance(root, state, memory)
+    artifact_records = artifact_markdown_records(root)
+    unreferenced_artifacts = [record for record in artifact_records if not record["referenced_by"]]
 
     if args.json:
         payload: dict[str, Any] = {
             "root": str(root),
             "phase": state.get("current_phase") if state else None,
+            "phase_guidance": phase_status,
             "files": {},
             "directories": {},
             "ledgers": {},
             "large_markdown": [],
             "research_hygiene": {
                 "markdown_under_artifacts": [],
+                "artifact_markdown": [],
+                "artifact_markdown_unreferenced": [],
                 "tool_named_research_dirs": [],
+                "markdown_outside_corpus": [],
             },
             "attention": attention,
             "report_ready": report_readiness(root, args.chain),
@@ -801,18 +940,26 @@ def cmd_status(args: argparse.Namespace) -> None:
                 "error": error,
                 "counts": ledger_counts(ledger) if ledger else {},
             }
-        payload["workspace_memory"] = workspace_memory_counts(root) or {
+        payload["workspace_memory"] = memory or {
             "error": f"{workspace_db.DB_FILE} missing"
         }
         payload["large_markdown"] = [
             {"path": relative_to(path, root), "lines": lines}
             for path, lines in large_markdown_files(root, args.max_lines)
         ]
-        payload["research_hygiene"]["markdown_under_artifacts"] = [
-            relative_to(path, root) for path in markdown_under_artifacts(root)
+        payload["research_hygiene"]["markdown_under_artifacts"] = [record["relative"] for record in artifact_records]
+        payload["research_hygiene"]["artifact_markdown"] = [
+            {"path": record["relative"], "referenced_by": record["referenced_by"]}
+            for record in artifact_records
+        ]
+        payload["research_hygiene"]["artifact_markdown_unreferenced"] = [
+            record["relative"] for record in unreferenced_artifacts
         ]
         payload["research_hygiene"]["tool_named_research_dirs"] = [
             relative_to(path, root) for path in tool_named_research_dirs(root)
+        ]
+        payload["research_hygiene"]["markdown_outside_corpus"] = [
+            relative_to(path, root) for path in markdown_outside_corpus(root)
         ]
         print(json.dumps(payload, indent=2))
         return
@@ -822,6 +969,11 @@ def cmd_status(args: argparse.Namespace) -> None:
         print(f"- phase: {state.get('current_phase')}")
     else:
         print(f"- phase: not initialized ({STATE_FILE} missing)")
+    if phase_status["stale"]:
+        print(
+            f"- phase guidance: suggest `{phase_status['suggested']}` because "
+            f"{'; '.join(phase_status['reasons'])}"
+        )
 
     print("Workspace files:")
     for filename, description in WORKSPACE_FILES.items():
@@ -846,13 +998,17 @@ def cmd_status(args: argparse.Namespace) -> None:
         )
         print(f"- {ledger_type}: {len(ledger.get('findings', []))} finding(s), active={active}, {summary or 'empty'}")
 
-    memory = workspace_memory_counts(root)
     if memory is None:
         print(f"Workspace memory: {workspace_db.DB_FILE} missing")
     elif memory.get("error"):
         print(f"Workspace memory: error: {memory['error']}")
     else:
-        print(f"Workspace memory: models={memory['models']}, debates={memory['debates']}, audits={memory['audits']}")
+        print(
+            "Workspace memory: "
+            f"corpus={memory['corpus_documents']} note(s), "
+            f"corpus_edges={memory['corpus_edges']}, "
+            f"models={memory['models']}, debates={memory['debates']}, audits={memory['audits']}"
+        )
 
     large = large_markdown_files(root, args.max_lines)
     if large:
@@ -862,22 +1018,37 @@ def cmd_status(args: argparse.Namespace) -> None:
     else:
         print(f"Large markdown files over {args.max_lines} lines: none")
 
-    artifact_markdown = markdown_under_artifacts(root)
+    artifact_markdown = unreferenced_artifacts
     tool_dirs = tool_named_research_dirs(root)
-    if artifact_markdown or tool_dirs:
+    outside_corpus = markdown_outside_corpus(root)
+    if artifact_markdown or tool_dirs or outside_corpus:
         print("Research hygiene warnings:")
-        for path in artifact_markdown:
+        for record in artifact_markdown:
             print(
-                f"- review: {relative_to(path, root)} is markdown under artifacts/; "
-                "rewrite durable conclusions into a sibling research note if future sessions should read it"
+                f"- review: {record['relative']} is unreferenced markdown under artifacts/; "
+                "reference it from a corpus note or rewrite durable conclusions into a corpus note if future sessions should read it"
             )
+        for path in outside_corpus[:25]:
+            print(
+                f"- review: {relative_to(path, root)} is research markdown outside research/notes, research/views, or research/artifacts; "
+                "import durable knowledge with maxtac-core-corpus instead of growing a hand-authored hierarchy"
+            )
+        if len(outside_corpus) > 25:
+            print(f"- review: {len(outside_corpus) - 25} additional outside-corpus markdown file(s) omitted")
         for path in tool_dirs:
             print(
                 f"- review: {relative_to(path, root)}/ is tool-named research; "
                 "move raw tool outputs under artifacts/ unless the tool itself is the modeled system"
             )
     else:
-        print("Research hygiene warnings: none")
+        referenced_count = len(artifact_records)
+        if referenced_count:
+            print(
+                "Research hygiene warnings: none "
+                f"({referenced_count} artifact markdown file(s) are referenced by corpus note evidence)"
+            )
+        else:
+            print("Research hygiene warnings: none")
 
     print_attention(attention)
     print_checks(report_readiness(root, args.chain))
@@ -890,11 +1061,42 @@ def cmd_phase(args: argparse.Namespace) -> None:
         state = initial_state("prepare", "Workspace phase initialized.")
 
     current = str(state.get("current_phase", "prepare"))
+    if args.phase and (args.suggest or args.auto):
+        raise SystemExit("pass either a target phase, --suggest, or --auto")
     if args.list:
         print("MaxTAC phases:")
         for phase in PHASES:
             next_phases = ", ".join(sorted(PHASE_TRANSITIONS[phase]))
             print(f"- {phase}: next {next_phases}")
+        return
+
+    if args.suggest or args.auto:
+        guidance = phase_guidance(root, state)
+        if not guidance["stale"]:
+            print(f"Phase guidance: current phase `{current}` is consistent with workspace evidence.")
+            if args.auto:
+                save_state(root, state)
+            return
+        target = str(guidance["suggested"])
+        reason_text = "; ".join(guidance["reasons"])
+        if args.suggest:
+            print(f"Phase guidance: suggest `{target}` from current `{current}`.")
+            print(f"Reason: {reason_text}")
+            return
+        timestamp = now()
+        state["current_phase"] = target
+        state["updated_at"] = timestamp
+        state.setdefault("phase_history", []).append(
+            {
+                "time": timestamp,
+                "from": current,
+                "to": target,
+                "note": args.note or f"Auto phase inference from workspace evidence: {reason_text}",
+                "auto": True,
+            }
+        )
+        save_state(root, state)
+        print(f"Phase changed: {current} -> {target}")
         return
 
     if not args.phase:
@@ -1259,10 +1461,12 @@ def base_parser() -> argparse.ArgumentParser:
     phase.add_argument("phase", nargs="?", help="Target phase")
     phase.add_argument("--list", action="store_true", help="List phases and allowed transitions")
     phase.add_argument("--force", action="store_true", help="Allow a nonstandard phase transition")
+    phase.add_argument("--suggest", action="store_true", help="Suggest a phase from workspace evidence without writing state")
+    phase.add_argument("--auto", action="store_true", help="Update to the evidence-suggested phase and record an automatic phase note")
     phase.add_argument("--note")
     phase.set_defaults(func=cmd_phase)
 
-    submodule = subparsers.add_parser("new-submodule", help="Create a research submodule")
+    submodule = subparsers.add_parser("new-submodule", help="Create a legacy research submodule")
     add_root_arg(submodule)
     submodule.add_argument("name", help="Submodule directory name")
     submodule.add_argument("--parent", help="Parent under research/; defaults to research/")

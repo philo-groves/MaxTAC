@@ -1,6 +1,6 @@
 {
   "name": "maxtac-cloud",
-  "version": "0.1.0",
+  "version": "0.1.1+codex.20260630021628",
   "author": {
     "name": "Philo Groves"
   },
@@ -43,6 +43,5 @@
     ],
     "brandColor": "#0F766E",
     "screenshots": []
-  },
-  "mcpServers": "./.mcp.json"
+  }
 }

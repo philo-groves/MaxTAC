@@ -6,9 +6,11 @@ Install only the tools needed by the active plugin packs and current target. Cor
 
 | Tool | Used for |
 | --- | --- |
-| Python | Workspace helpers, ledger helpers, evidence scripts, and auditor MCP servers. |
+| Python | Workspace helpers, ledger helpers, evidence scripts, and the SQLite auditor registry. |
+| Core corpus helper | Faceted research notes, tags, graph edges, generated corpus views, import, search, lint, and anti-tunnel orientation packs. |
 | Core model helper | Security model JSON, invariant dictionaries, model projections, model-backed auditor prompts, and workspace model search. |
-| Codex subagents and goals | Auditor prompts, verifier debates, and workflow orchestration. |
+| Core contracts thin closure | Compact non-reportable closure bundles with coverage receipts, proof evidence, and reopen criteria for tiny exact scopes. |
+| Codex subagents and goals | Auditor prompts, registry-backed auditor lookup, verifier debates, and workflow orchestration. |
 
 ## Source
 

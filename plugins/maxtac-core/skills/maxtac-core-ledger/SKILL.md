@@ -10,6 +10,8 @@ The ledger tracks finding state; it is not a replacement for the research librar
 
 Ledger updates are also part of the MaxTAC attention cadence. If a branch produces a promote, de-escalate, duplicate, limited, or no-finding decision, record that decision as a finding update or milestone instead of letting the next session infer it from old artifacts. These timestamps help distinguish useful deep work from tunnel vision.
 
+For MaxTAC thin closure, update the ledger only when a primitive or chain candidate already exists or the branch produced a reusable candidate worth tracking as `limited` or `de-escalated`. Do not create a noisy primitive row for every tiny no-issue helper. In no-finding thin closures, the result contract coverage and corpus `closure` note are the durable closure record.
+
 - Workspace database: `workspace.sqlite`
 - Legacy imports: existing `primitives.json` and `chains.json` are imported into `workspace.sqlite` when the database is first created.
 - Subagent memory: the same database stores and indexes debate tallies and audit assessments for fast lookup.

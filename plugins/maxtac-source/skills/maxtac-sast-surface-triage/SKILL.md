@@ -13,6 +13,7 @@ Use this skill as the first static-analysis pass for a target slice. The goal is
 - Keep the output small enough to paste into an auditor prompt or research note.
 - Capture why a path matters: actor, trust boundary, controlled fields, protected asset, and security invariant.
 - Prefer 2-4 strong hypotheses over many shallow guesses.
+- Use `maxtac-core-corpus orient` before adding durable research notes, especially when the same subsystem or boundary has prior notes, negative results, or open questions.
 - Use `maxtac-source-codebase-memory` first when codebase-memory-mcp is available and architecture, route, symbol, or call-path orientation would reduce broad file exploration.
 - Use `maxtac-core-modeling` first when a Core model exists or the target slice depends on architecture, identity, trust, state, policy, or invariant context that should survive the packet.
 - Use `maxtac-sast-opengrep` for repeatable source-to-sink searches and `maxtac-sast-control-flow-graph` when reachability, guard ordering, state transitions, locks, or cleanup paths matter.
@@ -140,7 +141,7 @@ python3 <skill-dir>/scripts/packet.py prompt surface-packet.md cfg-evidence.md o
 
 The helper refuses to convert invalid packets unless `--allow-invalid` is passed. Do not use `--allow-invalid` for normal workflow handoff. The generated auditor prompt explicitly tells auditors that packets are structured triage and evidence, not proof of a validated, proofed, or reportable finding. Before spawning a subagent from a generated auditor prompt, pass it through `maxtac-core-subagents` via `audit-helper.py --prompt-file` or `audit_prompt_create` so the final subagent prompt includes Codex goal instructions and persistence paths.
 
-Store generated packets in `tmp/` or the relevant subsystem's `artifacts/`. Do not let packets become the durable research library. When a packet closes a path or captures a reusable invariant, incorporate the conclusion into the corresponding system-focused markdown file and link back to the packet.
+Store generated packets in `tmp/` or `research/artifacts/`. Do not let packets become the durable research library. When a packet closes a path or captures reusable architecture, a negative result, an open question, or an invariant, incorporate the conclusion into a `maxtac-core-corpus` note with tags and evidence links, then link related notes when it refines, contradicts, supersedes, or closes prior knowledge.
 
 If a packet depends on a Core model, put model references in the optional `Model refs` field using `model-id:assertion-id` or `kind:model-id:assertion-id`. Use `maxtac-core-modeling export-prompt` when the auditor needs more than one or two model assertions.
 
@@ -171,6 +172,7 @@ Produce this compact packet before spawning auditors or writing rules:
 - Use `maxtac-sast-opengrep` when a hypothesis needs repeatable searches across many files, taint-like source-to-sink checks, constant or symbolic propagation, or rule tests.
 - Use `maxtac-sast-control-flow-graph` when a hypothesis depends on path feasibility, guard dominance, call chains, callbacks, lock order, cleanup paths, or multi-function state transitions.
 - Use `maxtac-source-codebase-memory` when codebase-memory-mcp can provide architecture summaries, symbol discovery, route maps, call paths, ADRs, or diff impact before narrowing the packet.
+- Use `maxtac-core-corpus` when the packet teaches durable research knowledge or should be checked against existing notes, negative results, open questions, and graph neighbors.
 - Use `maxtac-core-modeling` when the packet should reuse or update a durable security model, invariant dictionary, FOL-style assertion, unknown, assumption, or contradiction.
 - Use Android JADX for APK/DEX/resource decompiler output, or Binary RE skills such as Ghidra and Radare2 for native binaries, firmware payloads, binary-level xrefs, and call graphs.
 - Use DAST skills when the triage path needs runtime confirmation, fuzzing, debugging, or a controlled proof environment.

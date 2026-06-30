@@ -1,6 +1,6 @@
 {
   "name": "maxtac-supply-chains",
-  "version": "0.2.0",
+  "version": "0.2.1+codex.20260630021628",
   "author": {
     "name": "Philo Groves"
   },
@@ -42,6 +42,5 @@
     ],
     "brandColor": "#0F766E",
     "screenshots": []
-  },
-  "mcpServers": "./.mcp.json"
+  }
 }

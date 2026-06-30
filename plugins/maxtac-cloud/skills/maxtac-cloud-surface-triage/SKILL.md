@@ -70,4 +70,4 @@ When a file packet is useful, store results under `tmp/cloud/<case-id>/surface-t
 
 ## Auditor Routing
 
-Use the Cloud pack's auditor MCP tools when available. Good starting filters include `iam`, `rbac`, `federation`, `data-exposure`, `storage`, `snapshot`, `runtime`, `metadata`, `serverless`, `kubernetes`, `network`, `secrets`, `kms`, `aws`, `azure`, and `gcp`.
+Use the Cloud pack's auditor MCP tools when available. If those tools are not exposed in the current context, use Core's local fallback: `python3 <maxtac-core-subagents-skill-dir>/scripts/audit-helper.py --catalog cloud --filter <term>`. Good starting filters include `iam`, `rbac`, `federation`, `data-exposure`, `storage`, `snapshot`, `runtime`, `metadata`, `serverless`, `kubernetes`, `network`, `secrets`, `kms`, `aws`, `azure`, and `gcp`.

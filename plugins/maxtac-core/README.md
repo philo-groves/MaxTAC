@@ -1,25 +1,28 @@
 # MaxTAC Core
 
-MaxTAC Core is the required base pack for MaxTAC research. It owns the research workflow, workspace structure, security models, invariant dictionaries, finding ledgers, result contracts, report projection, and goal-bounded auditor or verifier orchestration.
+MaxTAC Core is the required base pack for MaxTAC research. It owns the research workflow, workspace structure, faceted research corpus, security models, invariant dictionaries, finding ledgers, thin/full closure profiles, result contracts, report projection, and goal-bounded auditor or verifier orchestration.
 
 Install this pack for every MaxTAC engagement, then add only the domain packs needed by the target.
 
 ## When To Use
 
 - Starting or continuing an authorized MaxTAC vulnerability research session.
+- Writing, importing, searching, linking, and orienting durable research notes through a faceted corpus instead of hand-grown directory trees.
 - Building and querying durable security models, invariant dictionaries, first-order-logic-style assertions, assumptions, unknowns, and contradictions.
 - Tracking primitives, chains, validation state, proof state, duplicates, and de-escalations.
 - Creating canonical result bundles with coverage, findings, evidence, limitations, and deterministic report output.
+- Closing tiny non-reportable targets with thin result bundles, proof evidence, and reopen criteria instead of a full artifact train.
 - Routing focused auditor and verifier-debate subagents.
-- Keeping durable research notes separate from transient review artifacts.
+- Keeping durable research notes, generated views, raw artifacts, and transient review artifacts separate.
 
 ## Skills
 
 - `maxtac-core-workflow`: standard MaxTAC phases, workspace layout, validation, proof, and reporting flow.
+- `maxtac-core-corpus`: faceted research corpus notes, tags, graph edges, generated views, import, search, lint, and anti-tunnel orientation packs.
 - `maxtac-core-modeling`: security models, invariant dictionaries, architecture relations, first-order-logic-style assertions, assumptions, unknowns, contradictions, and model-backed auditor handoffs.
 - `maxtac-core-ledger`: finding state tracking, deduplication, promotion, de-escalation, and report linkage.
-- `maxtac-core-subagents`: goal-bounded auditor and verifier-debate subagent guidance.
-- `maxtac-core-contracts`: machine-readable result contracts, coverage closure, schemas, and report projection.
+- `maxtac-core-subagents`: goal-bounded auditor and verifier-debate subagent guidance, SQLite-backed auditor registry lookup, and prompt enrichment with corpus/model context.
+- `maxtac-core-contracts`: machine-readable result contracts, thin closure bundles, coverage closure, schemas, and report projection.
 
 ## Typical Pairings
 
@@ -34,9 +37,12 @@ Install this pack for every MaxTAC engagement, then add only the domain packs ne
 
 Core expects research artifacts such as:
 
-- `research/` durable notes.
+- `research/notes/` canonical compact research notes.
+- `research/views/` generated corpus indexes and graph projections.
+- `research/artifacts/` raw corpus artifacts and imported legacy markdown.
 - `models/` security models, invariant dictionaries, model graphs, and proof obligations.
-- `workspace.sqlite` primitive and chain findings, model assertions, debate tallies, audit assessments, related evidence, milestones, and search memory.
+- `workspace.sqlite` primitive and chain findings, corpus documents, corpus tags, corpus graph edges, model assertions, debate tallies, audit assessments, related evidence, milestones, and workspace search memory.
+- `$CODEX_HOME/maxtac/auditors.sqlite` active-plugin auditor registry with duplicate prevention and FTS search.
 - `proof/` proof-of-vulnerability artifacts.
 - `contracts/` canonical result bundles.
 - `reporting/` submission-ready report projections.
@@ -44,3 +50,16 @@ Core expects research artifacts such as:
 ## Boundary
 
 Core does not contain source, binary, web, cloud, supply-chain, Android, Apple, or Microsoft-specific exploitation guidance. Use domain packs for target-specific research direction.
+
+Core rebuilds the global auditor registry from active plugin catalogs at session start. Use Core's helper for every auditor lookup:
+
+```text
+python3 plugins/maxtac-core/skills/maxtac-core-subagents/scripts/audit-helper.py --catalogs
+python3 plugins/maxtac-core/skills/maxtac-core-subagents/scripts/audit-helper.py --catalog web --filter auth
+```
+
+If plugins changed during a running session, refresh the registry with:
+
+```text
+python3 plugins/maxtac-core/skills/maxtac-core-subagents/scripts/auditor_registry.py rebuild
+```

@@ -1,6 +1,6 @@
 {
   "name": "maxtac-android",
-  "version": "0.2.0",
+  "version": "0.2.1+codex.20260630021628",
   "description": "Android application and platform research workflows for MaxTAC.",
   "author": {
     "name": "Philo Groves"
@@ -38,6 +38,5 @@
     ],
     "brandColor": "#0F766E",
     "screenshots": []
-  },
-  "mcpServers": "./.mcp.json"
+  }
 }

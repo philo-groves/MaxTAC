@@ -1,4 +1,4 @@
 interface:
   display_name: "MaxTAC Core Workflow"
-  short_description: "Run MaxTAC workflow and attention checks"
-  default_prompt: "Use $maxtac-core-workflow to organize an authorized vulnerability research session."
+  short_description: "Workflow, phases, and closure profiles"
+  default_prompt: "Use $maxtac-core-workflow to organize an authorized vulnerability research session with the right closure profile."

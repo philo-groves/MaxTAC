@@ -74,6 +74,17 @@
     "model_refs": {
       "type": "array",
       "items": { "$ref": "#/$defs/model_ref" }
+    },
+    "closure": {
+      "type": "object",
+      "required": ["profile", "rationale", "evidence", "ledger_refs", "reopen_criteria"],
+      "properties": {
+        "profile": { "enum": ["full", "thin"] },
+        "rationale": { "type": "string" },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "ledger_refs": { "type": "array", "items": { "type": "string" } },
+        "reopen_criteria": { "type": "array", "items": { "type": "string" } }
+      }
     }
   },
   "$defs": {

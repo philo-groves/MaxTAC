@@ -55,4 +55,4 @@ Store results under `research/apple/<case-id>/surface-triage.md`:
 
 ## Auditor Routing
 
-Use the Apple pack's auditor MCP tools when available. Good starting filters include `tcc`, `sandbox`, `entitlements`, `xpc`, `mach`, `gatekeeper`, `quarantine`, `amfi`, `code-signing`, `hardened-runtime`, `sip`, `webkit`, `lockdown-mode`, `kernel`, `iokit`, `driverkit`, `sptm`, `mie`, and `memory-tagging`.
+Use the Apple pack's auditor MCP tools when available. If those tools are not exposed in the current context, use Core's local fallback: `python3 <maxtac-core-subagents-skill-dir>/scripts/audit-helper.py --catalog apple --filter <term>`. Good starting filters include `tcc`, `sandbox`, `entitlements`, `xpc`, `mach`, `gatekeeper`, `quarantine`, `amfi`, `code-signing`, `hardened-runtime`, `sip`, `webkit`, `lockdown-mode`, `kernel`, `iokit`, `driverkit`, `sptm`, `mie`, and `memory-tagging`.

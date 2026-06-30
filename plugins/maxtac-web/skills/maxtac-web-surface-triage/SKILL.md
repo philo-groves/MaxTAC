@@ -51,4 +51,4 @@ Use this skill as the first pass for web applications, APIs, browser-facing serv
 
 ## Auditor Routing
 
-Use the Web pack's auditor MCP tools when available. Good starting filters include `authz`, `tenant`, `idor`, `oauth`, `saml`, `session`, `replay`, `approval`, `payment`, `ssrf`, `sql-injection`, `xss`, `websocket`, `http`, and `business-logic`.
+Use the Web pack's auditor MCP tools when available. If those tools are not exposed in the current context, use Core's local fallback: `python3 <maxtac-core-subagents-skill-dir>/scripts/audit-helper.py --catalog web --filter <term>`. Good starting filters include `authz`, `tenant`, `idor`, `oauth`, `saml`, `session`, `replay`, `approval`, `payment`, `ssrf`, `sql-injection`, `xss`, `websocket`, `http`, and `business-logic`.
