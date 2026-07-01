@@ -1,13 +1,13 @@
 # MaxTAC for Source
 
-MaxTAC for Source adds static-analysis workflows for source code and existing decompiler output, including optional codebase-memory-mcp graph usage, patch-history correlation loops, invariant-driven source loops, and deep source scan loops. It is for evidence-driven source review, not reverse engineering itself.
+MaxTAC for Source adds static-analysis workflows for source code and existing decompiler output, including bundled codebase-memory-mcp graph integration, patch-history correlation loops, invariant-driven source loops, and deep source scan loops. It is for evidence-driven source review, not reverse engineering itself.
 
 Use this pack with MaxTAC Core when the target includes source code, generated code, decompiled code, code-scanning findings, exact-path thin closures, negative-evidence source inputs, source diffs, invariant worklists, or function/field inventories that need auditable closure.
 
 ## When To Use
 
 - Static surface triage over source code or existing decompiler output.
-- Optional codebase-memory-mcp architecture, graph, symbol, route, call-path, ADR, and diff-impact queries before source triage.
+- codebase-memory-mcp architecture, graph, symbol, route, call-path, ADR, and diff-impact queries before source triage, launched through this plugin's MCP registration.
 - Git-backed diff scans, repository scans, or scoped-path source reviews.
 - CVE, advisory, release-note, and patch-history correlation that should enrich a threat model without overclaiming reachability.
 - Invariant-driven audits that model guards, sinks, authority boundaries, proof obligations, and refutation conditions before targeted review.
@@ -20,7 +20,7 @@ Use this pack with MaxTAC Core when the target includes source code, generated c
 ## Skills
 
 - `maxtac-sast-surface-triage`: maps trust boundaries, entrypoints, sinks, invariants, and route hypotheses.
-- `maxtac-source-codebase-memory`: optional codebase-memory-mcp indexing, architecture queries, graph search, call-path tracing, diff-impact mapping, and ADR lookup.
+- `maxtac-source-codebase-memory`: plugin-bundled codebase-memory-mcp indexing, architecture queries, graph search, call-path tracing, diff-impact mapping, and ADR lookup.
 - `maxtac-sast-opengrep`: OpenGrep rules, static vulnerability searches, taint/pattern matching, and evidence packaging.
 - `maxtac-sast-control-flow-graph`: static CFG/call-graph evidence for reachability and path reasoning.
 - `maxtac-source-scan`: deterministic source worklists, thin exact-path closure, coverage receipts, negative-evidence inputs, closure validation, and result-contract output.
@@ -46,7 +46,7 @@ Source workflows commonly write:
 - `contracts/loops/<loop-id>/` Source loop worklists, gates, events, and next-action prompts.
 - `contracts/intake/<intake-id>/` normalized external findings.
 - CFG, call graph, and OpenGrep evidence under `tmp/` or the relevant research artifact directory.
-- Codebase Memory packets from optional graph, architecture, ADR, and diff-impact queries.
+- Codebase Memory packets from graph, architecture, ADR, and diff-impact queries.
 - Core result contracts under `contracts/<result-id>/`.
 
 ## Boundary

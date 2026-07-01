@@ -38,6 +38,7 @@ Desktop.ini
 
 # MaxTAC workspace state and generated research artifacts
 /.maxtac-workspace.json
+/.codebase-memory/
 /program-info.md
 /primitives.json
 /chains.json

@@ -20,7 +20,7 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | --- | --- | --- |
 | ripgrep (`rg`) | Fast source search during surface triage and path collection. | Source |
 | Git | Diff, branch, commit, repository worklist generation, and patch-history loop evidence. | Source |
-| codebase-memory-mcp | Optional local MCP/CLI code graph for repository indexing, architecture summaries, structural search, call-path tracing, ADR lookup, and diff impact mapping. | Source |
+| codebase-memory-mcp | Source plugin MCP integration for repository indexing, architecture summaries, structural search, call-path tracing, ADR lookup, and diff impact mapping. The plugin launcher caches the upstream static binary locally and verifies release checksums. | Source |
 | OpenGrep (`opengrep`) | Rule authoring, pattern matching, taint-style source-to-sink checks, result packets. | Source |
 | Compiler, AST, language-server, static-analysis, code-index, or route-map tools | CFG/call-graph facts, guard dominance, route maps, reachability evidence, and deep-scan item worklists. | Source |
 | DOT or Mermaid-compatible graph output | Persisted control-flow, call-graph, state-machine, or ownership evidence. | Source |

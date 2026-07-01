@@ -1,17 +1,29 @@
 # codebase-memory-mcp Reference
 
-`codebase-memory-mcp` is an external local MCP server from DeusData. It indexes repositories into a SQLite-backed knowledge graph using tree-sitter and lightweight semantic resolution, then exposes graph, search, impact, and ADR tools to MCP clients.
+`codebase-memory-mcp` is a local MCP server from DeusData. It indexes repositories into a SQLite-backed knowledge graph using tree-sitter and lightweight semantic resolution, then exposes graph, search, impact, and ADR tools to MCP clients. The MaxTAC Source plugin declares this MCP server directly and launches it through `scripts/codebase_memory_mcp.py`.
+
+## Plugin Integration
+
+- The Source plugin's `.mcp.json` starts `python3 scripts/codebase_memory_mcp.py serve`.
+- The launcher uses `MAXTAC_CODEBASE_MEMORY_MCP` when set, then a MaxTAC-managed cache under `$CODEX_HOME/maxtac/tools/codebase-memory-mcp/`, then an existing `codebase-memory-mcp` on `PATH`, then downloads the current upstream release asset.
+- Downloaded release assets are checked against the release `checksums.txt` before installation.
+- The launcher does not run the upstream `install` command and does not modify global Codex, Claude, Gemini, or other agent configuration files.
+- Set `MAXTAC_CODEBASE_MEMORY_NO_DOWNLOAD=1` to require an existing binary and disable first-run download.
+- Set `MAXTAC_CODEBASE_MEMORY_UI=1` before first launch to cache the upstream UI variant instead of the standard binary. The UI binary can expose its 3D graph view on `localhost:9749` when started with upstream flags such as `--ui=true --port=9749`.
+- Set `MAXTAC_CODEBASE_MEMORY_ARGS` to pass extra upstream flags to the MCP server on launch, for example `MAXTAC_CODEBASE_MEMORY_ARGS="--ui=true --port=9749"`.
+- Upstream `CBM_*` variables still apply. Common examples are `CBM_CACHE_DIR`, `CBM_DIAGNOSTICS`, `CBM_LOG_LEVEL`, and `CBM_WORKERS`.
 
 ## Installation Boundary
 
-- Do not install or run installer scripts unless the user approves. The upstream installer can modify agent MCP configuration and instruction files.
-- If installation is approved, prefer the upstream release or installer and let the user choose whether to install the UI variant.
-- If installation is not approved or the binary is unavailable, continue with MaxTAC Source workflows.
+- Do not run the upstream installer unless the user explicitly wants upstream agent auto-configuration. It can modify agent MCP configuration and instruction files.
+- Prefer the Source plugin launcher for MaxTAC-managed use.
+- If the launcher, binary, and MCP tools are unavailable, continue with MaxTAC Source workflows.
 
 ## Common MCP Tools
 
 - `index_repository`: index a repository by absolute path.
 - `list_projects`: list indexed repositories and graph sizes.
+- `delete_project`: remove a project and all graph data.
 - `index_status`: check whether a repository is indexed or stale.
 - `get_graph_schema`: inspect graph labels, edge types, and properties.
 - `get_architecture`: summarize languages, packages, entrypoints, routes, hotspots, boundaries, layers, clusters, and ADRs.
@@ -29,11 +41,20 @@
 Every MCP tool can be invoked through the CLI when the binary is installed:
 
 ```text
-codebase-memory-mcp cli index_repository '{"repo_path": "C:/absolute/path/to/repo"}'
+python3 scripts/codebase_memory_mcp.py cli index_repository '{"repo_path": "/absolute/path/to/repo"}'
+python3 scripts/codebase_memory_mcp.py cli get_graph_schema '{"project": "repo-name"}'
+python3 scripts/codebase_memory_mcp.py cli search_graph '{"name_pattern": ".*Handler.*", "label": "Function"}'
+python3 scripts/codebase_memory_mcp.py cli trace_path '{"function_name": "ProcessOrder", "direction": "both"}'
+python3 scripts/codebase_memory_mcp.py cli detect_changes '{"repo_path": "/absolute/path/to/repo"}'
+```
+
+A system-level install can still be called directly:
+
+```text
+codebase-memory-mcp cli index_repository '{"repo_path": "/absolute/path/to/repo"}'
 codebase-memory-mcp cli get_graph_schema '{"project": "repo-name"}'
 codebase-memory-mcp cli search_graph '{"name_pattern": ".*Handler.*", "label": "Function"}'
 codebase-memory-mcp cli trace_path '{"function_name": "ProcessOrder", "direction": "both"}'
-codebase-memory-mcp cli detect_changes '{"repo_path": "C:/absolute/path/to/repo"}'
 ```
 
 Use absolute paths for repository indexing. Use `list_projects` when the project name is unclear.

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "codebase-memory-mcp": {
+      "command": "python3",
+      "args": [
+        "scripts/codebase_memory_mcp.py",
+        "serve"
+      ],
+      "env": {
+        "CBM_LOG_LEVEL": "warn"
+      }
+    }
+  }
+}

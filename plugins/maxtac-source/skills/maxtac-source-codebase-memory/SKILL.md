@@ -1,18 +1,20 @@
 ---
 name: maxtac-source-codebase-memory
-description: "Use this skill when MaxTAC Source can use an installed codebase-memory-mcp server or CLI for source-code repository indexing, architecture overview, structural search, call-path tracing, diff impact mapping, ADR lookup, or code graph evidence before SAST triage, CFG work, OpenGrep authoring, or source scans."
+description: "Use this skill when MaxTAC Source should use the plugin-bundled codebase-memory-mcp MCP integration or CLI fallback for repository indexing, architecture overview, structural search, call-path tracing, diff impact mapping, ADR lookup, or code graph evidence before SAST triage, CFG work, OpenGrep authoring, or source scans."
 ---
 
 # MaxTAC Source Codebase Memory
 
-Use this skill as an optional structural-memory layer for source repositories. `codebase-memory-mcp` can index a repo into a local graph and answer architecture, symbol, route, call-path, diff-impact, and ADR questions quickly. Treat it as a discovery accelerator and evidence index, not as proof by itself.
+Use this skill as MaxTAC Source's structural-memory layer for source repositories. The Source plugin declares a `codebase-memory-mcp` MCP server and ships a launcher that obtains the upstream static binary into MaxTAC's local tool cache when needed. `codebase-memory-mcp` can index a repo into a local graph and answer architecture, symbol, route, call-path, diff-impact, and ADR questions quickly. Treat it as a discovery accelerator and evidence index, not as proof by itself.
 
 Read `references/codebase-memory-mcp.md` when installation, CLI fallback, tool names, or graph artifact policy matter.
 
 ## Operating Rules
 
-- Use codebase-memory only when the MCP tools are already available, the `codebase-memory-mcp` CLI is already installed, or the user explicitly approves installation/config changes.
-- Do not make MaxTAC Source depend on this MCP. If unavailable, continue with `rg`, Source triage, OpenGrep, CFG, language servers, and domain tools.
+- Prefer the plugin MCP tools when they are exposed in the active session.
+- If the MCP tools are not exposed, use the Source plugin launcher as the CLI fallback from the plugin root: `python3 scripts/codebase_memory_mcp.py cli <tool> '<json>'`.
+- Do not ask the user to run the upstream installer as routine setup. The plugin launcher downloads release assets and verifies upstream checksums without modifying global agent configuration.
+- Do not make MaxTAC Source brittle on this MCP. If startup, download, or indexing fails, record the failure and continue with `rg`, Source triage, OpenGrep, CFG, language servers, and domain tools.
 - Prefer the graph for orientation and path selection; verify security-relevant edges by reading source, generated code, decompiler output, tests, or runtime evidence.
 - Keep graph query output as artifact evidence. Rewrite durable architecture, invariants, ownership, and negative findings into the stable Core `research/` library.
 - Do not commit `.codebase-memory/graph.db.zst` or other shared graph artifacts unless the user explicitly wants a team-shared index and understands it may reveal repository structure.
@@ -22,7 +24,8 @@ Read `references/codebase-memory-mcp.md` when installation, CLI fallback, tool n
 
 1. Establish availability.
    - If MCP tools are exposed, use them directly.
-   - If only the CLI is available, use `codebase-memory-mcp cli <tool> '<json>'`.
+   - If MCP tools are not exposed but the Source plugin files are available, use `python3 scripts/codebase_memory_mcp.py cli <tool> '<json>'`.
+   - If only a system CLI is available, use `codebase-memory-mcp cli <tool> '<json>'`.
    - If neither is available, record that codebase memory was unavailable and fall back.
 
 2. Index or refresh the target.
@@ -31,8 +34,8 @@ Read `references/codebase-memory-mcp.md` when installation, CLI fallback, tool n
    - For CLI fallback:
 
 ```text
-codebase-memory-mcp cli index_repository '{"repo_path": "C:/absolute/path/to/repo"}'
-codebase-memory-mcp cli index_status '{"repo_path": "C:/absolute/path/to/repo"}'
+python3 scripts/codebase_memory_mcp.py cli index_repository '{"repo_path": "/absolute/path/to/repo"}'
+python3 scripts/codebase_memory_mcp.py cli index_status '{"repo_path": "/absolute/path/to/repo"}'
 ```
 
 3. Get orientation before broad reading.
