@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Android Input Loop"
+  short_description: "Android user-facing input loop"
+  default_prompt: "Use $maxtac-android-input-loop to map and audit Android user-facing inputs with safe evidence."

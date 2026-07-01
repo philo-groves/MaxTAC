@@ -1,6 +1,6 @@
 # MaxTAC for Apple Systems
 
-MaxTAC for Apple Systems adds Apple platform surface triage, Apple Security Bounty Commpage/TCC proof packets, advanced IPSW provenance and patch-diff research, Apple mitigation-bypass workflows, and Apple-specific auditor routing.
+MaxTAC for Apple Systems adds Apple platform surface triage, Apple Security Bounty Commpage/TCC proof packets, advanced IPSW provenance and patch-diff research, IPSW CVE-history loops, Apple mitigation-bypass workflows, and Apple-specific auditor routing.
 
 Use this pack with MaxTAC Core when the target involves Apple platform research, ASB proof requirements, Apple service or sandbox boundaries, IPSW/OTA artifacts, Apple firmware, dyld shared cache, kernelcache, or mitigation-bypass evidence.
 
@@ -8,7 +8,8 @@ Use this pack with MaxTAC Core when the target involves Apple platform research,
 
 - Apple surface triage across platform build, process identity, entitlements, sandbox, TCC, IPC, services, drivers, WebKit, and bypass direction.
 - ASB Commpage or TCC target-flag proof packets.
-- Advanced IPSW/OTA provenance, patch archaeology, kernelcache, dyld shared cache, and firmware-derived evidence.
+- Advanced IPSW/OTA provenance, patch archaeology, CVE-history correlation, kernelcache, dyld shared cache, and firmware-derived evidence.
+- IPSW CVE-history loops that correlate Apple advisories, build trains, firmware artifacts, binary diffs, source releases, and public CVE context.
 - Apple mitigation-bypass reasoning after a primitive is proven.
 - Build-specific Apple platform evidence and Apple-specific auditor routing.
 
@@ -17,6 +18,7 @@ Use this pack with MaxTAC Core when the target involves Apple platform research,
 - `maxtac-apple-surface-triage`: Apple target, identity, entitlement, sandbox, IPC, service, driver, WebKit, and bypass-direction triage.
 - `maxtac-asb-flag-proof`: Commpage or TCC proof workflows and verifiable ASB target-flag packets.
 - `maxtac-asb-ipsw`: advanced IPSW/OTA provenance, patch diffing, kernelcache or dyld analysis, and firmware-derived ASB evidence.
+- `maxtac-asb-ipsw-cve-history-loop`: Apple IPSW/OTA CVE-history and patch-diff correlation loop for build-specific threat modeling.
 - `maxtac-asb-mitigations`: Apple mitigation-bypass direction, controls, and proof artifacts after a primitive is proven.
 
 ## Typical Pairings
@@ -35,6 +37,7 @@ Apple workflows commonly produce:
 - `research/apple/<case-id>/surface-triage.md` for Apple surface maps and bypass-direction handoffs.
 - `research/apple/<case-id>/mitigation-bypass-packet.md` for mitigation-bypass evidence.
 - `research/apple-firmware/<case-id>/` IPSW provenance bundles and research packets.
+- `contracts/loops/<loop-id>/` Apple IPSW CVE-history loop worklists, gates, events, and next-action prompts.
 - Crash logs, panic logs, unified logs, entitlements, sandbox profiles, dyld/kernelcache UUIDs, and proof artifact indexes.
 
 ## Boundary

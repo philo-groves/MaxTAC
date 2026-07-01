@@ -1,13 +1,13 @@
 {
   "name": "maxtac-core",
-  "version": "0.4.1+codex.20260630104946",
+  "version": "0.4.1+codex.20260630185025",
   "author": {
     "name": "Philo Groves"
   },
   "repository": "https://github.com/philo-groves/MaxTAC",
   "license": "MIT",
   "skills": "./skills/",
-  "description": "Core MaxTAC workflow, workspace, faceted research corpus, security modeling, invariant dictionaries and receipts, ledger, canonical result contracts, thin closure, false-negative review, reporting, phase hygiene, SQLite auditor registry, and goal-bounded subagent orchestration.",
+  "description": "Core MaxTAC workflow, workspace, faceted research corpus, security modeling, invariant dictionaries and receipts, domain loop state, ledger, canonical result contracts, thin closure, false-negative review, reporting, phase hygiene, SQLite auditor registry, and goal-bounded subagent orchestration.",
   "keywords": [
     "codex",
     "maxtac",
@@ -18,18 +18,21 @@
     "knowledge-base",
     "thin-closure",
     "false-negative-review",
+    "domain-loops",
+    "loop-state",
     "security-modeling",
     "invariants",
     "vulnerability-research"
   ],
   "interface": {
     "displayName": "MaxTAC Core",
-    "shortDescription": "Core workflow, corpus, models, contracts, false-negative review, ledgers, and auditor orchestration.",
-    "longDescription": "MaxTAC Core coordinates authorized vulnerability research without loading domain-specific source, binary, web, supply-chain, Android, Apple, or Microsoft guidance. It manages the research workspace, faceted research corpus, durable research notes, generated corpus views, security models, invariant dictionaries and receipts, first-order-logic-style assertions, primitive and chain ledgers, canonical result contracts, thin/full closure profiles, false-negative review, phase hygiene, the SQLite auditor registry, goal-bounded auditor/debater prompts, validation, proof, and reporting flow.",
+    "shortDescription": "Core workflow, corpus, models, loop state, contracts, false-negative review, ledgers, and auditor orchestration.",
+    "longDescription": "MaxTAC Core coordinates authorized vulnerability research without loading domain-specific source, binary, web, supply-chain, Android, Apple, or Microsoft guidance. It manages the research workspace, faceted research corpus, durable research notes, generated corpus views, security models, invariant dictionaries and receipts, first-order-logic-style assertions, domain loop state for bounded repeatable workflows, primitive and chain ledgers, canonical result contracts, thin/full closure profiles, false-negative review, phase hygiene, the SQLite auditor registry, goal-bounded auditor/debater prompts, validation, proof, and reporting flow.",
     "defaultPrompt": [
       "Use MaxTAC Core to initialize this authorized research workspace.",
       "Use MaxTAC Core to add and orient faceted research corpus notes for this target.",
       "Use MaxTAC Core to create or update a security model and invariant dictionary for this target.",
+      "Use MaxTAC Core to create or validate domain loop state for this bounded repeatable research workflow.",
       "Use MaxTAC Core to run a false-negative review before trusting this broad no-finding conclusion.",
       "Use MaxTAC Core to create a thin closure bundle for this tiny non-reportable target.",
       "Use MaxTAC Core to update findings and plan the next validation step.",

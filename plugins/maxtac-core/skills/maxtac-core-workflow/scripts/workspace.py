@@ -186,6 +186,30 @@ FALSE_NEGATIVE_REOPEN_TEMPLATES = {
     "model": "Add invariant receipts with guard, sink, authority boundary, proof obligations, and refutation conditions.",
     "chain-composition": "Start from de-escalated primitives and compose at least two cross-component chain hypotheses.",
 }
+LOOP_ITEM_ACTIVE_STATES = {"open", "in_progress", "needs_follow_up"}
+LOOP_ITEM_TERMINAL_STATES = {"closed", "reported", "rejected", "not_applicable"}
+LOOP_DURABLE_DIRS = (
+    "research/notes",
+    "research/artifacts",
+    "models",
+    "contracts",
+    "proof",
+    "fuzz",
+)
+LOOP_MIXED_LEAD_RE = re.compile(r"\b(and|or|vs|versus)\b|[,;/+&]", re.IGNORECASE)
+LOOP_REOPEN_RE = re.compile(r"\bre-?open\b|\brevisit\b|\brecheck\b|\bresurrect\b", re.IGNORECASE)
+LOOP_BLOCKER_RE = re.compile(
+    r"\bblocker\b|\bprecondition\b|\bguard\b|\bunreachable\b|\bnot reachable\b|\bmissing\b",
+    re.IGNORECASE,
+)
+LOOP_REF_KEYS = (
+    "target_refs",
+    "model_refs",
+    "ledger_refs",
+    "corpus_refs",
+    "contract_refs",
+    "evidence",
+)
 
 
 def now() -> str:
@@ -233,6 +257,23 @@ def read_json(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise SystemExit(f"{path} must contain a JSON object")
     return payload
+
+
+def read_jsonl_objects(path: Path) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    if not path.exists():
+        return rows
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise SystemExit(f"{path}:{line_number}: invalid JSONL: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise SystemExit(f"{path}:{line_number}: expected JSON object")
+        rows.append(payload)
+    return rows
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -1029,6 +1070,269 @@ def false_negative_summary(root: Path) -> dict[str, Any]:
     }
 
 
+def loop_bundle_records(root: Path) -> list[dict[str, Any]]:
+    loops_root = root / "contracts" / "loops"
+    if not loops_root.is_dir():
+        return []
+    records: list[dict[str, Any]] = []
+    for loop_json in sorted(loops_root.glob("*/loop.json")):
+        errors: list[str] = []
+        payload: dict[str, Any] = {}
+        items: list[dict[str, Any]] = []
+        try:
+            payload = read_json(loop_json)
+        except SystemExit as exc:
+            errors.append(str(exc))
+        items_jsonl = loop_json.parent / "items.jsonl"
+        events_jsonl = loop_json.parent / "events.jsonl"
+        try:
+            items = read_jsonl_objects(items_jsonl)
+        except SystemExit as exc:
+            errors.append(str(exc))
+        timestamps = [
+            timestamp
+            for timestamp in (
+                file_timestamp(loop_json),
+                file_timestamp(items_jsonl),
+                file_timestamp(events_jsonl),
+                parse_timestamp(payload.get("updated_at")),
+            )
+            if timestamp is not None
+        ]
+        records.append(
+            {
+                "loop_id": str(payload.get("loop_id") or loop_json.parent.name),
+                "path": loop_json,
+                "payload": payload,
+                "items": items,
+                "errors": errors,
+                "updated_at": max(timestamps) if timestamps else None,
+            }
+        )
+    return records
+
+
+def is_loop_state_path(path: Path, root: Path) -> bool:
+    try:
+        parts = path.relative_to(root).parts
+    except ValueError:
+        return False
+    return len(parts) >= 2 and parts[0] == "contracts" and parts[1] == "loops"
+
+
+def durable_loop_sync_files(root: Path, *, after: datetime | None = None, limit: int = 12) -> list[tuple[Path, datetime]]:
+    result: list[tuple[Path, datetime]] = []
+    db_timestamp = file_timestamp(root / workspace_db.DB_FILE)
+    if db_timestamp and (after is None or db_timestamp > after):
+        result.append((root / workspace_db.DB_FILE, db_timestamp))
+    for dirname in LOOP_DURABLE_DIRS:
+        base = root / dirname
+        if not base.exists() or not base.is_dir():
+            continue
+        for dirpath, dirnames, filenames in os.walk(base):
+            dirnames[:] = [
+                item
+                for item in dirnames
+                if item.lower() not in ATTENTION_PRUNE_DIRS
+            ]
+            for filename in filenames:
+                path = Path(dirpath) / filename
+                if is_loop_state_path(path, root):
+                    continue
+                if path.suffix.lower() not in ATTENTION_TRACKED_SUFFIXES:
+                    continue
+                timestamp = file_timestamp(path)
+                if timestamp is None or (after is not None and timestamp <= after):
+                    continue
+                result.append((path, timestamp))
+    result.sort(key=lambda item: item[1], reverse=True)
+    return result[: max(1, limit)]
+
+
+def item_values(item: dict[str, Any], key: str) -> list[str]:
+    value = item.get(key) or []
+    if not isinstance(value, list):
+        return []
+    return [str(item_value) for item_value in value if str(item_value).strip()]
+
+
+def item_text(item: dict[str, Any]) -> str:
+    parts = [
+        str(item.get("title", "")),
+        str(item.get("notes", "")),
+        " ".join(item_values(item, "blockers")),
+    ]
+    return " ".join(part for part in parts if part).strip()
+
+
+def loop_item_reference_count(item: dict[str, Any]) -> int:
+    return sum(len(item_values(item, key)) for key in LOOP_REF_KEYS)
+
+
+def loop_item_has_durable_reference(item: dict[str, Any]) -> bool:
+    return any(item_values(item, key) for key in LOOP_REF_KEYS)
+
+
+def phase_is_newer_than_item(state: dict[str, Any] | None, item: dict[str, Any]) -> bool:
+    phase_timestamp = latest_phase_timestamp(state)
+    item_timestamp = parse_timestamp(item.get("updated_at")) or parse_timestamp(item.get("created_at"))
+    if item_timestamp is None:
+        return True
+    return bool(phase_timestamp and phase_timestamp >= item_timestamp)
+
+
+def loop_hygiene_report(root: Path, state: dict[str, Any] | None) -> dict[str, Any]:
+    records = loop_bundle_records(root)
+    loop_status_counts: Counter[str] = Counter()
+    item_status_counts: Counter[str] = Counter()
+    errors: list[str] = []
+    mixed_items: list[dict[str, Any]] = []
+    closure_items: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+    active_loop_count = 0
+
+    for record in records:
+        payload = record["payload"]
+        loop_id = record["loop_id"]
+        status = str(payload.get("status", "unknown"))
+        loop_status_counts[status] += 1
+        if status == "active":
+            active_loop_count += 1
+        for error in record["errors"]:
+            errors.append(f"{relative_to(record['path'], root)}: {error}")
+        for item in record["items"]:
+            item_status = str(item.get("status", "open"))
+            item_status_counts[item_status] += 1
+            title = str(item.get("title", "")).strip()
+            if item_status in LOOP_ITEM_ACTIVE_STATES:
+                reasons: list[str] = []
+                if title and LOOP_MIXED_LEAD_RE.search(title):
+                    reasons.append("title appears to contain multiple sub-leads")
+                ref_count = loop_item_reference_count(item)
+                if ref_count >= 5:
+                    reasons.append(f"{ref_count} refs are attached to one item")
+                if reasons:
+                    mixed_items.append(
+                        {
+                            "loop_id": loop_id,
+                            "item_id": item.get("item_id"),
+                            "title": title,
+                            "reasons": reasons,
+                        }
+                    )
+            if item_status in LOOP_ITEM_TERMINAL_STATES:
+                text = item_text(item)
+                missing: list[str] = []
+                if not (LOOP_REOPEN_RE.search(text) or item_values(item, "contract_refs")):
+                    missing.append("reopen criteria")
+                if not LOOP_BLOCKER_RE.search(text):
+                    missing.append("blocker or closing precondition")
+                if not loop_item_has_durable_reference(item):
+                    missing.append("durable evidence, artifact, corpus, model, ledger, or contract ref")
+                if not phase_is_newer_than_item(state, item):
+                    missing.append("phase renewal or phase-shift note after item closure")
+                if missing:
+                    closure_items.append(
+                        {
+                            "loop_id": loop_id,
+                            "item_id": item.get("item_id"),
+                            "status": item_status,
+                            "title": title,
+                            "missing": missing,
+                        }
+                    )
+
+    latest_loop_update = max(
+        (record["updated_at"] for record in records if record["updated_at"] is not None),
+        default=None,
+    )
+    newer_durable_files = durable_loop_sync_files(root, after=latest_loop_update) if latest_loop_update else []
+    latest_durable_update = newer_durable_files[0][1] if newer_durable_files else None
+    stale_sync = bool(active_loop_count and newer_durable_files)
+
+    if errors:
+        warnings.append(
+            {
+                "kind": "loop-state-error",
+                "message": "One or more loop bundles could not be parsed or indexed.",
+                "items": errors[:10],
+            }
+        )
+    if stale_sync:
+        warnings.append(
+            {
+                "kind": "loop-sync-stale",
+                "message": (
+                    "Durable workspace evidence changed after the latest loop-state update; "
+                    "mirror surviving conclusions, blockers, or next actions back into active loop items."
+                ),
+                "items": [relative_to(path, root) for path, _timestamp in newer_durable_files[:8]],
+            }
+        )
+    if mixed_items:
+        warnings.append(
+            {
+                "kind": "mixed-loop-items",
+                "message": (
+                    "Some active loop items appear to bundle multiple sub-leads; split them when one sub-lead survives "
+                    "or needs different evidence."
+                ),
+                "items": mixed_items[:8],
+            }
+        )
+    if closure_items:
+        warnings.append(
+            {
+                "kind": "branch-close-checklist",
+                "message": (
+                    "Closed loop items are missing branch-close hygiene. Preserve reopen criteria, blocker/precondition, "
+                    "durable evidence path, and a phase note before relying on closure."
+                ),
+                "items": closure_items[:8],
+            }
+        )
+
+    return {
+        "loop_count": len(records),
+        "active_loop_count": active_loop_count,
+        "loop_status_counts": dict(sorted(loop_status_counts.items())),
+        "item_status_counts": dict(sorted(item_status_counts.items())),
+        "latest_loop_update": latest_loop_update.isoformat() if latest_loop_update else None,
+        "latest_durable_update_after_loop": latest_durable_update.isoformat() if latest_durable_update else None,
+        "stale_sync": stale_sync,
+        "newer_durable_refs": [relative_to(path, root) for path, _timestamp in newer_durable_files],
+        "mixed_lead_items": mixed_items,
+        "closure_checklist": closure_items,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def print_loop_hygiene(result: dict[str, Any]) -> None:
+    print("Loop hygiene:")
+    if not result["loop_count"]:
+        print("- loops: none")
+        return
+    loop_counts = ", ".join(f"{status}={count}" for status, count in result["loop_status_counts"].items())
+    item_counts = ", ".join(f"{status}={count}" for status, count in result["item_status_counts"].items())
+    print(f"- loops: {result['loop_count']} ({loop_counts or 'no status counts'})")
+    print(f"- items: {item_counts or 'none'}")
+    print(f"- latest loop update: {result['latest_loop_update'] or 'unknown'}")
+    if result["warnings"]:
+        for warning in result["warnings"]:
+            print(f"- review: {warning['message']}")
+            for item in warning.get("items", [])[:5]:
+                if isinstance(item, dict):
+                    label = f"{item.get('loop_id')}:{item.get('item_id')}"
+                    detail = item.get("title") or item.get("status") or ""
+                    reason = ", ".join(item.get("reasons") or item.get("missing") or [])
+                    print(f"  - {label} {detail} ({reason})".rstrip())
+                else:
+                    print(f"  - {item}")
+    else:
+        print("- warnings: none")
+
+
 def cmd_false_negative_review(args: argparse.Namespace) -> None:
     root = root_path(args.root)
     review_id = slugify(args.review_id or args.target, "false-negative-review")
@@ -1120,6 +1424,7 @@ def cmd_status(args: argparse.Namespace) -> None:
     memory = workspace_memory_counts(root)
     fn_summary = false_negative_summary(root)
     phase_status = phase_guidance(root, state, memory)
+    loop_hygiene = loop_hygiene_report(root, state)
     artifact_records = artifact_markdown_records(root)
     unreferenced_artifacts = [record for record in artifact_records if not record["referenced_by"]]
 
@@ -1140,6 +1445,7 @@ def cmd_status(args: argparse.Namespace) -> None:
                 "markdown_outside_corpus": [],
             },
             "attention": attention,
+            "loop_hygiene": loop_hygiene,
             "false_negative_reviews": fn_summary,
             "report_ready": report_readiness(root, args.chain),
         }
@@ -1280,6 +1586,7 @@ def cmd_status(args: argparse.Namespace) -> None:
             print("Research hygiene warnings: none")
 
     print_attention(attention)
+    print_loop_hygiene(loop_hygiene)
     print_checks(report_readiness(root, args.chain))
 
 

@@ -7,6 +7,7 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | Tool | Used for |
 | --- | --- |
 | Python | Workspace helpers, ledger helpers, evidence scripts, and the SQLite auditor registry. |
+| Core loop-state helper | Domain loop state, prioritized worklists, next-action prompts, item evidence, and loop closure validation. |
 | Core corpus helper | Faceted research notes, tags, graph edges, generated corpus views, import, search, lint, and anti-tunnel orientation packs. |
 | Core model helper | Security model JSON, invariant dictionaries, invariant receipts, model projections, model-backed auditor prompts, and workspace model search. |
 | Core contracts thin closure | Compact non-reportable closure bundles with coverage receipts, proof evidence, and reopen criteria for tiny exact scopes. |
@@ -18,11 +19,12 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | Tool | Used for | Pack |
 | --- | --- | --- |
 | ripgrep (`rg`) | Fast source search during surface triage and path collection. | Source |
-| Git | Diff, branch, commit, and repository worklist generation for Source Scan. | Source |
+| Git | Diff, branch, commit, repository worklist generation, and patch-history loop evidence. | Source |
 | codebase-memory-mcp | Optional local MCP/CLI code graph for repository indexing, architecture summaries, structural search, call-path tracing, ADR lookup, and diff impact mapping. | Source |
 | OpenGrep (`opengrep`) | Rule authoring, pattern matching, taint-style source-to-sink checks, result packets. | Source |
-| Compiler, AST, language-server, static-analysis, code-index, or route-map tools | CFG/call-graph facts, guard dominance, route maps, reachability evidence. | Source |
+| Compiler, AST, language-server, static-analysis, code-index, or route-map tools | CFG/call-graph facts, guard dominance, route maps, reachability evidence, and deep-scan item worklists. | Source |
 | DOT or Mermaid-compatible graph output | Persisted control-flow, call-graph, state-machine, or ownership evidence. | Source |
+| Public advisory, CVE, release-note, or bug-tracker exports | Patch-history loop correlation and bug-precedent evidence. | Source |
 | SARIF, JSON scanner exports, advisory or ticket exports | External finding intake and backlog triage normalization. | Source |
 | GitHub CLI or authorized connector export | Optional retrieval of code scanning, Dependabot, advisory, or private report content before local intake normalization. | Source |
 
@@ -32,6 +34,7 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | --- | --- | --- |
 | Ghidra, `analyzeHeadless`, Java, PyGhidra | Headless import, decompilation, p-code, scripting, type recovery, BSim, version tracking, emulation. | Binary |
 | radare2 suite: `r2`, `rabin2`, `rahash2`, `rafind2`, `radiff2`, `rax2`, `rasm2`, `ragg2`, `r2pipe` | Binary triage, imports, symbols, hashes, search, diffing, ESIL, debugging, scripting, utilities. | Binary |
+| Function tracing, profiling, call-frequency, or xref evidence | Prioritization for executable binary decompile loops. | Binary |
 | LLDB | macOS and native C/C++/LLVM crash replay and debugging. | Binary |
 | GDB | Linux and portable ELF crash replay/debugging. | Binary |
 | x64dbg | Windows user-mode binary debugging. | Binary |
@@ -51,6 +54,7 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | WebDriver BiDi | Browser debugging and automation with bidirectional events. | Web |
 | Chrome DevTools Protocol (CDP) | Chromium-family browser instrumentation and evidence capture. | Web |
 | WebKit debugging tools | Safari, WebKit, WKWebView, WebKitGTK, and WPE inspection. | Web |
+| Sitemap, OpenAPI, GraphQL, HAR, and route exports | Web input-loop worklist generation and safe replay planning. | Web |
 
 ## Supply Chains
 
@@ -83,12 +87,14 @@ Install only the tools needed by the active plugin packs and current target. Cor
 | JDWP tools such as `jdb` | Debuggable-app inspection and authorized Java runtime debugging. | Android |
 | Frida and frida-tools | Android Java/native hooks, runtime observation, API tracing, and script-backed evidence. | Android |
 | Android SDK command-line tools such as `apksigner` and `apkanalyzer` | Signing, certificate, manifest, APK, resource, and package metadata support when available. | Android |
+| Android resource, navigation, UI automation, and runtime exports | Android user-facing input-loop worklists and evidence. | Android |
 
 ## Program Packs
 
 | Tool | Used for | Pack |
 | --- | --- | --- |
 | `ipsw` | IPSW/OTA provenance, targeted extraction, kernelcache and dyld artifacts, firmware diffing, and Apple patch archaeology. | Apple Systems |
+| Apple advisories, CVEs, build metadata, and IPSW/OTA diff evidence | IPSW CVE-history loop correlation and component prioritization. | Apple Systems |
 | Apple SDK and binary-inspection tools (`codesign`, `otool`, `nm`, `log`, `sysctl`) | Proof packet metadata, entitlements, build state, crash/log evidence, and local PoV helpers. | Apple Systems |
 | Microsoft SandboxSecurityTools | LPAC and eligible sandbox proof setup. | Microsoft Systems |
 | PowerShell, `whoami`, `Get-Process`, `icacls`, `reg` | Windows build, token, process, ACL, and registry evidence. | Microsoft Systems |

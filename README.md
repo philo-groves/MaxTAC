@@ -12,14 +12,14 @@ Warning: Using MaxTAC workflows with non-TAC accounts may trigger OpenAI cyber p
 
 | Pack | Path | Use when |
 | --- | --- | --- |
-| MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, faceted research corpus, security models, invariant receipts, false-negative review, ledgers, canonical result contracts, thin/full closure profiles, reporting flow, and goal-bounded auditor/debater orchestration. |
-| MaxTAC for Source | `plugins/maxtac-source` | You need static triage, optional codebase-memory graph orientation, source diff/repo scan closure, thin exact-path closure, negative-evidence inputs, external finding intake, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
-| MaxTAC for Binary | `plugins/maxtac-binary` | You need native binary RE, Ghidra, radare2, debugger evidence, crash replay, instrumentation, or systems fuzzing. |
-| MaxTAC for Web | `plugins/maxtac-web` | You need web/API/session/tenant triage, browser debugging, or stateful API fuzzing. |
+| MaxTAC Core | `plugins/maxtac-core` | You need the shared research workspace, domain loop state, faceted research corpus, security models, invariant receipts, false-negative review, ledgers, canonical result contracts, thin/full closure profiles, reporting flow, and goal-bounded auditor/debater orchestration. |
+| MaxTAC for Source | `plugins/maxtac-source` | You need static triage, optional codebase-memory graph orientation, source patch-history/invariant/deep-scan loops, source diff/repo scan closure, thin exact-path closure, negative-evidence inputs, external finding intake, control-flow evidence, or OpenGrep searches over source code or existing decompiler output. |
+| MaxTAC for Binary | `plugins/maxtac-binary` | You need native binary RE, decompile loops, Ghidra, radare2, debugger evidence, crash replay, instrumentation, or systems fuzzing. |
+| MaxTAC for Web | `plugins/maxtac-web` | You need web/API/session/tenant triage, scoped input loops, browser debugging, or stateful API fuzzing. |
 | MaxTAC for Cloud | `plugins/maxtac-cloud` | You need AWS, Azure, or GCP IAM, storage, data-plane, runtime metadata, workload identity, managed Kubernetes, or cloud network boundary research. |
 | MaxTAC for Supply Chains | `plugins/maxtac-supply-chains` | You need package compromise hunting, source-to-artifact diffing, CI/CD release takeover analysis, OSS proof gating, dependency, provenance, registry, container, or release-pipeline triage. |
-| MaxTAC for Android | `plugins/maxtac-android` | You need APK/DEX/resource RE, Android component triage, ADB/logcat/JDWP/Frida runtime evidence, or Android-specific auditors. |
-| MaxTAC for Apple Systems | `plugins/maxtac-apple-systems` | You need ASB Commpage/TCC proof packets, advanced IPSW patch-diff research, Apple mitigation-bypass workflows, or Apple-specific auditors. |
+| MaxTAC for Android | `plugins/maxtac-android` | You need APK/DEX/resource RE, Android user-facing input loops, component triage, ADB/logcat/JDWP/Frida runtime evidence, or Android-specific auditors. |
+| MaxTAC for Apple Systems | `plugins/maxtac-apple-systems` | You need ASB Commpage/TCC proof packets, advanced IPSW patch-diff or CVE-history loops, Apple mitigation-bypass workflows, or Apple-specific auditors. |
 | MaxTAC for Microsoft Systems | `plugins/maxtac-microsoft-systems` | You need MSRC LPAC proofing, Windows mitigation reasoning, or Microsoft/Windows-specific auditors. |
 
 Virtualization and general environment-management guidance is intentionally excluded from active packs.
@@ -50,7 +50,7 @@ research/          # faceted research corpus
 models/            # machine-readable security models and invariant dictionaries
 proof/             # proof-of-vulnerability development
 fuzz/              # fuzzing inputs, scripts, and artifacts
-contracts/         # canonical result bundles, false-negative reviews, and generated reports
+contracts/         # loop state, canonical result bundles, false-negative reviews, and generated reports
 tmp/               # temporary files
 ```
 

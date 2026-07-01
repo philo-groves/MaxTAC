@@ -173,7 +173,7 @@ def enabled_plugin_names(config_path: Path | None = None) -> set[str]:
             for key, value in plugins.items():
                 if isinstance(value, dict) and value.get("enabled") is True:
                     result.add(str(key).split("@", 1)[0])
-            return result
+            return expand_enabled_plugin_names(result)
 
     result: set[str] = set()
     current_plugin: str | None = None
@@ -187,7 +187,35 @@ def enabled_plugin_names(config_path: Path | None = None) -> set[str]:
             continue
         if current_plugin and line == "enabled = true":
             result.add(current_plugin)
+    return expand_enabled_plugin_names(result)
+
+
+def expand_enabled_plugin_names(names: set[str]) -> set[str]:
+    result = set(names)
+    if "maxtac" not in result:
+        return result
+    cache_local = codex_home() / "plugins" / "cache" / "local"
+    if not cache_local.exists():
+        return result
+    for root in latest_plugin_roots(cache_local):
+        manifest = manifest_for(root)
+        if manifest and manifest.get("name"):
+            result.add(str(manifest["name"]))
     return result
+
+
+def plugin_version_sort_key(root: Path) -> tuple[tuple[int, ...], int, str, float]:
+    manifest = manifest_for(root) or {}
+    version = str(manifest.get("version") or root.name)
+    base = version.split("+", 1)[0]
+    base_numbers = tuple(int(part) for part in re.findall(r"\d+", base))
+    codex_match = re.search(r"\+codex\.([0-9]+)\b", version)
+    codex_token = int(codex_match.group(1)) if codex_match else 0
+    try:
+        mtime = root.stat().st_mtime
+    except OSError:
+        mtime = 0.0
+    return base_numbers, codex_token, version, mtime
 
 
 def latest_plugin_roots(cache_local: Path) -> list[Path]:
@@ -201,7 +229,7 @@ def latest_plugin_roots(cache_local: Path) -> list[Path]:
             if child.is_dir() and (child / ".codex-plugin" / "plugin.json").exists()
         ]
         if candidates:
-            roots.append(max(candidates, key=lambda item: item.stat().st_mtime))
+            roots.append(max(candidates, key=plugin_version_sort_key))
     return roots
 
 

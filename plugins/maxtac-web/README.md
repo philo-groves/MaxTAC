@@ -1,6 +1,6 @@
 # MaxTAC for Web
 
-MaxTAC for Web adds web application, API, browser-state, session, tenant, and SaaS research workflows.
+MaxTAC for Web adds web application, API, browser-state, session, tenant, SaaS research workflows, and scoped web input loops.
 
 Use this pack with MaxTAC Core when the target is a web app, API, browser-mediated workflow, SaaS control plane, tenant boundary, or stateful HTTP surface.
 
@@ -10,6 +10,7 @@ Use this pack with MaxTAC Core when the target is a web app, API, browser-mediat
 - Stateful API fuzzing, schema-backed fuzzing, captured HTTP replay, and logic-oracle evidence.
 - Browser debugging, DOM/storage evidence, request timing, frame/process state, CDP, WebDriver BiDi, or WebKit inspection.
 - Session, tenant, authorization, request-flow, and business-logic mapping.
+- Scoped input loops that model a sitemap, route inventory, actors, sessions, and input worklist before deep input auditing.
 - Webhook, OAuth app, package registry API, or SaaS workflow investigation.
 
 ## Skills
@@ -17,6 +18,7 @@ Use this pack with MaxTAC Core when the target is a web app, API, browser-mediat
 - `maxtac-web-surface-triage`: route, session, tenant, authorization, browser-state, and business-logic surface triage.
 - `maxtac-web-api-fuzzing`: stateful request fuzzing, schema-backed fuzzing, parameter fuzzing, and replay.
 - `maxtac-web-browser-debugging`: browser debugging, protocol instrumentation, DOM/storage evidence, timing, and process/frame state.
+- `maxtac-web-input-loop`: scoped sitemap and input worklist loop for systematic web input auditing under program scope and rate limits.
 
 ## Typical Pairings
 
@@ -30,6 +32,7 @@ Use this pack with MaxTAC Core when the target is a web app, API, browser-mediat
 Web workflows commonly produce:
 
 - Route and request-flow maps.
+- `contracts/loops/<loop-id>/` Web input loop worklists, gates, events, and next-action prompts.
 - Captured HTTP transcripts and replay plans.
 - Fuzzing cases, state machines, and logic-oracle evidence.
 - Browser storage, DOM, frame, and protocol evidence.

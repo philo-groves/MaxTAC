@@ -1,13 +1,13 @@
 {
   "name": "maxtac-source",
-  "version": "0.3.1+codex.20260630104946",
+  "version": "0.3.1+codex.20260630184615",
   "author": {
     "name": "Philo Groves"
   },
   "repository": "https://github.com/philo-groves/MaxTAC",
   "license": "MIT",
   "skills": "./skills/",
-  "description": "Static analysis, optional codebase memory, source scan closure, thin exact-path closure, negative-evidence inputs, and external finding intake workflows for source code and existing decompiler output in MaxTAC research.",
+  "description": "Static analysis, optional codebase memory, source scan closure, source CVE/patch-history loops, invariant loops, deep source scan loops, thin exact-path closure, negative-evidence inputs, and external finding intake workflows for source code and existing decompiler output in MaxTAC research.",
   "keywords": [
     "codex",
     "maxtac",
@@ -19,15 +19,22 @@
     "control-flow",
     "thin-closure",
     "negative-evidence",
+    "patch-history",
+    "cve-history",
+    "invariant-loop",
+    "deep-scan",
     "source-code"
   ],
   "interface": {
     "displayName": "MaxTAC for Source",
-    "shortDescription": "SAST, codebase memory, scan closure, negative evidence, intake, CFG, and OpenGrep evidence.",
-    "longDescription": "MaxTAC for Source adds static surface triage, optional codebase-memory-mcp graph usage, source diff/repo scan worklists with coverage receipts, thin exact-path source closure for tiny non-reportable targets, negative-evidence inputs for Core false-negative review, external finding intake normalization, focused control-flow evidence, and OpenGrep rule guidance for source code or existing decompiler output. It does not own reverse engineering; pair it with the domain pack that produces the code view, such as Binary or Android.",
+    "shortDescription": "SAST, codebase memory, source loops, scan closure, negative evidence, intake, CFG, and OpenGrep evidence.",
+    "longDescription": "MaxTAC for Source adds static surface triage, optional codebase-memory-mcp graph usage, source CVE and patch-history correlation loops, invariant-driven source audit loops, deep source scan loops over functions and fields, source diff/repo scan worklists with coverage receipts, thin exact-path source closure for tiny non-reportable targets, negative-evidence inputs for Core false-negative review, external finding intake normalization, focused control-flow evidence, and OpenGrep rule guidance for source code or existing decompiler output. It does not own reverse engineering; pair it with the domain pack that produces the code view, such as Binary or Android.",
     "defaultPrompt": [
       "Use MaxTAC for Source to triage this authorized source target.",
       "Use MaxTAC for Source with codebase memory to map this repository before triage.",
+      "Use MaxTAC for Source to run a CVE and patch-history loop for this codebase.",
+      "Use MaxTAC for Source to run an invariant-driven source audit loop.",
+      "Use MaxTAC for Source to run a deep scan loop over every security-relevant function and field.",
       "Create a focused MaxTAC Source packet for this route or subsystem.",
       "Run a MaxTAC Source scan with coverage receipts for this diff.",
       "Feed these Source scan receipts into a Core false-negative review.",

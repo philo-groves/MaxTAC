@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Source Patch History Loop"
+  short_description: "CVE, advisory, and source patch loops"
+  default_prompt: "Use $maxtac-source-patch-history-loop to correlate source history with CVEs, advisories, and quiet hardening."

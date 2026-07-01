@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Binary Decompile Loop"
+  short_description: "Systematic binary decompile loop"
+  default_prompt: "Use $maxtac-binary-decompile-loop to model a binary and systematically recover functions or data structures."

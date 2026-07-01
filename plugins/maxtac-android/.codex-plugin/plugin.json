@@ -1,7 +1,7 @@
 {
   "name": "maxtac-android",
-  "version": "0.2.1+codex.20260630021628",
-  "description": "Android application and platform research workflows for MaxTAC.",
+  "version": "0.2.1+codex.20260630184615",
+  "description": "Android application and platform research workflows, including user-facing input loops, for MaxTAC.",
   "author": {
     "name": "Philo Groves"
   },
@@ -15,15 +15,18 @@
     "android",
     "apk",
     "jadx",
+    "android-input-loop",
+    "input-audit",
     "adb",
     "frida"
   ],
   "interface": {
     "displayName": "MaxTAC for Android",
-    "shortDescription": "Android APK, device, and runtime research.",
-    "longDescription": "MaxTAC for Android adds APK and DEX reverse engineering with JADX, Android surface triage, ADB/logcat/JDWP/Frida runtime evidence workflows, and Android-focused auditor routing.",
+    "shortDescription": "Android APK, input loop, device, and runtime research.",
+    "longDescription": "MaxTAC for Android adds APK and DEX reverse engineering with JADX, Android surface triage, user-facing Android input loops, ADB/logcat/JDWP/Frida runtime evidence workflows, and Android-focused auditor routing.",
     "defaultPrompt": [
       "Use MaxTAC for Android to triage this authorized Android target.",
+      "Use MaxTAC for Android to run a user-facing input loop for this APK.",
       "Use MaxTAC for Android to inspect this APK and choose auditors."
     ],
     "developerName": "Philo Groves",

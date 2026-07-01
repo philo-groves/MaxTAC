@@ -1,6 +1,6 @@
 ---
 name: maxtac-core-workflow
-description: "Use this skill when starting, organizing, or continuing an authorized MaxTAC vulnerability research session with standard directories, phases, closure profiles, thin closure decisions, adversarial false-negative review, subsystem notes, validation, proof, and reporting flow."
+description: "Use this skill when starting, organizing, or continuing an authorized MaxTAC vulnerability research session with standard directories, phases, domain loop state, closure profiles, thin closure decisions, adversarial false-negative review, subsystem notes, validation, proof, and reporting flow."
 ---
 
 # MaxTAC Core Workflow
@@ -30,16 +30,53 @@ tmp/               # temporary files that can be deleted between sessions
 Use `python3 <skill-dir>/scripts/workspace.py` for routine workspace operations instead of hand-creating the standard files and directories:
 
 - `init`: create the canonical workspace directories, seed `program-info.md`, initialize empty finding ledgers, and record the starting phase.
-- `status`: summarize workspace health, model counts, ledger counts, false-negative reviews, oversized research markdown, research hygiene, attention-lock warnings, phase state, and report readiness.
+- `status`: summarize workspace health, model counts, ledger counts, false-negative reviews, oversized research markdown, research hygiene, attention-lock warnings, loop hygiene, phase state, and report readiness.
 - `phase`: show or update the current workflow phase. The canonical forward path is `prepare` -> `scan` -> `validation` -> `primitive-proof` -> `chain-proof` -> `reporting`; the helper also allows documented returns to earlier phases when evidence invalidates a path. Repeating the current phase with `--note` records a timestamped phase renewal. Use `phase --suggest` to inspect evidence-based phase drift and `phase --auto --note ...` to repair stale phase state when the workspace clearly moved ahead.
 - `new-submodule`: create a legacy research submodule under `research/`; prefer `maxtac-core-corpus` for new durable knowledge.
 - `split-large-markdown`: split a markdown file over the large-file threshold into a submodule. Retain the source by default; delete it only with `--verified --delete-source` after confirming the transcription.
 - `report-ready`: check whether a proofed chain has the minimum workspace evidence needed to move into reporting.
 - `false-negative-review`: create a structured adversarial reopen review under `contracts/false-negative-reviews/` with a negative-evidence score, explicit gaps, and reopen actions.
+- `loop.py`: manage domain loop state under `contracts/loops/<loop-id>/` for loop skills in Source, Binary, Apple Systems, Web, Android, or other packs.
 
 The helper stores phase history in `<workspace-root>/.maxtac-workspace.json`. Finding state remains owned by the `maxtac-core-ledger` script and is stored in `<workspace-root>/workspace.sqlite`. The same database also indexes model assertions, debate tallies, and audit assessments so agents can search known invariants, prior votes, conclusions, blockers, and artifacts before repeating work.
 
 Use `scripts/workspace.py` as the canonical Core workspace helper. Domain or program-specific packs may expose MCP wrappers for their own workflows, but Core does not require them.
+
+## Domain Loop State
+
+Domain loop skills may use `scripts/loop.py` when a prompt would otherwise need to carry a large repeated control structure. Loop state is a light worklist and gate record; it does not replace phases, ledgers, corpus, models, source-scan receipts, result contracts, or false-negative reviews.
+
+Use loop state only when all are true:
+
+- the target has a repeated item set, such as commits, invariants, functions, decompiled functions, IPSW artifacts, web inputs, or Android UI inputs;
+- each item can advance toward a clear positive or negative gate;
+- the loop must survive across turns or subagents;
+- the domain skill owns the research method and Core owns the durable state.
+
+Create a loop bundle:
+
+```text
+python3 <skill-dir>/scripts/loop.py init \
+  --root <workspace-root> \
+  --loop-id <id> \
+  --kind <domain-loop-kind> \
+  --owner-plugin maxtac-source \
+  --target "<target>" \
+  --scope "<bounded scope>" \
+  --summary "<loop intent>" \
+  --positive-gate "<what proves this loop item is complete>" \
+  --negative-gate "<what blocks or reopens this loop item>"
+```
+
+Then use `add-item`, `next`, `prompt`, `update-item`, `event`, `set-status`, `status`, and `validate`. Store loop-local prompts and events under `contracts/loops/<loop-id>/`; store durable conclusions in the existing Core systems. A closed loop item should point to evidence, and broad negative loop conclusions should still run `false-negative-review`. Mark the loop itself `complete`, `blocked`, or `superseded` with `set-status` once its positive or negative gates have been adjudicated.
+
+Read `schemas/loop-state.schema.json` only when exact machine-readable loop shape matters.
+
+`workspace.py status` checks loop hygiene across all `contracts/loops/*/` bundles. Treat these warnings as required review points:
+
+- **loop-sync-stale**: corpus notes, contracts, models, proof artifacts, or `workspace.sqlite` changed after the latest loop update. Mirror the surviving conclusion, blocker, or next action back into the relevant loop item before branch closure.
+- **mixed-loop-items**: an active item appears to bundle multiple sub-leads, such as a slash-separated or comma-separated title or many unrelated refs. Split it when one sub-lead survives, needs different evidence, or closes differently from its siblings.
+- **branch-close-checklist**: a closed item lacks one of the durable closure fields. Add reopen criteria, the blocker or closing precondition, an evidence/corpus/model/ledger/contract reference, and a phase renewal or phase-shift note before relying on the closure.
 
 ## Research Workspace
 MaxTAC is designed as a modular research workspace meant to scale for scopes of any size, continuously building a knowledge base that provides better context than most security researchers traditionally have access to. Models often persist every research file to the base directory, or fail to persist important knowledge at all; this guidance prevents that behavior.
@@ -85,6 +122,13 @@ Every substantial scan, RE branch, proof branch, or negative result should close
 - **Deferred**: the branch is incomplete; leave a pointer in `tmp/`, `workspace.sqlite`, or a ledger evidence link, not as a misleading corpus note.
 
 This prevents session goals from becoming the knowledge structure and prevents artifacts from becoming a hidden markdown knowledge base.
+
+Before closing a branch or loop item, verify the branch-close checklist is represented somewhere durable:
+
+- reopen criteria or a contract carrying reopen criteria;
+- the exact blocker or missing precondition that prevents escalation;
+- a durable evidence, artifact, corpus, model, ledger, or contract path;
+- a phase renewal or phase-shift note when the closure changes the active checkpoint.
 
 ### Closure Profiles
 

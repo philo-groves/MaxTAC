@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Source Deep Scan Loop"
+  short_description: "Function and field deep source audit"
+  default_prompt: "Use $maxtac-source-deep-scan-loop to deeply audit each security-relevant code item in a bounded subsystem."

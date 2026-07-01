@@ -21,6 +21,14 @@ try:
 except Exception:  # pragma: no cover - local fallback for schema-only usage
     workspace_db = None  # type: ignore
 
+CORPUS_SCRIPTS_DIR = SCRIPT_DIR.parent.parent / "maxtac-core-corpus" / "scripts"
+sys.path.insert(0, str(CORPUS_SCRIPTS_DIR))
+
+try:
+    import corpus as corpus_helper  # type: ignore  # noqa: E402
+except Exception:  # pragma: no cover - model-only environments can still use schema commands
+    corpus_helper = None  # type: ignore
+
 
 DOCUMENT_TYPE = "maxtac.security_model"
 SCHEMA_VERSION = "1.0"
@@ -952,6 +960,314 @@ def cmd_export_prompt(args: argparse.Namespace) -> None:
     index_model(path, payload)
 
 
+def clipped(value: str, limit: int = 180) -> str:
+    text = " ".join(str(value or "").split())
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3].rstrip() + "..."
+
+
+def root_for_mirror(args: argparse.Namespace, model_json: Path | None = None) -> Path:
+    if args.root:
+        return Path(args.root).expanduser().resolve()
+    if model_json:
+        inferred = root_for_model_path(model_json)
+        if inferred:
+            return inferred
+    return Path(".").resolve()
+
+
+def model_relative_ref(root: Path, model_json: Path, item_id: str) -> str:
+    try:
+        relative = model_json.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        relative = str(model_json)
+    return f"{relative}#{item_id}"
+
+
+def existing_question_refs(root: Path) -> set[str]:
+    if corpus_helper is None:
+        raise SystemExit("maxtac-core-corpus helper is not available; cannot mirror open questions")
+    refs: set[str] = set()
+    try:
+        docs = corpus_helper.list_documents(root, kind="open-question")
+    except Exception:
+        docs = []
+    for doc in docs:
+        for value in doc.get("model_refs") or []:
+            if str(value).strip():
+                refs.add(str(value).strip())
+    return refs
+
+
+def model_question_tags(payload: dict[str, Any], item: dict[str, Any]) -> list[str]:
+    model_id = str(payload.get("model_id", "model"))
+    tags = ["knowledge-kind=question", f"model={model_id}"]
+    for value in item.get("tags") or []:
+        text = str(value).strip()
+        if text and ("=" in text or ":" in text):
+            tags.append(text)
+    if not any(tag.startswith("domain=") or tag.startswith("domain:") for tag in tags):
+        tags.append("domain=core")
+    return tags
+
+
+def question_candidate(
+    payload: dict[str, Any],
+    model_json: Path,
+    root: Path,
+    *,
+    collection_name: str,
+    item: dict[str, Any],
+    title: str,
+    summary: str,
+    body: str,
+) -> dict[str, Any]:
+    item_id = str(item.get("id", "")).strip()
+    ref = model_relative_ref(root, model_json, item_id)
+    return {
+        "title": clipped(title, 120),
+        "summary": clipped(summary, 260),
+        "body": body.rstrip(),
+        "tags": model_question_tags(payload, item),
+        "evidence": [ref],
+        "model_refs": [ref, f"{payload.get('model_id')}:{collection_name}:{item_id}"],
+        "source_ref": ref,
+    }
+
+
+def unknown_question_candidates(payload: dict[str, Any], model_json: Path, root: Path, *, include_stale: bool) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    model_id = str(payload.get("model_id", "model"))
+    for item in payload.get("unknowns") or []:
+        if not isinstance(item, dict):
+            continue
+        status = str(item.get("status", "candidate"))
+        if status in {"refuted", "stale"} and not include_stale:
+            continue
+        item_id = str(item.get("id", "")).strip()
+        question = str(item.get("question", "")).strip()
+        if not item_id or not question:
+            continue
+        scope = str(item.get("scope", "")).strip() or payload.get("target", {}).get("name", "")
+        blocked_by = parse_repeated(item.get("blocked_by") if isinstance(item.get("blocked_by"), list) else None)
+        evidence = parse_repeated(item.get("evidence") if isinstance(item.get("evidence"), list) else None)
+        body_lines = [
+            f"Model assertion: `{item_id}` in `{model_id}`.",
+            "",
+            f"Question: {question}",
+            f"Scope: {scope or 'unspecified'}",
+            f"Model status: `{status}`",
+        ]
+        if item.get("owner"):
+            body_lines.append(f"Owner: {item.get('owner')}")
+        if blocked_by:
+            body_lines.extend(["", "Blocked by:"])
+            body_lines.extend(f"- `{value}`" for value in blocked_by)
+        if evidence:
+            body_lines.extend(["", "Existing evidence on the model assertion:"])
+            body_lines.extend(f"- `{value}`" for value in evidence)
+        body_lines.extend(
+            [
+                "",
+                "Resolution rule: answer this question with direct evidence, then update the model assertion and link or close this corpus note.",
+            ]
+        )
+        candidates.append(
+            question_candidate(
+                payload,
+                model_json,
+                root,
+                collection_name="unknowns",
+                item=item,
+                title=f"{model_id} {item_id}: {question}",
+                summary=f"Open model question for {scope or model_id}: {question}",
+                body="\n".join(body_lines),
+            )
+        )
+    return candidates
+
+
+def invariant_tension_reasons(item: dict[str, Any]) -> list[str]:
+    reasons: list[str] = []
+    status = str(item.get("status", "candidate"))
+    if status in {"observed", "confirmed"}:
+        for key in INVARIANT_RECEIPT_TEXT_FIELDS:
+            if not str(item.get(key, "")).strip():
+                reasons.append(f"missing receipt field `{key}`")
+        for key in ("proof_obligations", "refutation_conditions"):
+            values = [str(value).strip() for value in item.get(key) or [] if str(value).strip()]
+            if not values:
+                reasons.append(f"missing receipt field `{key}`")
+    proof_obligations = [str(value).strip() for value in item.get("proof_obligations") or [] if str(value).strip()]
+    binary_gaps = [str(value).strip() for value in item.get("binary_gaps") or [] if str(value).strip()]
+    bypass_assumptions = [str(value).strip() for value in item.get("bypass_assumptions") or [] if str(value).strip()]
+    violated_by = [str(value).strip() for value in item.get("violated_by") or [] if str(value).strip()]
+    if status in {"candidate", "observed"} and proof_obligations:
+        reasons.append("open proof obligations")
+    if binary_gaps:
+        reasons.append("binary-only gaps")
+    if status != "confirmed" and bypass_assumptions:
+        reasons.append("unconfirmed bypass assumptions")
+    if violated_by:
+        reasons.append("possible invariant violation refs")
+    return list(dict.fromkeys(reasons))
+
+
+def invariant_question_candidates(payload: dict[str, Any], model_json: Path, root: Path, *, include_stale: bool) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    model_id = str(payload.get("model_id", "model"))
+    for item in payload.get("invariants") or []:
+        if not isinstance(item, dict):
+            continue
+        status = str(item.get("status", "candidate"))
+        if status in {"refuted", "stale"} and not include_stale:
+            continue
+        item_id = str(item.get("id", "")).strip()
+        statement = str(item.get("statement", "")).strip()
+        if not item_id or not statement:
+            continue
+        reasons = invariant_tension_reasons(item)
+        if not reasons:
+            continue
+        scope = str(item.get("scope", "")).strip() or payload.get("target", {}).get("name", "")
+        body_lines = [
+            f"Model invariant: `{item_id}` in `{model_id}`.",
+            "",
+            f"Statement: {statement}",
+            f"Scope: {scope or 'unspecified'}",
+            f"Model status: `{status}`",
+            "",
+            "Tension to resolve:",
+        ]
+        body_lines.extend(f"- {reason}" for reason in reasons)
+        for label, key in (
+            ("Guard", "guard"),
+            ("Sink", "sink"),
+            ("Authority boundary", "authority_boundary"),
+            ("Trusted callers", "trusted_callers"),
+            ("Proof obligations", "proof_obligations"),
+            ("Bypass assumptions", "bypass_assumptions"),
+            ("Binary gaps", "binary_gaps"),
+            ("Violated by", "violated_by"),
+        ):
+            value = item.get(key)
+            text = compact_list(value) if isinstance(value, list) else str(value or "").strip()
+            if text:
+                body_lines.extend(["", f"{label}: {text}"])
+        body_lines.extend(
+            [
+                "",
+                "Resolution rule: collect evidence that confirms, narrows, or refutes this tension; then update the invariant receipt and close or link this corpus note.",
+            ]
+        )
+        candidates.append(
+            question_candidate(
+                payload,
+                model_json,
+                root,
+                collection_name="invariants",
+                item=item,
+                title=f"{model_id} {item_id}: invariant tension",
+                summary=f"Open invariant tension for {scope or model_id}: {', '.join(reasons)}.",
+                body="\n".join(body_lines),
+            )
+        )
+    return candidates
+
+
+def write_open_question(root: Path, candidate: dict[str, Any], status: str) -> str:
+    if corpus_helper is None:
+        raise SystemExit("maxtac-core-corpus helper is not available; cannot mirror open questions")
+    corpus_helper.ensure_dirs(root)
+    note_args = argparse.Namespace(
+        doc_id=None,
+        title=candidate["title"],
+        kind="open-question",
+        status=status,
+        summary=candidate["summary"],
+        body=None,
+        body_file=None,
+        tag=candidate["tags"],
+        evidence=candidate["evidence"],
+        model_ref=candidate["model_refs"],
+    )
+    body = candidate["body"]
+    payload = corpus_helper.note_payload_from_args(root, note_args, body)
+    errors, warnings = corpus_helper.validate_doc_payload(payload, body, strict=True)
+    for warning in warnings:
+        print(f"warning: {warning}", file=sys.stderr)
+    if errors:
+        raise SystemExit("\n".join(errors))
+    note_path = corpus_helper.workspace_path(root, payload["body_path"], "note path")
+    corpus_helper.write_text_file(note_path, corpus_helper.render_note_markdown(payload, body))
+    corpus_helper.upsert_document(root, payload, body, allow_update=False)
+    return str(payload["doc_id"])
+
+
+def compile_corpus_views(root: Path) -> None:
+    if corpus_helper is None:
+        return
+    corpus_helper.ensure_dirs(root)
+    views = corpus_helper.render_views(root)
+    view_dir = corpus_helper.corpus_dirs(root)["views"]
+    for filename, text in views.items():
+        corpus_helper.write_text_file(view_dir / filename, text)
+
+
+def model_paths_for_mirror(args: argparse.Namespace) -> tuple[Path, list[Path]]:
+    if args.all:
+        root = root_for_mirror(args)
+        return root, sorted((root / "models").glob("*/model.json"))
+    if not args.model_json:
+        raise SystemExit("pass a model JSON path or --all")
+    model_json = Path(args.model_json).expanduser().resolve()
+    return root_for_mirror(args, model_json), [model_json]
+
+
+def cmd_mirror_open_questions(args: argparse.Namespace) -> None:
+    if corpus_helper is None:
+        raise SystemExit("maxtac-core-corpus helper is not available; cannot mirror open questions")
+    root, model_paths = model_paths_for_mirror(args)
+    if not model_paths:
+        print("No model files found.")
+        return
+    existing_refs = existing_question_refs(root)
+    created: list[str] = []
+    skipped: list[str] = []
+    candidates: list[dict[str, Any]] = []
+    for model_json in model_paths:
+        payload = read_json(model_json)
+        errors, warnings = validate_model(payload)
+        for warning in warnings:
+            print(f"warning: {model_json}: {warning}", file=sys.stderr)
+        if errors:
+            raise SystemExit(f"{model_json}:\n" + "\n".join(errors))
+        index_model(model_json, payload)
+        candidates.extend(unknown_question_candidates(payload, model_json, root, include_stale=args.include_stale))
+        candidates.extend(invariant_question_candidates(payload, model_json, root, include_stale=args.include_stale))
+
+    for candidate in candidates:
+        source_refs = [ref for ref in candidate["model_refs"] if "#" in ref]
+        if any(ref in existing_refs for ref in source_refs):
+            skipped.append(candidate["source_ref"])
+            continue
+        if args.dry_run:
+            created.append(candidate["source_ref"])
+            continue
+        doc_id = write_open_question(root, candidate, args.status)
+        existing_refs.update(source_refs)
+        created.append(f"{doc_id} <- {candidate['source_ref']}")
+    if args.compile_views and not args.dry_run:
+        compile_corpus_views(root)
+    action = "Would create" if args.dry_run else "Created"
+    print(f"{action} {len(created)} open-question note(s); skipped {len(skipped)} duplicate(s).")
+    for item in created[:25]:
+        print(f"- {item}")
+    if len(created) > 25:
+        print(f"- ... {len(created) - 25} additional created item(s)")
+
+
 def cmd_summary(args: argparse.Namespace) -> None:
     payload = read_json(Path(args.model_json))
     errors, warnings = validate_model(payload)
@@ -1109,6 +1425,19 @@ def base_parser() -> argparse.ArgumentParser:
     export_prompt.add_argument("--focus")
     export_prompt.add_argument("--output")
     export_prompt.set_defaults(func=cmd_export_prompt)
+
+    mirror = subparsers.add_parser(
+        "mirror-open-questions",
+        help="Mirror model unknowns and invariant tensions into corpus open-question notes",
+    )
+    mirror.add_argument("model_json", nargs="?")
+    mirror.add_argument("--root", help="Workspace root; inferred from models/<id>/model.json when omitted")
+    mirror.add_argument("--all", action="store_true", help="Mirror every models/*/model.json under --root")
+    mirror.add_argument("--status", choices=("draft", "candidate", "observed"), default="candidate")
+    mirror.add_argument("--include-stale", action="store_true", help="Also mirror stale or refuted model assertions")
+    mirror.add_argument("--dry-run", action="store_true")
+    mirror.add_argument("--compile-views", action="store_true", help="Regenerate corpus views after creating notes")
+    mirror.set_defaults(func=cmd_mirror_open_questions)
 
     return parser
 

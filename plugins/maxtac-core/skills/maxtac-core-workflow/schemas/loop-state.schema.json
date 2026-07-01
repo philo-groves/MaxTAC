@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maxtac.local/schemas/loop-state.schema.json",
+  "title": "MaxTAC loop state",
+  "type": "object",
+  "required": [
+    "document_type",
+    "schema_version",
+    "loop_id",
+    "kind",
+    "owner_plugin",
+    "target",
+    "scope",
+    "summary",
+    "status",
+    "created_at",
+    "updated_at",
+    "safety_constraints",
+    "setup",
+    "positive_gates",
+    "negative_gates",
+    "outputs"
+  ],
+  "properties": {
+    "document_type": { "const": "maxtac.loop_state" },
+    "schema_version": { "const": "1.0" },
+    "loop_id": { "type": "string", "minLength": 1 },
+    "kind": { "type": "string", "minLength": 1 },
+    "owner_plugin": { "type": "string", "minLength": 1 },
+    "target": { "type": "string", "minLength": 1 },
+    "scope": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["active", "blocked", "complete", "superseded"] },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "safety_constraints": { "type": "array", "items": { "type": "string" } },
+    "setup": { "type": "array", "items": { "type": "string" } },
+    "positive_gates": { "type": "array", "items": { "type": "string" } },
+    "negative_gates": { "type": "array", "items": { "type": "string" } },
+    "outputs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

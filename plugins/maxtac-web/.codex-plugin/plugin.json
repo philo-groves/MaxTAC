@@ -1,28 +1,31 @@
 {
   "name": "maxtac-web",
-  "version": "0.2.1+codex.20260630021628",
+  "version": "0.2.1+codex.20260630184615",
   "author": {
     "name": "Philo Groves"
   },
   "repository": "https://github.com/philo-groves/MaxTAC",
   "license": "MIT",
   "skills": "./skills/",
-  "description": "Web application, API, browser-state, and SaaS workflow research pack for MaxTAC.",
+  "description": "Web application, API, browser-state, scoped input loops, and SaaS workflow research pack for MaxTAC.",
   "keywords": [
     "codex",
     "maxtac",
     "security",
     "web-security",
     "api-security",
+    "input-loop",
+    "input-audit",
     "browser-debugging",
     "sast"
   ],
   "interface": {
     "displayName": "MaxTAC for Web",
-    "shortDescription": "Web, API, session, and browser research.",
-    "longDescription": "MaxTAC for Web adds web surface triage, stateful API fuzzing, browser debugging, and web-focused auditor routing for authorized web application and SaaS targets.",
+    "shortDescription": "Web, API, input loops, session, and browser research.",
+    "longDescription": "MaxTAC for Web adds web surface triage, scoped sitemap and input worklist loops, stateful API fuzzing, browser debugging, and web-focused auditor routing for authorized web application and SaaS targets.",
     "defaultPrompt": [
       "Use MaxTAC for Web to triage this authorized web target.",
+      "Use MaxTAC for Web to run a scoped input loop for this web app or API.",
       "Use MaxTAC for Web to map this API workflow and select auditors."
     ],
     "developerName": "Philo Groves",

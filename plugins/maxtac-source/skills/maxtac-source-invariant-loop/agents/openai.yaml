@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Source Invariant Loop"
+  short_description: "Invariant-driven source audit loop"
+  default_prompt: "Use $maxtac-source-invariant-loop to model source invariants and audit guard, sink, and caller evidence."

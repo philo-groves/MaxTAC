@@ -219,16 +219,17 @@ def pre_audit_context(root: Path, query: str | None) -> str:
     return "\n".join(section.rstrip() for section in sections) + "\n"
 
 
-def enrich_prompt(prompt_file: Path, root: Path, *, context_query: str | None = None) -> None:
+def enrich_prompt(prompt_file: Path, root: Path, *, context_query: str | None = None, prompt_kind: str = "audit") -> None:
     prompt_path_input = workspace_path(root, prompt_file, "Prompt file")
     raw_prompt = read_text(prompt_path_input).rstrip()
     audit_id = generated_id("audit")
     helper_path = Path(__file__).resolve()
     assessment_path = f"tmp/assessment-{audit_id}.md"
+    kind_label = prompt_kind.replace("-", " ")
     goal_objective = (
-        "Produce a focused MaxTAC audit assessment for the supplied hypothesis, auditor specialty, and evidence, "
+        f"Produce a focused MaxTAC {kind_label} assessment for the supplied hypothesis, proposition, or evidence, "
         f"then persist it to {workspace_db.DB_FILE}. Negative end outcome: if the supplied context, directly "
-        "referenced files, or available tools are insufficient to decide the hypothesis within a bounded pass, stop "
+        "referenced files, or available tools are insufficient to decide the question within a bounded pass, stop "
         "broadening scope and persist an assessment with blockers, missing evidence, and the safest recommended next step."
     )
     goal_call = json.dumps({"objective": goal_objective})
@@ -250,7 +251,7 @@ Do not inspect files, run commands, reason through the hypothesis, or draft the 
 
 Bounds: inspect the supplied packet/evidence, directly referenced files/functions, and immediately necessary callers/callees only. Do not start broad repo discovery, fuzzing, PoV construction, or unrelated refactors unless this prompt explicitly grants that scope. Do not complete the subagent run until the goal is either achieved or ended with the negative outcome above.
 
-## Audit Task
+## {kind_label.title()} Task
 
 {raw_prompt}
 
@@ -263,6 +264,7 @@ Bounds: inspect the supplied packet/evidence, directly referenced files/function
 ## MaxTAC Audit Persistence Instructions
 
 Audit ID: `{audit_id}`
+Assessment kind: `{prompt_kind}`
 
 Persist the final audit assessment to `{workspace_db.DB_FILE}` before completing the subagent run. Draft the Markdown assessment at `{assessment_path}`, then record it with:
 
@@ -270,7 +272,7 @@ Persist the final audit assessment to `{workspace_db.DB_FILE}` before completing
 {shell_quote(python_command())} "{helper_path}" --root "{root}" --audit {audit_id} --record-assessment {assessment_path}
 ```
 
-Include a `Goal Activation` section naming `create_goal`, `/goal`, or `unavailable`; then include the vulnerability hypothesis or audit focus, method, reviewed files or components, findings, evidence, exploitability notes, blockers, and a clear conclusion. Summarize supporting evidence in the assessment and cite durable artifact paths from `research/`, `proof/`, `fuzz/`, `contracts/`, or `tmp/` when needed.
+Include a `Goal Activation` section naming `create_goal`, `/goal`, or `unavailable`; then include the assessment kind, vulnerability hypothesis or verification focus, method, reviewed files or components, findings, evidence, exploitability notes when relevant, blockers, and a clear conclusion. Summarize supporting evidence in the assessment and cite durable artifact paths from `research/`, `proof/`, `fuzz/`, `contracts/`, or `tmp/` when needed.
 """
     workspace_db.create_audit(root, audit_id, enriched)
     print(enriched, end="")
@@ -346,6 +348,12 @@ def base_parser() -> argparse.ArgumentParser:
     group.add_argument("--audit-search", metavar="TEXT", help="Semantic search audit prompts, assessments, and artifacts")
     parser.add_argument("--record-assessment", type=Path, help="Record an assessment Markdown file into workspace.sqlite")
     parser.add_argument("--context-query", help="Embed corpus orientation and model search output into an enriched prompt")
+    parser.add_argument(
+        "--prompt-kind",
+        choices=("audit", "verifier", "attention-review", "mitigation-review"),
+        default="audit",
+        help="Assessment kind to embed when enriching --prompt-file",
+    )
     parser.add_argument("--limit", type=int, default=10, help="Maximum rows for audit list or search output")
     return parser
 
@@ -372,7 +380,7 @@ def main() -> None:
     if args.prompt_file:
         if args.record_assessment:
             raise SystemExit("--record-assessment can only be used with --audit")
-        enrich_prompt(args.prompt_file, root_path(args.root), context_query=args.context_query)
+        enrich_prompt(args.prompt_file, root_path(args.root), context_query=args.context_query, prompt_kind=args.prompt_kind)
         return
 
     root = root_path(args.root)

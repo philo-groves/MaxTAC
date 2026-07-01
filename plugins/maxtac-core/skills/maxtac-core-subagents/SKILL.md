@@ -20,6 +20,8 @@ Use the local helper scripts for readiness checks, prompt enrichment, debate bal
 
 The helper scripts store audit and debate records in `<workspace-root>/workspace.sqlite`. Auditor catalogs are stored separately in `$CODEX_HOME/maxtac/auditors.sqlite` because they are plugin/session state, not workspace findings. Use the SQLite-backed helper commands for auditor search, majority counting, detail lookup, and semantic duplicate-work checks.
 
+Verifier-style subagents are not exempt from persistence. If a subagent is independently checking a hypothesis, closure, proof, mitigation assumption, attention decision, or "is this worth pursuing?" question, generate the prompt through `audit-helper.py --prompt-file ... --prompt-kind verifier` or through `debate-helper.py --prompt-file` when the question is a binary proposition. Do not leave verifier conclusions only in `tmp/`, chat text, or parent memory.
+
 The script prints `parallel` or `sequential` after checking available system resources against the requested subagent count. It reserves 4 GiB of available memory per requested subagent plus 1 GiB of headroom. Auditor subagents have an additional safety gate: if total system RAM is unknown or below 17 GiB, auditor readiness returns `sequential` regardless of available memory. Debaters and generic subagents are unaffected by the 17 GiB total-RAM gate.
 
 If the result is `parallel`, spawn subagents using standard Codex subagent spawning mechanisms without waiting for each to finish. If the result is `sequential`, spawn one subagent at a time, waiting for it to finish before spawning the next.
@@ -35,6 +37,8 @@ Bound each subagent goal tightly enough to avoid long-running drift but wide eno
 
 ## Attention Review Subagents
 When `workspace_status` reports an attention-lock warning, the parent may spawn a single goal-bounded auditor as an independent attention reviewer. The prompt should include the attention report, current phase, recent ledger summary, active branch, and the exact decision options: deepen, pivot, consolidate, phase-shift, or delegate-review. Use `audit-helper.py --prompt-file` or `audit_prompt_create`; do not spawn the reviewer from a raw prompt. The reviewer should persist an assessment into `workspace.sqlite` that recommends one action and names the evidence or absence of evidence behind it.
+
+For attention reviewers, prefer `audit-helper.py --prompt-file tmp/<prompt>.md --prompt-kind attention-review --context-query "<active boundary or subsystem>"` so later agents can distinguish the result from a vulnerability audit while still searching it through audit memory.
 
 ## Auditor Subagents
 An auditor subagent is a specialist vulnerability researcher for an individual bug class, mitigation, program, or other security topic. Core owns the goal-bounded prompt, persistence, and debate mechanics. Installed domain packs own most auditor catalogs.
@@ -77,6 +81,8 @@ python3 <skill-dir>/scripts/audit-helper.py --root <workspace-root> \
 ```
 
 The above script prints an enriched prompt; enrichment prepends Codex goal instructions, embeds corpus orientation and model search output for the context query, and appends instructions to persist the audit assessment into `workspace.sqlite`. It also creates the SQLite audit record for the generated audit ID. If a context query is genuinely irrelevant, omit `--context-query` only after the prompt itself explains why corpus/model orientation does not apply.
+
+Use `--prompt-kind verifier`, `--prompt-kind attention-review`, or `--prompt-kind mitigation-review` for non-auditor verification checks that still need durable assessment memory. The record is stored in the audit table so `--audit-search`, `--audit-list`, and `--audit-show` find it later.
 
 Include the triage packet, relevant graph evidence, OpenGrep result summaries, and exact file/function references in the prompt. Omit unrelated checklist text and avoid asking the auditor to rediscover the whole target.
 

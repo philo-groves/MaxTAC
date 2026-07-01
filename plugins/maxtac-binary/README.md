@@ -1,6 +1,6 @@
 # MaxTAC for Binary
 
-MaxTAC for Binary adds native reverse engineering, debugger, crash replay, instrumentation, and systems fuzzing workflows.
+MaxTAC for Binary adds native reverse engineering, systematic decompile loops, debugger, crash replay, instrumentation, and systems fuzzing workflows.
 
 Use this pack with MaxTAC Core when the target is a native binary, firmware component, parser, protocol implementation, kernel-adjacent component, native library, or decompiler-heavy system.
 
@@ -10,7 +10,8 @@ Use this pack with MaxTAC Core when the target is a native binary, firmware comp
 - Native debugger or instrumentation evidence with LLDB, GDB, x64dbg, WinDbg, Frida, or radare2 debugger mode.
 - Crash replay and runtime state capture.
 - Coverage-guided fuzzing, harness selection, grammar fuzzing, or systems dynamic testing.
-- Binary diffing, decompilation, p-code, ESIL, emulation, or function similarity work.
+- Binary diffing, decompilation, p-code, ESIL, emulation, function similarity work, or compile/load-stack modeling.
+- Decompile loops that prioritize entrypoints, exports, hot functions, cross-reference hubs, and security-sensitive sinks.
 
 ## Skills
 
@@ -18,6 +19,7 @@ Use this pack with MaxTAC Core when the target is a native binary, firmware comp
 - `maxtac-re-radare2`: radare2 binary analysis, search, diffing, debugging, ESIL, and hex utilities.
 - `maxtac-dast-debugger`: debugger, instrumentation, crash replay, and runtime evidence capture.
 - `maxtac-dast-fuzzer`: fuzzing strategy, harness selection, coverage, grammar fuzzing, and crash triage.
+- `maxtac-binary-decompile-loop`: systematic binary understanding with compile/load-stack modeling, function worklists, decompiler evidence, and dynamic-frequency prioritization.
 
 ## Typical Pairings
 
@@ -33,6 +35,7 @@ Use this pack with MaxTAC Core when the target is a native binary, firmware comp
 Binary workflows commonly produce:
 
 - Reverse-engineering notes and function maps.
+- `contracts/loops/<loop-id>/` Binary decompile-loop worklists, gates, events, and next-action prompts.
 - Decompiled snippets and cross-reference evidence.
 - Debugger transcripts, crash logs, register state, memory maps, and replay commands.
 - Fuzzing harnesses, corpora, minimization notes, coverage, and crash buckets.

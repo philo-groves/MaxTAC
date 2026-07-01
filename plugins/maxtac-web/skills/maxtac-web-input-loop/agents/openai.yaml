@@ -1,0 +1,4 @@
+interface:
+  display_name: "MaxTAC Web Input Loop"
+  short_description: "Scoped web input audit loop"
+  default_prompt: "Use $maxtac-web-input-loop to map and audit scoped web inputs while respecting rate limits."

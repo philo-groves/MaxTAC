@@ -1,13 +1,13 @@
 {
   "name": "maxtac-binary",
-  "version": "0.2.1+codex.20260630021628",
+  "version": "0.2.1+codex.20260630184615",
   "author": {
     "name": "Philo Groves"
   },
   "repository": "https://github.com/philo-groves/MaxTAC",
   "license": "MIT",
   "skills": "./skills/",
-  "description": "Binary and systems reverse engineering, dynamic debugging, and native fuzzing workflows for MaxTAC research.",
+  "description": "Binary and systems reverse engineering, systematic decompile loops, dynamic debugging, and native fuzzing workflows for MaxTAC research.",
   "keywords": [
     "codex",
     "maxtac",
@@ -16,15 +16,18 @@
     "reverse-engineering",
     "ghidra",
     "radare2",
+    "decompile-loop",
+    "decompilation",
     "debugging",
     "fuzzing"
   ],
   "interface": {
     "displayName": "MaxTAC for Binary",
-    "shortDescription": "Binary RE, debugging, and systems fuzzing.",
-    "longDescription": "MaxTAC for Binary adds Ghidra, radare2, native debugger, instrumentation, crash replay, and systems fuzzing guidance without loading web, supply-chain, Android, Apple, or Microsoft workflows.",
+    "shortDescription": "Binary RE, decompile loops, debugging, and systems fuzzing.",
+    "longDescription": "MaxTAC for Binary adds Ghidra, radare2, systematic decompile loops, compile/load-stack modeling, native debugger, instrumentation, crash replay, and systems fuzzing guidance without loading web, supply-chain, Android, Apple, or Microsoft workflows.",
     "defaultPrompt": [
       "Use MaxTAC for Binary to triage this authorized binary target.",
+      "Use MaxTAC for Binary to run a systematic decompile loop for this binary.",
       "Use MaxTAC for Binary to capture repeatable crash or RE evidence."
     ],
     "developerName": "Philo Groves",

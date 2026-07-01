@@ -30,7 +30,8 @@ Use `scripts/model.py` instead of hand-editing `model.json` when creating, valid
 5. Add assumptions and unknowns explicitly instead of letting them disappear into prose.
 6. Mark contradictions when two assertions cannot both be true. Do not silently delete stale beliefs; mark them `stale` or `refuted` and preserve evidence.
 7. Run `validate` and `project` after meaningful model edits.
-8. Use `export-prompt` before auditor or debater handoff so the subagent sees confirmed facts, candidate assertions, formulas, unknowns, and warnings in a compact format.
+8. Run `mirror-open-questions` when model unknowns, missing invariant receipts, proof obligations, bypass assumptions, binary gaps, or possible invariant violations should become visible in corpus orientation.
+9. Use `export-prompt` before auditor or debater handoff so the subagent sees confirmed facts, candidate assertions, formulas, unknowns, and warnings in a compact format.
 
 ## Commands
 
@@ -94,6 +95,15 @@ Export a model-backed auditor prompt:
 python3 <skill-dir>/scripts/model.py export-prompt models/<id>/model.json --focus "Check whether the export guard dominates all object reads." --output tmp/export-model-auditor-prompt.md
 ```
 
+Mirror model unknowns and invariant tensions into corpus `open-question` notes:
+
+```text
+python3 <skill-dir>/scripts/model.py mirror-open-questions models/<id>/model.json --compile-views
+python3 <skill-dir>/scripts/model.py mirror-open-questions --root <workspace-root> --all --dry-run
+```
+
+The mirror command deduplicates by model assertion reference. Re-run it after model edits instead of manually copying unknowns into `research/notes/`.
+
 ## Assertion Status
 
 - `candidate`: plausible but not proven by direct evidence.
@@ -138,6 +148,7 @@ For any invariant used to close a primitive, de-escalate a chain, or support a f
 - Ask auditors to verify invariant receipt fields, especially guard dominance, trusted caller completeness, binary gaps, and refutation conditions.
 - After an audit, update both the model and the relevant research note when durable system knowledge changed.
 - Link ledger findings to violated invariant IDs when a finding depends on an invariant break.
+- Before handoff or branch closure, mirror unresolved model unknowns and invariant tensions into corpus `open-question` notes so `maxtac-core-corpus orient` exposes them to future agents.
 
 ## Resources
 
